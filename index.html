@@ -3157,7 +3157,8 @@
   function saveSettingField(field, value) {
     const st = getSettings();
     if (field === 'overtimeHours') {
-      value = parseFloat(String(value).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+      // ممیز فارسی/عربی (٫) و ویرگول هم ممیز حساب می‌شوند: «۷٫۵» یعنی هفت و نیم
+      value = parseFloat(faToEnDigits(value).replace(/[٫,،]/g, '.'));
       if (!Number.isFinite(value) || value <= 0 || value > 24) value = st.overtimeHours;
     }
     if (field === 'reminderTime' && !/^\d{2}:\d{2}$/.test(value)) value = st.reminderTime;
@@ -3689,6 +3690,7 @@
   }
 
   // آرشیو و فیلتر هر شرکت
+  let archiveVisible = 30;
   function renderArchive() {
     const logs = getLogs();
     const comps = getCompanies();
@@ -3700,14 +3702,14 @@
     const allChip = document.createElement('div');
     allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
     allChip.textContent = 'همه شرکت‌ها';
-    allChip.onclick = () => { archiveCompanyFilter = 'all'; renderArchive(); };
+    allChip.onclick = () => { archiveCompanyFilter = 'all'; archiveVisible = 30; renderArchive(); };
     filterBar.appendChild(allChip);
 
     comps.forEach(c => {
       const chip = document.createElement('div');
       chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
       chip.textContent = c;
-      chip.onclick = () => { archiveCompanyFilter = c; renderArchive(); };
+      chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
       filterBar.appendChild(chip);
     });
 
@@ -3726,7 +3728,7 @@
       return;
     }
 
-    stream.innerHTML = filtered.slice(0, 30).map(item => `
+    stream.innerHTML = filtered.slice(0, archiveVisible).map(item => `
       <div class="record-card-item">
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
@@ -3744,11 +3746,15 @@
           <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" onclick="deleteLogItem(${Number(item.id) || 0})" title="حذف رکورد">🗑</button>
         </div>
       </div>
-    `).join('');
+    `).join('') + (filtered.length > archiveVisible
+      ? `<button class="add-comp-pill" onclick="archiveVisible += 30; renderArchive();">نمایش بیشتر (${toPersianDigits(filtered.length - archiveVisible)} رکورد دیگر)</button>`
+      : '');
   }
 
-  function deleteLogItem(id) {
+  async function deleteLogItem(id) {
     playTactileFeedback();
+    const item = getLogs().find(l => l.id === id);
+    if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
     let logs = getLogs();
     logs = logs.filter(l => l.id !== id);
     localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
