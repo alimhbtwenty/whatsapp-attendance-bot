@@ -4567,6 +4567,21 @@
     });
   });
 
+  // دکمه برگشت گوشی (اپ اندروید): اول پنجره باز را ببند، بعد به تب تردد برگرد؛
+  // false یعنی چیزی برای بستن نبود و اپ بسته شود
+  function handleBack() {
+    if (document.getElementById('confirmModal').classList.contains('open')) { resolveConfirm(false); return true; }
+    const modals = [['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal], ['userModal', closeUserModal]];
+    for (const [id, close] of modals) {
+      if (document.getElementById(id).classList.contains('open')) { close(); return true; }
+    }
+    if (document.getElementById('tgActionSheet').classList.contains('open')) { closeChatActions(); return true; }
+    if (isEditMode) { toggleEditLocations(); return true; }
+    if (systemMode !== 'attendance') { switchSystemMode('attendance'); return true; }
+    return false;
+  }
+  window.handleBack = handleBack;
+
   window.onload = init;
 </script>
 </body>

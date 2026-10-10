@@ -54,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
         settings.setGeolocationEnabled(true);
+        // اندروید ۶ و قدیمی‌تر بدون این مسیر اجازه لوکیشن صفحه را ذخیره/اعمال نمی‌کند
+        settings.setGeolocationDatabasePath(getFilesDir().getPath());
 
         // WebChromeClient: بدون آن confirm/alert نمایش داده نمی‌شوند و لوکیشن به صفحه نمی‌رسد
         webView.setWebChromeClient(new WebChromeClient() {
@@ -84,9 +86,10 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     startActivityForResult(Intent.createChooser(intent, "انتخاب فایل"), REQ_PICK_FILE);
                 } catch (Exception e) {
+                    // callback همین‌جا جواب گرفت؛ باید true برگردد وگرنه WebView دوباره صدایش می‌زند
                     pendingFileCallback = null;
                     callback.onReceiveValue(null);
-                    return false;
+                    Toast.makeText(MainActivity.this, "برنامه‌ای برای انتخاب فایل پیدا نشد", Toast.LENGTH_LONG).show();
                 }
                 return true;
             }
@@ -206,10 +209,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (webView != null && webView.canGoBack()) {
-            webView.goBack();
-        } else {
+        if (webView == null) {
             super.onBackPressed();
+            return;
         }
+        // اول از صفحه بپرس: تقویم، پنجره‌ها یا تب دیگر باز است؟ فقط اگر نه، اپ بسته شود
+        webView.evaluateJavascript("(window.handleBack && window.handleBack()) ? 'handled' : 'exit'", value -> {
+            if (!"\"handled\"".equals(value)) {
+                if (webView.canGoBack()) webView.goBack();
+                else MainActivity.super.onBackPressed();
+            }
+        });
     }
 }
