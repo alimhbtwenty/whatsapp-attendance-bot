@@ -1168,32 +1168,34 @@
       transform: translateX(-50%) translateY(0) scale(1);
     }
 
-    /* ردیف تاریخ تب تردد: همه دکمه‌ها در یک خط، فشرده‌تر روی گوشی */
+    /* ردیف تاریخ تب تردد: همه دکمه‌ها در یک خط، فشرده‌تر روی گوشی؛
+       --fit را fitDateRow() فقط وقتی لازم است کم می‌کند (فونت فارسی گوشی‌ها پهنای متفاوتی دارد) */
     .compact-date-row {
+      --fit: 1;
       flex-wrap: nowrap;
-      gap: 3px;
-      padding: 7px 5px;
+      gap: 2px;
+      padding: 7px 4px;
     }
     .compact-date-row .date-chips-quick,
     .compact-date-row > div:last-child {
-      gap: 3px !important;
+      gap: 2px !important;
       flex-shrink: 0;
     }
     .compact-date-row .date-q-btn {
-      padding: 5px 4px;
-      font-size: 10px;
+      padding: 5px 3px;
+      font-size: calc(10px * var(--fit));
       white-space: nowrap;
     }
     .compact-date-row .date-pick-btn {
-      padding: 4px 5px;
-      gap: 2px;
+      padding: 4px 4px;
+      gap: 1px;
       white-space: nowrap;
+      font-size: calc(13px * var(--fit));
     }
     .compact-date-row .date-display-tag {
-      font-size: 11.5px;
+      font-size: calc(11.5px * var(--fit));
       letter-spacing: 0;
     }
-
     @media (max-width: 359px) {
       .compact-date-row { flex-wrap: wrap; }
     }
@@ -2402,6 +2404,7 @@
     document.getElementById('secMessenger').classList.toggle('active', mode === 'messenger');
 
     document.body.classList.toggle('mode-messenger', mode === 'messenger');
+    if (mode === 'attendance') fitDateRow();
 
     if (mode !== 'messenger') closeChatActions();
 
@@ -2667,9 +2670,26 @@
     updateDateDisplay();
   }
 
+  // اگر ردیف تاریخ (مثلاً «۳۱ اردیبهشت») روی گوشی جا نشد، متن ردیف را کمی کوچک کن تا در یک خط بماند
+  function fitDateRow() {
+    const row = document.querySelector('#secAttendance .compact-date-row');
+    if (!row || !row.offsetWidth || window.innerWidth < 360) {
+      if (row) row.style.setProperty('--fit', 1);
+      return;
+    }
+    let fit = 1;
+    row.style.setProperty('--fit', fit);
+    while (row.scrollWidth > row.clientWidth && fit > 0.8) {
+      fit = Math.round((fit - 0.04) * 100) / 100;
+      row.style.setProperty('--fit', fit);
+    }
+  }
+  window.addEventListener('resize', fitDateRow);
+
   function updateDateDisplay() {
     const { dayName } = getPersianDateParts(currentDateObj);
     document.getElementById('dateDisplay').textContent = shortDateLabel(currentDateObj);
+    fitDateRow();
     selectedDay = dayName;
 
     // همگام‌سازی خودکار دکمه‌های امروز / دیروز / پریروز
