@@ -1269,6 +1269,55 @@
       font-weight: 800;
     }
 
+    /* صف ارسال آفلاین */
+    .outbox-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 16px;
+      padding: 9px 12px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #bae6fd;
+    }
+    .outbox-banner.show {
+      display: flex;
+    }
+    .outbox-banner.offline {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+    }
+    .outbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+    .outbox-item {
+      background: rgba(14, 18, 25, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .outbox-item pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text-muted);
+      max-height: 90px;
+      overflow: hidden;
+      margin: 0;
+    }
+
     /* چک‌لیست ساپورت */
     .checklist {
       display: flex;
@@ -1534,6 +1583,14 @@
         <span id="userNameHeader">ثبت‌کننده</span>
       </div>
       <div class="hud-chip clock-text" id="liveClock">--:--</div>
+    </div>
+  </div>
+
+  <!-- صف ارسال آفلاین -->
+  <div class="outbox-banner" id="outboxBanner">
+    <span id="outboxText"></span>
+    <div class="banner-actions">
+      <button onclick="openOutbox()">📤 مشاهده و ارسال</button>
     </div>
   </div>
 
@@ -1987,6 +2044,16 @@
   </div>
 </div>
 
+<!-- Glass Modal: صف ارسال -->
+<div class="glass-modal-bg" id="outboxModal" onclick="if(event.target === this) closeOutbox()">
+  <div class="glass-modal-box" style="gap:12px;">
+    <div style="font-size:15px; font-weight:800; color:#fff;">📤 گزارش‌های ارسال‌نشده</div>
+    <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
+    <div class="outbox-list" id="outboxList"></div>
+    <button class="dock-copy-btn" style="padding:10px;" onclick="closeOutbox()">بستن</button>
+  </div>
+</div>
+
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
 <div class="glass-modal-bg" id="confirmModal" onclick="if(event.target === this) resolveConfirm(false)">
   <div class="glass-modal-box">
@@ -2288,6 +2355,7 @@
     renderChatMessages();
     updateNetworkStatus();
     renderSettings();
+    renderOutbox();
     checkExitReminder();
     setInterval(checkExitReminder, 30000);
 
@@ -2794,6 +2862,125 @@
     }
   }
 
+  // ==================== صف ارسال آفلاین ====================
+  const OUTBOX_KEY = 'geomat_outbox_v1';
+  const OUTBOX_MAX = 50;
+
+  function getOutbox() {
+    try {
+      const list = JSON.parse(localStorage.getItem(OUTBOX_KEY) || '[]');
+      return Array.isArray(list) ? list.filter(x => x && typeof x.text === 'string' && x.id) : [];
+    } catch(e) {
+      return [];
+    }
+  }
+  function saveOutbox(list) {
+    try {
+      if (list.length) localStorage.setItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
+      else localStorage.removeItem(OUTBOX_KEY);
+      return true;
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ گزارش در صف ذخیره نشد');
+      return false;
+    }
+  }
+
+  function queueOutbox(type, text) {
+    const list = getOutbox();
+    list.push({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, type, company: selectedCompany, text, ts: Date.now() });
+    if (saveOutbox(list)) showToast(`📴 اینترنت نیست؛ گزارش ثبت و در صف ارسال گذاشته شد (${toPersianDigits(Math.min(list.length, OUTBOX_MAX))})`);
+    renderOutbox();
+  }
+
+  function renderOutbox() {
+    const banner = document.getElementById('outboxBanner');
+    if (!banner) return;
+    const list = getOutbox();
+    banner.classList.toggle('show', list.length > 0);
+    banner.classList.toggle('offline', !navigator.onLine);
+    document.getElementById('outboxText').textContent = navigator.onLine
+      ? `📤 ${toPersianDigits(list.length)} گزارش در صف ارسال`
+      : `📴 آفلاین • ${toPersianDigits(list.length)} گزارش در صف`;
+    if (document.getElementById('outboxModal').classList.contains('open')) renderOutboxList();
+  }
+
+  function renderOutboxList() {
+    const list = getOutbox();
+    const box = document.getElementById('outboxList');
+    document.getElementById('outboxHint').textContent = navigator.onLine
+      ? 'هر گزارش را جدا به واتساپ بفرستید؛ بعد از ارسال از صف برداشته می‌شود.'
+      : 'هنوز آفلاین هستید؛ وقتی اینترنت وصل شد ارسال کنید.';
+    box.innerHTML = '';
+    if (!list.length) {
+      box.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:12px;">صف خالی است ✅</div>';
+      return;
+    }
+    list.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'outbox-item';
+      const head = document.createElement('div');
+      head.style.cssText = 'display:flex; justify-content:space-between; font-size:12px; font-weight:800;';
+      const title = document.createElement('span');
+      title.textContent = `${item.type === 'attendance' ? '🕒 تردد' : '🛠 ساپورت'} • ${item.company || ''}`;
+      const when = document.createElement('span');
+      when.style.color = 'var(--text-dim)';
+      const d = new Date(item.ts);
+      when.textContent = `${shortDateLabel(d)} ${toPersianDigits(pad2(d.getHours()) + ':' + pad2(d.getMinutes()))}`;
+      head.append(title, when);
+      const pre = document.createElement('pre');
+      pre.textContent = item.text;
+      const actions = document.createElement('div');
+      actions.className = 'banner-actions';
+      const send = document.createElement('button');
+      send.textContent = '🟢 ارسال به واتساپ';
+      send.onclick = () => sendOutboxItem(item.id);
+      const del = document.createElement('button');
+      del.textContent = '🗑';
+      del.title = 'حذف از صف';
+      del.onclick = () => removeOutboxItem(item.id, true);
+      actions.append(send, del);
+      el.append(head, pre, actions);
+      box.appendChild(el);
+    });
+  }
+
+  function openOutbox() {
+    playTactileFeedback();
+    renderOutboxList();
+    document.getElementById('outboxModal').classList.add('open');
+  }
+  function closeOutbox() {
+    document.getElementById('outboxModal').classList.remove('open');
+  }
+
+  function sendOutboxItem(id) {
+    const item = getOutbox().find(x => x.id === id);
+    if (!item) return;
+    if (!navigator.onLine) {
+      showToast('📴 هنوز آفلاین هستید');
+      return;
+    }
+    playTactileFeedback();
+    saveOutbox(getOutbox().filter(x => x.id !== id));
+    renderOutbox();
+    if (navigator.share) {
+      navigator.share({ text: item.text }).catch(() => openWhatsAppDirect(item.text));
+    } else {
+      openWhatsAppDirect(item.text);
+    }
+  }
+
+  async function removeOutboxItem(id, ask) {
+    if (ask && !await appConfirm('این گزارش از صف ارسال حذف شود؟ (در آرشیو می‌ماند)')) return;
+    saveOutbox(getOutbox().filter(x => x.id !== id));
+    renderOutbox();
+  }
+
+  function onConnectivityChange() {
+    renderOutbox();
+    if (navigator.onLine && getOutbox().length) showToast(`📶 اینترنت وصل شد؛ ${toPersianDigits(getOutbox().length)} گزارش در صف ارسال است`);
+  }
+
   // ==================== چک‌لیست ساپورت ====================
   // آیتم‌های هر مشتری ذخیره می‌شوند؛ تیک‌ها فقط تا ارسال/کپی گزارش در حافظه می‌مانند
   const CHECKLISTS_KEY = 'geomat_checklists_v1';
@@ -3294,6 +3481,12 @@
     if (isAtt) await ensureEntryGeoBeforeSend();
     const text = isAtt ? generateAttendanceText() : generateSupportText();
     commitReport(isAtt ? 'attendance' : 'support', text);
+
+    // بدون اینترنت: گزارش در آرشیو ثبت شد و برای ارسال بعدی در صف می‌ماند
+    if (!navigator.onLine) {
+      queueOutbox(isAtt ? 'attendance' : 'support', text);
+      return;
+    }
 
     if (navigator.share) {
       navigator.share({ text: text }).catch(() => openWhatsAppDirect(text));
@@ -4199,6 +4392,8 @@
   }
   window.addEventListener('online', updateNetworkStatus);
   window.addEventListener('offline', updateNetworkStatus);
+  window.addEventListener('online', onConnectivityChange);
+  window.addEventListener('offline', onConnectivityChange);
 
   // همگام‌سازی بلادرنگ بین تب‌های باز (Cross-Tab Realtime Hardening)
   window.addEventListener('storage', (e) => {
@@ -4206,6 +4401,8 @@
       if (systemMode === 'messenger') renderChatMessages();
     } else if (e.key === 'geomat_logs_v2') {
       if (systemMode === 'archive') renderArchive();
+    } else if (e.key === OUTBOX_KEY) {
+      renderOutbox();
     } else if (e.key === CHECKLISTS_KEY) {
       updateSupportPreview();
     } else if (e.key === OPEN_ENTRY_KEY || e.key === SETTINGS_KEY) {
@@ -4265,6 +4462,7 @@
         closeChatActions();
         resolveConfirm(false);
         closeCalendar();
+        closeOutbox();
       }
     });
   });
