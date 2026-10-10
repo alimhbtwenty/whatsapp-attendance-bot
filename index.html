@@ -2076,7 +2076,11 @@
 
   // صداسازی مکانیکی ظریف بدون مصرف حافظه مکرر (Singleton AudioContext)
   let sharedAudioCtx = null;
+  // مرورگر لرزش و صدا را قبل از اولین لمس کاربر مسدود می‌کند (و در کنسول خطا می‌دهد)
+  let userHasInteracted = false;
+  ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => { userHasInteracted = true; }, { capture: true, once: true }));
   function playTactileFeedback() {
+    if (!userHasInteracted) return;
     if (navigator.vibrate) { try { navigator.vibrate(10); } catch(e){} }
     try {
       if (!sharedAudioCtx) {
@@ -2115,8 +2119,24 @@
   let archiveCompanyFilter = 'all';
 
   function getCompanies() {
-    const saved = localStorage.getItem('geomat_companies_v2');
-    return saved ? JSON.parse(saved) : DEFAULT_COMPANIES;
+    try {
+      const saved = JSON.parse(localStorage.getItem('geomat_companies_v2') || 'null');
+      if (Array.isArray(saved)) {
+        const list = saved.filter(c => typeof c === 'string' && c.trim());
+        if (list.length) return list;
+      }
+    } catch(e) {}
+    return DEFAULT_COMPANIES.slice();
+  }
+
+  // آرشیو خراب (مثلاً از یک فایل پشتیبان ناقص) نباید کل برنامه را از کار بیندازد
+  function getLogs() {
+    try {
+      const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+      return Array.isArray(logs) ? logs.filter(l => l && typeof l === 'object') : [];
+    } catch(e) {
+      return [];
+    }
   }
   function saveCompanies(list) {
     localStorage.setItem('geomat_companies_v2', JSON.stringify(list));
@@ -2359,11 +2379,13 @@
     checkExitReminder();
     setInterval(checkExitReminder, 30000);
 
-    setInterval(() => {
+    const tickClock = () => {
       const d = new Date();
-      document.getElementById('liveClock').textContent = 
+      document.getElementById('liveClock').textContent =
         `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    }, 1000);
+    };
+    tickClock();
+    setInterval(tickClock, 1000);
   }
 
   function switchSystemMode(mode) {
@@ -3543,7 +3565,7 @@
 
   // ثبت در آرشیو
   function saveToSystemLog(type, text) {
-    let logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    let logs = getLogs();
     const isSupport = type === 'support';
     const { dateStr, dayName } = getPersianDateParts(isSupport ? supportDateObj : currentDateObj);
     const dur = calculateDuration();
@@ -3583,7 +3605,7 @@
 
   // آرشیو و فیلتر هر شرکت
   function renderArchive() {
-    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    const logs = getLogs();
     const comps = getCompanies();
 
     // فیلتر بار
@@ -3642,7 +3664,7 @@
 
   function deleteLogItem(id) {
     playTactileFeedback();
-    let logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    let logs = getLogs();
     logs = logs.filter(l => l.id !== id);
     localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
     renderArchive();
@@ -3652,7 +3674,7 @@
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
   function exportFilteredExcel() {
     playTactileFeedback();
-    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    const logs = getLogs();
     const targetComp = archiveCompanyFilter;
     const filtered = targetComp === 'all' ? logs : logs.filter(l => l.company === targetComp);
 
@@ -3768,7 +3790,7 @@
       reportJY = t.jy;
       reportJM = t.jm;
     }
-    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    const logs = getLogs();
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const limit = Math.round(getSettings().overtimeHours * 60);
