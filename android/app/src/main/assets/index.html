@@ -2498,7 +2498,11 @@
     calculateDuration();
     updatePreview();
     showToast(`ساعت ${hh}:${mm} تنظیم شد`);
-    if (type === 'in' && needsEntryGeo() && !hasFreshGeo()) requestEntryLocation(false);
+    if (type === 'in' && needsEntryGeo()) {
+      geofenceForceNext = true;
+      if (hasFreshGeo()) applyGeofence();
+      else requestEntryLocation(false);
+    }
   }
 
   function toPersianDigits(n) {
@@ -2563,6 +2567,7 @@
         }
         btn.onclick = () => {
           playTactileFeedback();
+          companyPickedManually = true;
           selectedCompany = c;
           renderCompanies();
           updatePreview();
@@ -2808,7 +2813,10 @@
   }
 
   function requestEntryLocation(userAction) {
-    if (userAction) playTactileFeedback();
+    if (userAction) {
+      playTactileFeedback();
+      geofenceForceNext = true;
+    }
     if (!navigator.geolocation) {
       entryGeo = { status: 'error', err: 'این دستگاه از لوکیشن پشتیبانی نمی‌کند' };
       updatePreview();
@@ -3355,9 +3363,16 @@
     return { distance, inside: distance <= site.radius };
   }
 
-  // با هر لوکیشن تازه یک بار نزدیک‌ترین محل داخل شعاع را انتخاب کن (انتخاب دستی بعدی کاربر حفظ می‌شود)
+  // نزدیک‌ترین محل داخل شعاع را انتخاب کن؛ به‌روزرسانی بی‌صدای لوکیشن (هر چند دقیقه)
+  // انتخاب دستی کاربر را عوض نمی‌کند، فقط «⏱ الان» ورود یا دکمه به‌روزرسانی لوکیشن
+  let companyPickedManually = false;
+  let geofenceForceNext = false;
   function applyGeofence() {
+    const force = geofenceForceNext;
+    geofenceForceNext = false;
     if (!needsEntryGeo() || entryGeo.status !== 'ok') return;
+    if (companyPickedManually && !force) return;
+    companyPickedManually = false;
     const sites = getSites();
     const comps = getCompanies();
     let best = null;
