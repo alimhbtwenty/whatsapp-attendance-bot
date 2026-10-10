@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ main ]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -43,7 +44,9 @@ jobs:
           name: geomat-attendance-apk
           path: geomat-attendance.apk
 
+      # فقط main ریلیز می‌سازد؛ PR و اجرای دستی روی برنچ‌ها فقط APK را می‌سازند
       - name: Attach APK to GitHub Release v1.0.9
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

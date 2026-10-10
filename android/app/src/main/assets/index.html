@@ -1733,6 +1733,12 @@
         <span>⏱ اضافه‌کار بعد از (ساعت در روز)</span>
         <input type="text" inputmode="decimal" id="overtimeHoursInput" maxlength="4" onchange="saveSettingField('overtimeHours', this.value)">
       </label>
+      <div style="display:flex; gap:8px;">
+        <button class="dock-copy-btn" style="flex:1; padding:10px; font-size:12px;" onclick="exportBackup()">💾 فایل پشتیبان</button>
+        <button class="dock-copy-btn" style="flex:1; padding:10px; font-size:12px;" onclick="document.getElementById('restoreInput').click()">♻️ بازگردانی</button>
+      </div>
+      <input type="file" id="restoreInput" accept=".json,application/json" style="display:none;" onchange="restoreBackupFromInput(this)">
+      <div style="font-size:11px; color:var(--text-dim); line-height:1.7;">همه اطلاعات (آرشیو، شرکت‌ها، موقعیت‌ها، چت، تنظیمات) فقط روی همین گوشی است؛ قبل از پاک کردن اپ یا عوض کردن گوشی فایل پشتیبان بگیرید.</div>
     </div>
 
     <!-- کارت‌های آمار کل -->
@@ -3473,6 +3479,80 @@
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
     const name = `geomat-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
     if (downloadFile(name, csv, 'text/csv')) showToast(`📥 گزارش ${JALALI_MONTHS[reportJM - 1]} دانلود شد`);
+  }
+
+  // ==================== پشتیبان‌گیری و بازگردانی ====================
+  const APP_VERSION = '1.1.0';
+  const BACKUP_APP_ID = 'geomat-attendance';
+  const BACKUP_MAX_BYTES = 5 * 1024 * 1024;
+
+  function exportBackup() {
+    playTactileFeedback();
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('geomat_')) data[k] = localStorage.getItem(k);
+    }
+    const payload = { app: BACKUP_APP_ID, format: 1, version: APP_VERSION, exportedAt: new Date().toISOString(), data };
+    const t = dateToJalali(new Date());
+    const name = `geomat-backup-${t.jy}-${pad2(t.jm)}-${pad2(t.jd)}.json`;
+    if (downloadFile(name, JSON.stringify(payload), 'application/json')) {
+      showToast(`💾 فایل پشتیبان (${toPersianDigits(Object.keys(data).length)} بخش) آماده شد`);
+    }
+  }
+
+  // خروجی: { data } معتبر یا { error } به فارسی
+  function parseBackup(text) {
+    if (typeof text !== 'string' || text.length > BACKUP_MAX_BYTES) return { error: 'فایل خیلی بزرگ یا نامعتبر است' };
+    let obj;
+    try { obj = JSON.parse(text); } catch(e) { return { error: 'این فایل پشتیبان این برنامه نیست' }; }
+    if (!obj || obj.app !== BACKUP_APP_ID || !obj.data || typeof obj.data !== 'object' || Array.isArray(obj.data)) {
+      return { error: 'این فایل پشتیبان این برنامه نیست' };
+    }
+    const keys = Object.keys(obj.data);
+    if (!keys.length) return { error: 'فایل پشتیبان خالی است' };
+    for (const k of keys) {
+      if (!k.startsWith('geomat_') || typeof obj.data[k] !== 'string') return { error: 'فایل پشتیبان خراب است' };
+    }
+    return { data: obj.data, exportedAt: obj.exportedAt };
+  }
+
+  function restoreBackupFromInput(input) {
+    const file = input.files && input.files[0];
+    input.value = ''; // انتخاب دوباره همان فایل هم رویداد بدهد
+    if (!file) return;
+    if (file.size > BACKUP_MAX_BYTES) {
+      showToast('⚠️ فایل خیلی بزرگ است');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const parsed = parseBackup(String(reader.result || ''));
+      if (parsed.error) {
+        showToast(`⚠️ ${parsed.error}`);
+        return;
+      }
+      const when = parsed.exportedAt && !isNaN(new Date(parsed.exportedAt))
+        ? `${shortDateLabel(new Date(parsed.exportedAt))} ${toPersianDigits(dateToJalali(new Date(parsed.exportedAt)).jy)}`
+        : 'نامشخص';
+      if (!await appConfirm(`اطلاعات فعلی این گوشی با پشتیبانِ ${when} جایگزین شود؟`, 'بازگردانی')) return;
+      try {
+        const old = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && k.startsWith('geomat_')) old.push(k);
+        }
+        old.forEach(k => localStorage.removeItem(k));
+        Object.keys(parsed.data).forEach(k => localStorage.setItem(k, parsed.data[k]));
+      } catch(e) {
+        showToast('⚠️ بازگردانی کامل نشد (حافظه پر است)');
+        return;
+      }
+      showToast('♻️ اطلاعات بازگردانی شد');
+      setTimeout(() => location.reload(), 700);
+    };
+    reader.onerror = () => showToast('⚠️ خواندن فایل ممکن نشد');
+    reader.readAsText(file);
   }
 
   // ذخیره فایل: داخل اپ اندروید از پل جاوا (انتخاب محل ذخیره)، در مرورگر با دانلود معمولی
