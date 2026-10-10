@@ -21,14 +21,13 @@
       --bubble-in: #131518;
       --primary: #F3CB03;
       --primary-hover: #ffd700;
-      --primary-glow: rgba(243, 203, 3, 0.22);
+      --primary-glow: rgba(243, 203, 3, 0.25);
       --whatsapp: #25D366;
       --whatsapp-hover: #20ba59;
       --text-main: #f5f7fa;
       --text-muted: #8d97a5;
       --border: #262b33;
       --danger: #ff4757;
-      --danger-bg: rgba(255, 71, 87, 0.15);
     }
 
     * {
@@ -209,12 +208,6 @@
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
     }
-    .btn-grid.cols-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
-    .btn-grid.cols-4 {
-      grid-template-columns: repeat(4, 1fr);
-    }
 
     .inline-btn {
       background-color: var(--bubble-in);
@@ -245,7 +238,6 @@
       box-shadow: 0 4px 14px var(--primary-glow);
     }
 
-    /* حذف مکان */
     .delete-loc-btn {
       position: absolute;
       top: -5px;
@@ -266,7 +258,7 @@
       display: flex;
     }
 
-    /* روزهای هفته (دکمه‌های نواری گزینه‌ای) */
+    /* روزهای هفته (دکمه‌های نواری) */
     .days-row {
       display: flex;
       gap: 6px;
@@ -300,7 +292,7 @@
       box-shadow: 0 3px 10px var(--primary-glow);
     }
 
-    /* گزینه‌های تاریخ (امروز / دیروز / تغییر روز) */
+    /* گزینه‌های تاریخ */
     .date-control-card {
       background-color: var(--bubble-in);
       border: 1px solid var(--border);
@@ -361,73 +353,63 @@
       align-items: center;
       justify-content: center;
     }
-    .stepper-btn:active {
-      transform: scale(0.92);
-    }
 
-    /* انتخابگر هوشمند ساعت (بدون تایپ، کاملاً تپی) */
-    .time-box-group {
+    /* دو خانه مربعی ۲ تایی عددی با دو نقطه ثابت (درخواست کاربر) */
+    .time-squares-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .time-row-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       background-color: var(--bubble-in);
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 12px 16px;
     }
-    .time-header-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .time-title {
-      font-size: 12.5px;
+    .time-row-label {
+      font-size: 13.5px;
       font-weight: 700;
-      color: var(--text-muted);
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
-    .time-val-display {
-      font-size: 20px;
-      font-weight: 900;
+    .time-boxes-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      direction: ltr; /* ساعت در چپ، دقیقه در راست */
+    }
+    .digit-square-box {
+      width: 58px;
+      height: 58px;
+      background-color: var(--card-bg);
+      border: 2px solid var(--border);
+      border-radius: 13px;
       color: var(--primary);
-      letter-spacing: 1px;
+      font-size: 24px;
+      font-weight: 800;
+      text-align: center;
+      outline: none;
+      caret-color: var(--primary);
+      transition: all 0.2s ease;
       direction: ltr;
     }
-    .time-quick-presets {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .time-preset-chip {
-      padding: 6px 10px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-main);
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .time-adjust-row {
-      display: flex;
-      gap: 8px;
-    }
-    .time-adjust-btn {
-      flex: 1;
-      padding: 7px;
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 11.5px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-    }
-    .time-adjust-btn:active {
-      color: var(--primary);
+    .digit-square-box:focus {
       border-color: var(--primary);
+      box-shadow: 0 0 14px var(--primary-glow);
+      background-color: #1e2229;
+    }
+    .time-fixed-colon {
+      font-size: 26px;
+      font-weight: 900;
+      color: var(--primary);
+      user-select: none;
+      padding: 0 2px;
+      line-height: 1;
     }
 
     /* Preview Message Box */
@@ -487,7 +469,7 @@
       background-color: var(--border);
     }
 
-    /* مودال افزودن محل جدید */
+    /* مودال افزودن شرکت/محل جدید */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -677,17 +659,17 @@
     </button>
   </div>
 
-  <!-- Step 3: انتخاب روز هفته (کاملاً گزینه‌ای - بدون تایپ) -->
+  <!-- Step 3: انتخاب روز هفته (گزینه‌ای) -->
   <div class="chat-bubble">
     <div class="bubble-title">
-      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۳: روز هفته را انتخاب کنید</div>
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۳: روز هفته</div>
     </div>
     <div class="days-row" id="daysRow">
       <!-- Generated via JS: شنبه تا جمعه -->
     </div>
   </div>
 
-  <!-- Step 4: تنظیم تاریخ (کاملاً گزینه‌ای با دکمه‌های سریع) -->
+  <!-- Step 4: تنظیم تاریخ (گزینه‌ای با دکمه‌های سریع) -->
   <div class="chat-bubble">
     <div class="bubble-title">
       <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۴: تاریخ گزارش</div>
@@ -706,59 +688,93 @@
     </div>
   </div>
 
-  <!-- Step 5: تنظیم ساعت هوشمند (تپی، بدون نیاز به کیبورد) -->
+  <!-- Step 5: ساعت - دو خانه ۲ تایی مربعی عددی با دو نقطه ثابت (درخواست دقیق شما) -->
   <div class="chat-bubble">
     <div class="bubble-title">
-      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۵: تنظیم ساعت</div>
-      <button style="background:none; border:none; color:var(--primary); font-size:12px; cursor:pointer;" onclick="setNowTime()">
-        ⏱ ساعت فعلی
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۵: ساعت (ساعت : دقیقه)</div>
+      <button style="background:none; border:none; color:var(--primary); font-size:12px; cursor:pointer;" onclick="setCurrentTimeToInputs()">
+        ⏱ ساعت الان
       </button>
     </div>
 
-    <!-- بخش ساعت ورود -->
-    <div class="time-box-group" id="inTimeBox">
-      <div class="time-header-row">
-        <span class="time-title">🟢 ساعت ورود:</span>
-        <span class="time-val-display" id="inTimeDisplay">09:00</span>
+    <div class="time-squares-card">
+      
+      <!-- ساعت ورود -->
+      <div class="time-row-container" id="inTimeRow">
+        <div class="time-row-label">
+          <span>🟢</span>
+          <span>ساعت ورود:</span>
+        </div>
+        <div class="time-boxes-wrapper">
+          <!-- ساعت (۲ رقم) -->
+          <input type="text" 
+                 id="inHour" 
+                 class="digit-square-box" 
+                 maxlength="2" 
+                 inputmode="numeric" 
+                 pattern="[0-9]*" 
+                 placeholder="09" 
+                 value="09" 
+                 oninput="handleDigitInput(this, 'inMin')" 
+                 onblur="padZeroOnBlur(this)">
+          
+          <!-- دونقطه ثابت غیرقابل تغییر -->
+          <span class="time-fixed-colon">:</span>
+          
+          <!-- دقیقه (۲ رقم) -->
+          <input type="text" 
+                 id="inMin" 
+                 class="digit-square-box" 
+                 maxlength="2" 
+                 inputmode="numeric" 
+                 pattern="[0-9]*" 
+                 placeholder="00" 
+                 value="00" 
+                 oninput="handleDigitInput(this, null)" 
+                 onblur="padZeroOnBlur(this)">
+        </div>
       </div>
-      <div class="time-quick-presets">
-        <button class="time-preset-chip" onclick="setTimeVal('in', '08:30')">08:30</button>
-        <button class="time-preset-chip" onclick="setTimeVal('in', '09:00')">09:00</button>
-        <button class="time-preset-chip" onclick="setTimeVal('in', '09:15')">09:15</button>
-        <button class="time-preset-chip" onclick="setTimeVal('in', '09:30')">09:30</button>
-        <button class="time-preset-chip" onclick="setTimeVal('in', '10:00')">10:00</button>
-      </div>
-      <div class="time-adjust-row">
-        <button class="time-adjust-btn" onclick="adjustMinutes('in', -15)">➖ ۱۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('in', -5)">➖ ۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('in', 5)">➕ ۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('in', 15)">➕ ۱۵ دقیقه</button>
-      </div>
-    </div>
 
-    <!-- بخش ساعت خروج -->
-    <div class="time-box-group" id="outTimeBox">
-      <div class="time-header-row">
-        <span class="time-title">🔴 ساعت خروج:</span>
-        <span class="time-val-display" id="outTimeDisplay">17:00</span>
+      <!-- ساعت خروج -->
+      <div class="time-row-container" id="outTimeRow">
+        <div class="time-row-label">
+          <span>🔴</span>
+          <span>ساعت خروج:</span>
+        </div>
+        <div class="time-boxes-wrapper">
+          <!-- ساعت (۲ رقم) -->
+          <input type="text" 
+                 id="outHour" 
+                 class="digit-square-box" 
+                 maxlength="2" 
+                 inputmode="numeric" 
+                 pattern="[0-9]*" 
+                 placeholder="17" 
+                 value="17" 
+                 oninput="handleDigitInput(this, 'outMin')" 
+                 onblur="padZeroOnBlur(this)">
+          
+          <!-- دونقطه ثابت غیرقابل تغییر -->
+          <span class="time-fixed-colon">:</span>
+          
+          <!-- دقیقه (۲ رقم) -->
+          <input type="text" 
+                 id="outMin" 
+                 class="digit-square-box" 
+                 maxlength="2" 
+                 inputmode="numeric" 
+                 pattern="[0-9]*" 
+                 placeholder="00" 
+                 value="00" 
+                 oninput="handleDigitInput(this, null)" 
+                 onblur="padZeroOnBlur(this)">
+        </div>
       </div>
-      <div class="time-quick-presets">
-        <button class="time-preset-chip" onclick="setTimeVal('out', '13:00')">13:00</button>
-        <button class="time-preset-chip" onclick="setTimeVal('out', '14:30')">14:30</button>
-        <button class="time-preset-chip" onclick="setTimeVal('out', '17:00')">17:00</button>
-        <button class="time-preset-chip" onclick="setTimeVal('out', '18:00')">18:00</button>
-        <button class="time-preset-chip" onclick="setTimeVal('out', '21:00')">21:00</button>
-      </div>
-      <div class="time-adjust-row">
-        <button class="time-adjust-btn" onclick="adjustMinutes('out', -15)">➖ ۱۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('out', -5)">➖ ۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('out', 5)">➕ ۵ دقیقه</button>
-        <button class="time-adjust-btn" onclick="adjustMinutes('out', 15)">➕ ۱۵ دقیقه</button>
-      </div>
+
     </div>
 
     <!-- تنظیمات فرمت پیام -->
-    <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--text-muted);">
+    <div style="display: flex; gap: 14px; margin-top: 2px; font-size: 12px; color: var(--text-muted);">
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
         <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> درج تاریخ و روز
       </label>
@@ -815,14 +831,12 @@
 <div class="toast" id="toast">پیام کپی شد!</div>
 
 <script>
-  // ثبت Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
     });
   }
 
-  // PWA Install Prompt
   let deferredPrompt;
   const installBanner = document.getElementById('installBanner');
   const installAppBtn = document.getElementById('installAppBtn');
@@ -846,10 +860,8 @@
     }
   });
 
-  // روزهای هفته
   const WEEK_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
-  // پروژه‌ها
   const DEFAULT_PROJECTS = [
     "گئومات", "مایسا", "پایش", "راگا", 
     "کرانه", "آرکا", "روانمهر ، کالاتیک"
@@ -859,8 +871,6 @@
   let actionType = "both";
   let selectedDay = "";
   let currentDateObj = new Date();
-  let timeInStr = "09:00";
-  let timeOutStr = "17:00";
   let isEditMode = false;
 
   function getProjects() {
@@ -872,7 +882,6 @@
     localStorage.setItem('geomat_attendance_projects', JSON.stringify(list));
   }
 
-  // تبدیل تاریخ میلادی به تاریخ شمسی
   function getPersianDateParts(date) {
     const formatterDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
       year: 'numeric',
@@ -897,19 +906,14 @@
   }
 
   function init() {
-    // تنظیم زمان پیش‌فرض
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    timeOutStr = `${hh}:${mm}`;
-
     renderDays();
     renderProjects();
     setDateOffset(0);
-    renderTimes();
+    setCurrentTimeToInputs(false);
     renderHistory();
+    updatePreview();
 
-    // ساعت زنده
+    // ساعت زنده هدر
     setInterval(() => {
       const d = new Date();
       document.getElementById('liveClock').textContent = 
@@ -917,7 +921,70 @@
     }, 1000);
   }
 
-  // رندر دکمه‌های گزینه‌ای روزهای هفته
+  // ورودی هوشمند دو خانه مربعی ۲ تایی عددی
+  function handleDigitInput(input, nextInputId) {
+    // فقط عدد بپذیرد
+    input.value = input.value.replace(/[^0-9]/g, '');
+
+    // بررسی محدوده مجاز ساعت و دقیقه
+    if (input.id.includes('Hour')) {
+      if (parseInt(input.value) > 23) input.value = '23';
+    } else if (input.id.includes('Min')) {
+      if (parseInt(input.value) > 59) input.value = '59';
+    }
+
+    // اگر ۲ رقم شد به خانه بعدی پرش کند
+    if (input.value.length >= 2 && nextInputId) {
+      const next = document.getElementById(nextInputId);
+      if (next) {
+        next.focus();
+        next.select();
+      }
+    }
+    updatePreview();
+  }
+
+  function padZeroOnBlur(input) {
+    let val = input.value.trim();
+    if (val.length === 1) {
+      input.value = '0' + val;
+    } else if (val.length === 0) {
+      input.value = '00';
+    }
+    updatePreview();
+  }
+
+  function setCurrentTimeToInputs(showToastMsg = true) {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+
+    if (actionType === 'in') {
+      document.getElementById('inHour').value = hh;
+      document.getElementById('inMin').value = mm;
+    } else if (actionType === 'out') {
+      document.getElementById('outHour').value = hh;
+      document.getElementById('outMin').value = mm;
+    } else {
+      document.getElementById('outHour').value = hh;
+      document.getElementById('outMin').value = mm;
+    }
+    updatePreview();
+    if (showToastMsg) showToast(`ساعت به ${hh}:${mm} تنظیم شد`);
+  }
+
+  function getTimeString(type) {
+    if (type === 'in') {
+      const h = (document.getElementById('inHour').value || '09').padStart(2, '0');
+      const m = (document.getElementById('inMin').value || '00').padStart(2, '0');
+      return `${h}:${m}`;
+    } else {
+      const h = (document.getElementById('outHour').value || '17').padStart(2, '0');
+      const m = (document.getElementById('outMin').value || '00').padStart(2, '0');
+      return `${h}:${m}`;
+    }
+  }
+
   function renderDays() {
     const container = document.getElementById('daysRow');
     container.innerHTML = '';
@@ -937,14 +1004,13 @@
     });
   }
 
-  // رندر پروژه‌ها
   function renderProjects() {
     const container = document.getElementById('projectsGrid');
     container.className = `btn-grid ${isEditMode ? 'edit-mode' : ''}`;
     container.innerHTML = '';
     const projects = getProjects();
 
-    projects.forEach((proj, idx) => {
+    projects.forEach(proj => {
       const btn = document.createElement('button');
       btn.className = `inline-btn ${selectedProject === proj ? 'selected' : ''}`;
       btn.textContent = proj;
@@ -985,7 +1051,6 @@
     showToast(`محل «${name}» حذف شد`);
   }
 
-  // مودال افزودن محل جدید
   function openAddModal() {
     document.getElementById('modalProjectInput').value = '';
     document.getElementById('addModal').classList.add('open');
@@ -1011,7 +1076,6 @@
     closeAddModal();
   }
 
-  // تنظیم تاریخ با دکمه‌های سریع
   function setDateOffset(offset) {
     currentDateObj = new Date();
     currentDateObj.setDate(currentDateObj.getDate() + offset);
@@ -1039,53 +1103,6 @@
     updatePreview();
   }
 
-  // کنترل هوشمند ساعت
-  function renderTimes() {
-    document.getElementById('inTimeDisplay').textContent = timeInStr;
-    document.getElementById('outTimeDisplay').textContent = timeOutStr;
-  }
-
-  function setTimeVal(type, val) {
-    if (type === 'in') timeInStr = val;
-    else timeOutStr = val;
-    renderTimes();
-    updatePreview();
-  }
-
-  function adjustMinutes(type, deltaMins) {
-    let cur = type === 'in' ? timeInStr : timeOutStr;
-    let [h, m] = cur.split(':').map(Number);
-    let total = h * 60 + m + deltaMins;
-    if (total < 0) total += 24 * 60;
-    total = total % (24 * 60);
-
-    let newH = String(Math.floor(total / 60)).padStart(2, '0');
-    let newM = String(total % 60).padStart(2, '0');
-    let finalStr = `${newH}:${newM}`;
-
-    if (type === 'in') timeInStr = finalStr;
-    else timeOutStr = finalStr;
-
-    renderTimes();
-    updatePreview();
-  }
-
-  function setNowTime() {
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-    const now = `${hh}:${mm}`;
-
-    if (actionType === 'in') {
-      timeInStr = now;
-    } else {
-      timeOutStr = now;
-    }
-    renderTimes();
-    updatePreview();
-    showToast(`ساعت به ${now} تغییر یافت`);
-  }
-
   function setActionType(type) {
     actionType = type;
     const buttons = document.querySelectorAll('#actionTypeGrid .inline-btn');
@@ -1093,23 +1110,22 @@
     buttons[1].classList.toggle('selected', type === 'in');
     buttons[2].classList.toggle('selected', type === 'out');
 
-    const inBox = document.getElementById('inTimeBox');
-    const outBox = document.getElementById('outTimeBox');
+    const inRow = document.getElementById('inTimeRow');
+    const outRow = document.getElementById('outTimeRow');
 
     if (type === 'in') {
-      inBox.style.display = 'flex';
-      outBox.style.display = 'none';
+      inRow.style.display = 'flex';
+      outRow.style.display = 'none';
     } else if (type === 'out') {
-      inBox.style.display = 'none';
-      outBox.style.display = 'flex';
+      inRow.style.display = 'none';
+      outRow.style.display = 'flex';
     } else {
-      inBox.style.display = 'flex';
-      outBox.style.display = 'flex';
+      inRow.style.display = 'flex';
+      outRow.style.display = 'flex';
     }
     updatePreview();
   }
 
-  // تولید متن پیام
   function generateMessageText() {
     const { dateStr } = getPersianDateParts(currentDateObj);
     const includeDate = document.getElementById('includeDateCheck').checked;
@@ -1130,13 +1146,16 @@
 
     lines.push(projTag);
 
+    const timeIn = getTimeString('in');
+    const timeOut = getTimeString('out');
+
     if (actionType === 'both') {
-      lines.push(`ورود ${timeInStr}`);
-      lines.push(`خروج ${timeOutStr}`);
+      lines.push(`ورود ${timeIn}`);
+      lines.push(`خروج ${timeOut}`);
     } else if (actionType === 'in') {
-      lines.push(`ورود ${timeInStr}`);
+      lines.push(`ورود ${timeIn}`);
     } else if (actionType === 'out') {
-      lines.push(`خروج ${timeOutStr}`);
+      lines.push(`خروج ${timeOut}`);
     }
 
     return lines.join('\n');
@@ -1192,8 +1211,8 @@
       date: dateStr,
       day: selectedDay,
       project: proj,
-      in: timeInStr,
-      out: timeOutStr,
+      in: getTimeString('in'),
+      out: getTimeString('out'),
       action: actionType,
       text: text
     });
