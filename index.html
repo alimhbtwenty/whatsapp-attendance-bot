@@ -508,9 +508,11 @@
     .duration-badge-value {
       color: var(--gold);
       font-size: 13.5px;
-      font-weight: 900;
-      direction: ltr;
-      letter-spacing: 0.5px;
+      font-weight: 800;
+      direction: rtl;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
     /* Checkbox Toggles */
@@ -753,25 +755,35 @@
       box-shadow: 0 16px 40px rgba(0,0,0,0.9);
     }
 
-    /* Toast */
+    /* Toast Notification (Floating Glass Pill at Top) */
     .cyber-toast {
       position: fixed;
-      bottom: 80px;
+      top: 24px;
       left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: rgba(18, 22, 30, 0.96);
+      transform: translateX(-50%) translateY(-25px) scale(0.92);
+      opacity: 0;
+      visibility: hidden;
+      background: rgba(18, 22, 30, 0.95);
       border: 1px solid var(--gold);
       color: #fff;
       padding: 10px 22px;
       border-radius: 20px;
       font-size: 13px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
-      transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 1200;
+      font-weight: 700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px var(--gold-glow);
+      backdrop-filter: blur(14px);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 2000;
       pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
     }
     .cyber-toast.show {
-      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0) scale(1);
     }
   </style>
 </head>
@@ -1061,7 +1073,7 @@
   </div>
 </div>
 
-<div class="cyber-toast" id="toast">پیام کپی شد!</div>
+<div class="cyber-toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1237,12 +1249,26 @@
     showToast(`ساعت ${hh}:${mm} تنظیم شد`);
   }
 
+  function toPersianDigits(n) {
+    const farsiDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+    return String(n).replace(/[0-9]/g, (w) => farsiDigits[+w]);
+  }
+
   function setCurrentTimeToInputs(notify = true) {
     const d = new Date();
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
-    document.getElementById('outHour').value = hh;
-    document.getElementById('outMin').value = mm;
+    if (d.getHours() < 13) {
+      document.getElementById('inHour').value = hh;
+      document.getElementById('inMin').value = mm;
+      document.getElementById('outHour').value = '17';
+      document.getElementById('outMin').value = '00';
+    } else {
+      document.getElementById('inHour').value = '09';
+      document.getElementById('inMin').value = '00';
+      document.getElementById('outHour').value = hh;
+      document.getElementById('outMin').value = mm;
+    }
     calculateDuration();
     if (notify) showToast(`ساعت ${hh}:${mm} تنظیم شد`);
   }
@@ -1261,7 +1287,7 @@
     const h = Math.floor(diff / 60);
     const m = diff % 60;
 
-    document.getElementById('durationText').textContent = `${h} ساعت و ${m} دقیقه`;
+    document.getElementById('durationText').textContent = `${toPersianDigits(h)} ساعت و ${toPersianDigits(m)} دقیقه`;
     return { h, m, totalMins: diff };
   }
 
@@ -1629,11 +1655,16 @@
     showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
   }
 
+  let toastTimer = null;
   function showToast(msg) {
     const t = document.getElementById('toast');
+    if (!t) return;
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2100);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      t.classList.remove('show');
+    }, 2200);
   }
 
   window.onload = init;
