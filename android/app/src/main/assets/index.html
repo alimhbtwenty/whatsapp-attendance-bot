@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>سامانه ثبت تردد گئومات</title>
+  
+  <!-- PWA Meta Tags & Icons (Geomat Brand) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111417">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="تردد گئومات">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg-color: #111417;
+      --card-bg: #191c21;
+      --bubble-in: #14161a;
+      --primary: #F3CB03;
+      --primary-hover: #ffd700;
+      --primary-glow: rgba(243, 203, 3, 0.25);
+      --whatsapp: #25D366;
+      --whatsapp-hover: #20ba59;
+      --text-main: #f5f7fa;
+      --text-muted: #8d97a5;
+      --border: #282d37;
+      --danger: #ff4757;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Vazirmatn", Tahoma, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+      padding-bottom: 45px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Install Banner */
+    .install-banner {
+      display: none;
+      background: linear-gradient(135deg, #1f2329 0%, #16191d 100%);
+      border: 1px solid var(--primary);
+      border-radius: 16px;
+      padding: 12px 16px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+    .install-banner.show {
+      display: flex;
+    }
+    .install-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .install-logo-mini {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #000;
+      object-fit: contain;
+      padding: 4px;
+      border: 1px solid var(--border);
+    }
+    .install-text {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .install-sub {
+      font-size: 11px;
+      color: var(--primary);
+    }
+    .install-action-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #111417;
+      border: none;
+      padding: 9px 15px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px var(--primary-glow);
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(180deg, #1b1e24 0%, #17191d 100%);
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--primary) 50%, transparent 100%);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand-logo-img {
+      max-width: 140px;
+      height: auto;
+      object-fit: contain;
+    }
+    .live-clock-badge {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      direction: ltr;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .app-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .app-status {
+      font-size: 11px;
+      color: #4fa770;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Cards / Bubbles */
+    .chat-bubble {
+      background-color: var(--card-bg);
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bubble-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .bubble-title span.accent-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: var(--primary);
+    }
+
+    /* Option Grid / Inline Buttons */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .btn-grid.cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .inline-btn {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 12px 8px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+      text-align: center;
+      user-select: none;
+    }
+    .inline-btn:active {
+      transform: scale(0.96);
+    }
+    .inline-btn.selected {
+      background: linear-gradient(135deg, var(--primary) 0%, #e0b800 100%);
+      border-color: var(--primary-hover);
+      color: #111417;
+      font-weight: 800;
+      box-shadow: 0 4px 14px var(--primary-glow);
+    }
+
+    /* Inputs */
+    .time-picker-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .time-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .time-group label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .custom-input {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+      width: 100%;
+      outline: none;
+      direction: ltr;
+      transition: border-color 0.2s;
+    }
+    .custom-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Custom Project Add */
+    .add-project-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .add-project-input {
+      flex: 1;
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      outline: none;
+    }
+    .add-project-input:focus {
+      border-color: var(--primary);
+    }
+
+    /* Preview Message Box */
+    .preview-box {
+      background: linear-gradient(180deg, #15181d 0%, #111317 100%);
+      border-radius: 14px;
+      padding: 16px;
+      border-right: 4px solid var(--primary);
+      border-left: 1px solid rgba(255,255,255,0.04);
+      border-top: 1px solid rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.85;
+      font-weight: 500;
+      color: #e5ebf2;
+      min-height: 85px;
+      user-select: all;
+    }
+
+    /* Action Buttons */
+    .whatsapp-btn {
+      background: linear-gradient(135deg, #25D366 0%, #20ba59 100%);
+      color: #fff;
+      border: none;
+      border-radius: 15px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 4px 18px rgba(37, 211, 102, 0.35);
+      transition: all 0.2s ease;
+    }
+    .whatsapp-btn:active {
+      transform: scale(0.97);
+    }
+
+    .copy-btn {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .copy-btn:active {
+      background-color: var(--border);
+    }
+
+    /* History Log */
+    .history-card {
+      margin-top: 6px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background-color: var(--bubble-in);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.03);
+    }
+    .history-text {
+      color: var(--text-muted);
+    }
+    .history-badge {
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: rgba(25, 28, 33, 0.96);
+      border: 1px solid var(--primary);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 20px;
+      font-size: 14px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.6);
+      transition: transform 0.25s ease;
+      z-index: 999;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- PWA Install Prompt Banner (با لوگوی رسمی گئومات) -->
+  <div class="install-banner" id="installBanner">
+    <div class="install-info">
+      <img src="icon-192.png" alt="Geomat App Icon" class="install-logo-mini">
+      <div>
+        <div class="install-text">نصب اپلیکیشن گئومات روی گوشی</div>
+        <div class="install-sub">دسترسی سریع و آفلاین بدون نوار مرورگر</div>
+      </div>
+    </div>
+    <button class="install-action-btn" id="installAppBtn">نصب اپ</button>
+  </div>
+
+  <!-- Header با لوگوی رسمی شرکت گئومات -->
+  <div class="header">
+    <div class="header-top">
+      <img src="logo-geomatco.png" alt="شرکت فناوران آتیه گئومات" class="brand-logo-img">
+      <div class="live-clock-badge">
+        <span>⏱</span>
+        <span id="liveClock">--:--</span>
+      </div>
+    </div>
+    <div class="header-bottom">
+      <div class="app-title">سامانه ثبت تردد کارگاهی</div>
+      <div class="app-status">● آماده ارسال به واتساپ</div>
+    </div>
+  </div>
+
+  <!-- Step 1: نوع ثبت -->
+  <div class="chat-bubble">
+    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۱: نوع ثبت را انتخاب کنید</div>
+    <div class="btn-grid cols-2" id="actionTypeGrid">
+      <button class="inline-btn selected" onclick="setActionType('both')">
+        🔄 هر دو (ورود و خروج)
+      </button>
+      <button class="inline-btn" onclick="setActionType('in')">
+        🟢 فقط ورود
+      </button>
+      <button class="inline-btn" onclick="setActionType('out')">
+        🔴 فقط خروج
+      </button>
+      <button class="inline-btn" onclick="setNowTime()">
+        ⏱ ساعت الان
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: انتخاب پروژه/مکان -->
+  <div class="chat-bubble">
+    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۲: نام پروژه / ساختمان را انتخاب کنید</div>
+    <div class="btn-grid" id="projectsGrid">
+      <!-- Generated via JS -->
+    </div>
+    <div class="add-project-row">
+      <input type="text" id="newProjectInput" class="add-project-input" placeholder="افزودن نام پروژه جدید...">
+      <button class="inline-btn" style="padding: 10px 16px; background: var(--bubble-in); border-color: var(--primary); color: var(--primary);" onclick="addNewProject()">+ افزودن</button>
+    </div>
+  </div>
+
+  <!-- Step 3: تنظیم زمان و تاریخ -->
+  <div class="chat-bubble">
+    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۳: تاریخ و ساعت</div>
+    <div class="time-picker-row">
+      <div class="time-group">
+        <label>تاریخ شمسی:</label>
+        <input type="text" id="shamsiDateInput" class="custom-input" style="direction: rtl; font-size: 13px;">
+      </div>
+      <div class="time-group">
+        <label>روز هفته:</label>
+        <input type="text" id="shamsiDayInput" class="custom-input" style="direction: rtl; font-size: 13px;">
+      </div>
+    </div>
+
+    <div class="time-picker-row" style="margin-top: 6px;">
+      <div class="time-group" id="inTimeContainer">
+        <label>ساعت ورود:</label>
+        <input type="time" id="timeInInput" class="custom-input" onchange="updatePreview()">
+      </div>
+      <div class="time-group" id="outTimeContainer">
+        <label>ساعت خروج:</label>
+        <input type="time" id="timeOutInput" class="custom-input" onchange="updatePreview()">
+      </div>
+    </div>
+
+    <!-- تنظیمات فرمت پیام -->
+    <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--text-muted);">
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> شامل تاریخ و روز
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> هشتگ پروژه (#)
+      </label>
+    </div>
+  </div>
+
+  <!-- Step 4: پیش‌نمایش پیام -->
+  <div class="chat-bubble">
+    <div class="bubble-title"><span class="accent-dot"></span> پیش‌نمایش پیام جهت ارسال:</div>
+    <div class="preview-box" id="messagePreview">در حال آماده‌سازی پیام...</div>
+    
+    <button class="whatsapp-btn" onclick="sendToWhatsApp()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.031 2C6.496 2 2 6.496 2 12.031c0 1.83.493 3.555 1.353 5.043L2 22l5.068-1.328a9.98 9.98 0 0 0 4.963 1.36h.004c5.534 0 10.03-4.496 10.03-10.031A10.007 10.007 0 0 0 12.031 2zm0 18.36a8.31 8.31 0 0 1-4.238-1.157l-.304-.18-3.148.825.84-3.07-.197-.314A8.32 8.32 0 0 1 3.71 12.03c0-4.587 3.733-8.32 8.324-8.32 2.223 0 4.314.866 5.885 2.438a8.272 8.272 0 0 1 2.437 5.884c0 4.59-3.734 8.328-8.325 8.328zm4.558-6.223c-.25-.125-1.478-.73-1.708-.813-.23-.083-.396-.125-.563.125-.166.25-.646.813-.792.98-.146.166-.292.187-.542.062-.25-.125-1.055-.389-2.01-1.24a7.514 7.514 0 0 1-1.39-1.727c-.146-.25-.015-.385.11-.51.112-.112.25-.292.375-.438.125-.146.166-.25.25-.417.083-.166.042-.312-.02-.437-.063-.125-.563-1.354-.772-1.854-.203-.487-.41-.421-.563-.429-.146-.008-.312-.01-.479-.01-.167 0-.438.063-.667.313-.23.25-.875.854-.875 2.083s.896 2.417 1.021 2.583c.125.167 1.763 2.693 4.272 3.776.597.258 1.064.412 1.428.528.6.19 1.146.163 1.578.099.48-.072 1.478-.604 1.687-1.188.208-.583.208-1.083.146-1.188-.063-.104-.23-.166-.479-.291z"/>
+      </svg>
+      ارسال مستقیم به گروه واتساپ
+    </button>
+    <button class="copy-btn" onclick="copyMessage()">📋 کپی متن پیام</button>
+  </div>
+
+  <!-- تاریخچه پیام‌های ارسالی امروز -->
+  <div class="chat-bubble history-card">
+    <div class="bubble-title" style="justify-content: space-between;">
+      <span>🕒 آخرین ثبت‌های امروز</span>
+      <span style="font-size: 11px; cursor: pointer; color: var(--danger);" onclick="clearHistory()">پاک کردن</span>
+    </div>
+    <div class="history-list" id="historyList">
+      <!-- Dynamic history items -->
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">پیام کپی شد!</div>
+
+<script>
+  // ثبت Service Worker برای قابلیت آفلاین و PWA
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(err => {
+        console.log('SW registration failed: ', err);
+      });
+    });
+  }
+
+  // مدیریت نصب PWA
+  let deferredPrompt;
+  const installBanner = document.getElementById('installBanner');
+  const installAppBtn = document.getElementById('installAppBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBanner.classList.add('show');
+  });
+
+  installAppBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        installBanner.classList.remove('show');
+      }
+      deferredPrompt = null;
+    } else {
+      showToast('برای نصب، گزینه Add to Home Screen مرورگر را بزنید');
+    }
+  });
+
+  // پروژه‌های پیش‌فرض مطابق با گزارش‌های شما (شامل گئومات)
+  const DEFAULT_PROJECTS = [
+    "گئومات", "مایسا", "پایش", "راگا", 
+    "کرانه", "آرکا", "روانمهر ، کالاتیک"
+  ];
+
+  let selectedProject = "گئومات";
+  let actionType = "both";
+
+  function getProjects() {
+    const saved = localStorage.getItem('geomat_attendance_projects');
+    return saved ? JSON.parse(saved) : DEFAULT_PROJECTS;
+  }
+
+  function saveProjects(list) {
+    localStorage.setItem('geomat_attendance_projects', JSON.stringify(list));
+  }
+
+  // محاسبه تاریخ و زمان شمسی
+  function getPersianDateTime(date = new Date()) {
+    const formatterDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const formatterDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+      weekday: 'long'
+    });
+
+    const parts = formatterDate.formatToParts(date);
+    let year = '', month = '', day = '';
+    parts.forEach(p => {
+      if (p.type === 'year') year = p.value;
+      if (p.type === 'month') month = p.value;
+      if (p.type === 'day') day = p.value;
+    });
+
+    const dayName = formatterDay.format(date);
+    const shamsiDateStr = `${year}/${month}/${day}`;
+
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    return { shamsiDateStr, dayName, timeStr };
+  }
+
+  function init() {
+    const nowInfo = getPersianDateTime();
+    document.getElementById('shamsiDateInput').value = nowInfo.shamsiDateStr;
+    document.getElementById('shamsiDayInput').value = nowInfo.dayName;
+    document.getElementById('timeInInput').value = "09:00";
+    document.getElementById('timeOutInput').value = nowInfo.timeStr;
+
+    setInterval(() => {
+      const d = new Date();
+      document.getElementById('liveClock').textContent = 
+        `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    }, 1000);
+
+    renderProjects();
+    renderHistory();
+    updatePreview();
+  }
+
+  function renderProjects() {
+    const container = document.getElementById('projectsGrid');
+    container.innerHTML = '';
+    const projects = getProjects();
+
+    projects.forEach(proj => {
+      const btn = document.createElement('button');
+      btn.className = `inline-btn ${selectedProject === proj ? 'selected' : ''}`;
+      btn.textContent = proj;
+      btn.onclick = () => {
+        selectedProject = proj;
+        renderProjects();
+        updatePreview();
+      };
+      container.appendChild(btn);
+    });
+  }
+
+  function addNewProject() {
+    const input = document.getElementById('newProjectInput');
+    const val = input.value.trim();
+    if (!val) return;
+    const projects = getProjects();
+    if (!projects.includes(val)) {
+      projects.push(val);
+      saveProjects(projects);
+      selectedProject = val;
+      renderProjects();
+      updatePreview();
+      showToast(`پروژه «${val}» اضافه شد`);
+    }
+    input.value = '';
+  }
+
+  function setActionType(type) {
+    actionType = type;
+    const buttons = document.querySelectorAll('#actionTypeGrid .inline-btn');
+    buttons[0].classList.toggle('selected', type === 'both');
+    buttons[1].classList.toggle('selected', type === 'in');
+    buttons[2].classList.toggle('selected', type === 'out');
+
+    const inContainer = document.getElementById('inTimeContainer');
+    const outContainer = document.getElementById('outTimeContainer');
+
+    if (type === 'in') {
+      inContainer.style.display = 'flex';
+      outContainer.style.display = 'none';
+    } else if (type === 'out') {
+      inContainer.style.display = 'none';
+      outContainer.style.display = 'flex';
+    } else {
+      inContainer.style.display = 'flex';
+      outContainer.style.display = 'flex';
+    }
+    updatePreview();
+  }
+
+  function setNowTime() {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const now = `${hh}:${mm}`;
+
+    if (actionType === 'in') {
+      document.getElementById('timeInInput').value = now;
+    } else {
+      document.getElementById('timeOutInput').value = now;
+    }
+    updatePreview();
+    showToast(`ساعت به ${now} تغییر یافت`);
+  }
+
+  function generateMessageText() {
+    const dateStr = document.getElementById('shamsiDateInput').value.trim();
+    const dayStr = document.getElementById('shamsiDayInput').value.trim();
+    const timeIn = document.getElementById('timeInInput').value.trim();
+    const timeOut = document.getElementById('timeOutInput').value.trim();
+    const includeDate = document.getElementById('includeDateCheck').checked;
+    const useHashtag = document.getElementById('hashtagCheck').checked;
+
+    let projTag = selectedProject;
+    if (useHashtag) {
+      const cleanName = selectedProject.replace(/\s+/g, '_');
+      projTag = `#${cleanName}`;
+    }
+
+    let lines = [];
+
+    if (includeDate) {
+      lines.push(dateStr);
+      lines.push(dayStr);
+    }
+
+    lines.push(projTag);
+
+    if (actionType === 'both') {
+      lines.push(`ورود ${timeIn}`);
+      lines.push(`خروج ${timeOut}`);
+    } else if (actionType === 'in') {
+      lines.push(`ورود ${timeIn}`);
+    } else if (actionType === 'out') {
+      lines.push(`خروج ${timeOut}`);
+    }
+
+    return lines.join('\n');
+  }
+
+  function updatePreview() {
+    const previewEl = document.getElementById('messagePreview');
+    previewEl.textContent = generateMessageText();
+  }
+
+  function sendToWhatsApp() {
+    const text = generateMessageText();
+    saveToHistory(text, selectedProject);
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'گزارش تردد گئومات',
+        text: text
+      }).catch(err => {
+        openWhatsAppDirect(text);
+      });
+    } else {
+      openWhatsAppDirect(text);
+    }
+  }
+
+  function openWhatsAppDirect(text) {
+    const encoded = encodeURIComponent(text);
+    const whatsappUrl = `whatsapp://send?text=${encoded}`;
+    const webFallbackUrl = `https://api.whatsapp.com/send?text=${encoded}`;
+
+    window.location.href = whatsappUrl;
+
+    setTimeout(() => {
+      window.open(webFallbackUrl, '_blank');
+    }, 600);
+  }
+
+  function copyMessage() {
+    const text = generateMessageText();
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('متن پیام با موفقیت کپی شد! ✅');
+      saveToHistory(text, selectedProject);
+    }).catch(() => {
+      showToast('خطا در کپی متن');
+    });
+  }
+
+  function saveToHistory(text, proj) {
+    let history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
+    const d = new Date();
+    const time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    history.unshift({
+      time: time,
+      project: proj,
+      preview: text.split('\n').filter(Boolean).slice(-2).join(' | ')
+    });
+    if (history.length > 20) history.pop();
+    localStorage.setItem('geomat_attendance_history', JSON.stringify(history));
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
+    if (history.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center;">هنوز ثبتی انجام نشده است.</div>';
+      return;
+    }
+    list.innerHTML = history.map(item => `
+      <div class="history-item">
+        <span class="history-badge">${item.project}</span>
+        <span class="history-text">${item.preview}</span>
+        <span style="font-size:11px; color:var(--text-muted);">${item.time}</span>
+      </div>
+    `).join('');
+  }
+
+  function clearHistory() {
+    localStorage.removeItem('geomat_attendance_history');
+    renderHistory();
+    showToast('تاریخچه پاک شد');
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  window.onload = init;
+</script>
+</body>
+</html>
