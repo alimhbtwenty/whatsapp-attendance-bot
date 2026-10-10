@@ -1,0 +1,26 @@
+{
+  "name": "ثبت تردد و حضور و غیاب",
+  "short_name": "ثبت تردد",
+  "description": "اپلیکیشن ثبت سریع تردد و ارسال به واتساپ با تم تلگرام",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0e1621",
+  "theme_color": "#17212b",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
