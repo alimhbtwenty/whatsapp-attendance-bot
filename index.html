@@ -3212,6 +3212,7 @@
   }
 
   function commitReport(type, text) {
+    lastCommit = { sig: reportSignature(type), text, ts: Date.now() };
     saveToSystemLog(type, text);
     if (type === 'attendance') updateOpenEntryAfterCommit();
     else resetChecklistTicks(selectedCompany);
@@ -3489,24 +3490,56 @@
   }
 
   // ارسال نهایی به واتساپ
-  async function executeSendWhatsApp() {
-    playTactileFeedback();
-    const isAtt = systemMode === 'attendance';
-    if (!isAtt) {
-      const actions = document.getElementById('supportActionsText')?.value.trim();
+  // یک گزارش که یک بار کپی و بعد ارسال می‌شود (یا دو بار پشت‌سرهم) یک گزارش است:
+  // متن همان می‌ماند و دوباره ثبت نمی‌شود. امضا از ورودی‌های فرم ساخته می‌شود، نه از متن،
+  // چون بعد از ثبت، ورود باز بسته و تیک‌های چک‌لیست پاک می‌شوند و متن عوض می‌شود
+  const REPEAT_WINDOW_MS = 10 * 60 * 1000;
+  let lastCommit = null;
+
+  function reportSignature(type) {
+    if (type === 'attendance') {
+      return [type, selectedCompany, toISODate(currentDateObj), selectedDay, attendanceAction, timeInputValue('in'), timeInputValue('out'),
+        ...['includeDateCheck', 'hashtagCheck', 'includeDurationCheck', 'includeUserCheck', 'includeGeoCheck'].map(id => document.getElementById(id).checked)].join('|');
+    }
+    return [type, selectedCompany, toISODate(supportDateObj),
+      ...['supportActionsText', 'supportPendingText', 'supportTechInfo'].map(id => document.getElementById(id).value.trim())].join('|');
+  }
+
+  function repeatedReport(type) {
+    const sig = reportSignature(type);
+    return lastCommit && lastCommit.sig === sig && Date.now() - lastCommit.ts < REPEAT_WINDOW_MS ? lastCommit : null;
+  }
+
+  // متن گزارش فعلی؛ null یعنی گزارش ناقص است (پیام خطا نشان داده شده)
+  async function prepareReport(type) {
+    const repeat = repeatedReport(type);
+    if (repeat) return { text: repeat.text, repeat: true };
+    if (type === 'support') {
+      const actions = document.getElementById('supportActionsText').value.trim();
       if (!actions && !checklistState(selectedCompany).some(c => c.done)) {
         showToast('⚠️ لطفاً شرح اقدامات را بنویسید یا چک‌لیست را تیک بزنید');
-        document.getElementById('supportActionsText')?.focus();
-        return;
+        document.getElementById('supportActionsText').focus();
+        return null;
       }
+      return { text: generateSupportText(), repeat: false };
     }
-    if (isAtt) await ensureEntryGeoBeforeSend();
-    const text = isAtt ? generateAttendanceText() : generateSupportText();
-    commitReport(isAtt ? 'attendance' : 'support', text);
+    await ensureEntryGeoBeforeSend();
+    return { text: generateAttendanceText(), repeat: false };
+  }
+
+  // ارسال نهایی به واتساپ
+  async function executeSendWhatsApp() {
+    playTactileFeedback();
+    const type = systemMode === 'attendance' ? 'attendance' : 'support';
+    const report = await prepareReport(type);
+    if (!report) return;
+    const text = report.text;
+    if (!report.repeat) commitReport(type, text);
 
     // بدون اینترنت: گزارش در آرشیو ثبت شد و برای ارسال بعدی در صف می‌ماند
     if (!navigator.onLine) {
-      queueOutbox(isAtt ? 'attendance' : 'support', text);
+      if (!getOutbox().some(x => x.text === text)) queueOutbox(type, text);
+      else showToast('📴 این گزارش از قبل در صف ارسال است');
       return;
     }
 
@@ -3530,40 +3563,40 @@
 
   async function executeCopyText() {
     playTactileFeedback();
-    if (systemMode === 'attendance') await ensureEntryGeoBeforeSend();
-    const text = systemMode === 'attendance' ? generateAttendanceText() : generateSupportText();
-    
-    const fallbackCopy = (str) => {
+    const type = systemMode === 'attendance' ? 'attendance' : 'support';
+    const report = await prepareReport(type);
+    if (!report) return;
+    const text = report.text;
+    const copied = () => {
+      showToast('پیام کپی شد! ✅');
+      if (!report.repeat) commitReport(type, text);
+    };
+    const fallback = () => {
       try {
         const ta = document.createElement('textarea');
-        ta.value = str;
+        ta.value = text;
         ta.style.position = 'fixed';
         ta.style.opacity = '0';
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        document.execCommand('copy');
+        const ok = document.execCommand('copy');
         document.body.removeChild(ta);
-        showToast('پیام کپی شد! ✅');
-        commitReport(systemMode === 'attendance' ? 'attendance' : 'support', str);
+        if (ok) copied();
+        else showToast('خطا در کپی متن');
       } catch (err) {
         showToast('خطا در کپی متن');
       }
     };
-
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast('پیام کپی شد! ✅');
-        commitReport(systemMode === 'attendance' ? 'attendance' : 'support', text);
-      }).catch(() => {
-        fallbackCopy(text);
-      });
+      navigator.clipboard.writeText(text).then(copied).catch(fallback);
     } else {
-      fallbackCopy(text);
+      fallback();
     }
   }
 
-  // ثبت در آرشیو
+  // ثبت در آرشیو (هر رکورد حدود نیم کیلوبایت؛ ۵۰۰۰ رکورد چند سال کار و زیر سقف حافظه مرورگر است)
+  const LOGS_MAX = 5000;
   function saveToSystemLog(type, text) {
     let logs = getLogs();
     const isSupport = type === 'support';
@@ -3599,8 +3632,18 @@
       tech: document.getElementById('supportTechInfo')?.value || '',
       checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
     });
-    if (logs.length > 150) logs.pop();
-    localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+    // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
+    if (logs.length > LOGS_MAX) logs.length = LOGS_MAX;
+    for (;;) {
+      try {
+        localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+        break;
+      } catch(e) {
+        if (logs.length <= 50) { showToast('⚠️ حافظه پر است؛ رکورد ذخیره نشد'); break; }
+        logs.length = Math.floor(logs.length * 0.9);
+        showToast('⚠️ حافظه پر است؛ قدیمی‌ترین رکوردها حذف شدند (فایل پشتیبان بگیرید)');
+      }
+    }
   }
 
   // آرشیو و فیلتر هر شرکت
