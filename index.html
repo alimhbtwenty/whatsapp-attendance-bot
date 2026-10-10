@@ -56,7 +56,7 @@
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 12px 12px 90px;
+      padding: 12px 12px 115px;
       overflow-x: hidden;
       position: relative;
     }
@@ -866,10 +866,10 @@
           <button class="date-q-btn" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
           <button class="date-q-btn" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
         </div>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <button class="date-q-btn" onclick="changeDateByDays(-1)">➖</button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">◀ روز قبل</button>
           <span class="date-display-tag" id="dateDisplay">--/--/----</span>
-          <button class="date-q-btn" onclick="changeDateByDays(1)">➕</button>
+          <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">روز بعد ▶</button>
         </div>
       </div>
     </div>
@@ -892,7 +892,7 @@
           <div class="digital-digits-wrapper">
             <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" oninput="handleDigitInput(this, 'inMin')" onblur="padZeroOnBlur(this)">
             <span class="digital-colon">:</span>
-            <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
+            <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onkeydown="handleDigitKeydown(event, 'inHour')" onblur="padZeroOnBlur(this)">
           </div>
         </div>
 
@@ -906,7 +906,7 @@
           <div class="digital-digits-wrapper">
             <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" oninput="handleDigitInput(this, 'outMin')" onblur="padZeroOnBlur(this)">
             <span class="digital-colon">:</span>
-            <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
+            <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onkeydown="handleDigitKeydown(event, 'outHour')" onblur="padZeroOnBlur(this)">
           </div>
         </div>
 
@@ -1050,7 +1050,7 @@
 </div>
 
 <!-- Glass Modal: افزودن شرکت -->
-<div class="glass-modal-bg" id="addModal">
+<div class="glass-modal-bg" id="addModal" onclick="if(event.target === this) closeAddModal()">
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن شرکت یا محل جدید</div>
     <input type="text" id="modalProjectInput" class="cyber-input" placeholder="مثال: شرکت صدف، برایند، ونک...">
@@ -1062,7 +1062,7 @@
 </div>
 
 <!-- Glass Modal: نام پرسنل -->
-<div class="glass-modal-bg" id="userModal">
+<div class="glass-modal-bg" id="userModal" onclick="if(event.target === this) closeUserModal()">
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:#fff;">👤 نام شما (ثبت‌کننده)</div>
     <input type="text" id="userNameInput" class="cyber-input" placeholder="مثلاً: علی محبی">
@@ -1082,22 +1082,28 @@
     });
   }
 
-  // صداسازی مکانیکی ظریف (Micro-interaction Click Sound)
+  // صداسازی مکانیکی ظریف بدون مصرف حافظه مکرر (Singleton AudioContext)
+  let sharedAudioCtx = null;
   function playTactileFeedback() {
-    if (navigator.vibrate) navigator.vibrate(10);
+    if (navigator.vibrate) { try { navigator.vibrate(10); } catch(e){} }
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (sharedAudioCtx.state === 'suspended') {
+        sharedAudioCtx.resume();
+      }
+      const osc = sharedAudioCtx.createOscillator();
+      const gain = sharedAudioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(900, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.03);
-      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+      osc.frequency.setValueAtTime(850, sharedAudioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, sharedAudioCtx.currentTime + 0.035);
+      gain.gain.setValueAtTime(0.04, sharedAudioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, sharedAudioCtx.currentTime + 0.035);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(sharedAudioCtx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.03);
+      osc.stop(sharedAudioCtx.currentTime + 0.035);
     } catch(e) {}
   }
 
@@ -1209,10 +1215,14 @@
     }
   }
 
-  // دیجیت پد هوشمند
+  // دیجیت پد هوشمند با پشتیبانی کامل از کیبورد فارسی و انگلیسی
   function handleDigitInput(input, nextId) {
     playTactileFeedback();
-    input.value = input.value.replace(/[^0-9]/g, '');
+    input.value = input.value
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/[^0-9]/g, '');
+
     if (input.id.includes('Hour') && parseInt(input.value) > 23) input.value = '23';
     if (input.id.includes('Min') && parseInt(input.value) > 59) input.value = '59';
 
@@ -1222,6 +1232,16 @@
     }
     calculateDuration();
     updatePreview();
+  }
+
+  function handleDigitKeydown(event, prevId) {
+    if (event.key === 'Backspace' && event.target.value.length === 0 && prevId) {
+      const prev = document.getElementById(prevId);
+      if (prev) {
+        prev.focus();
+        prev.select();
+      }
+    }
   }
 
   function padZeroOnBlur(input) {
@@ -1334,6 +1354,7 @@
   }
 
   function deleteCompany(name) {
+    if (!confirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
     let list = getCompanies().filter(c => c !== name);
     saveCompanies(list);
     if (selectedCompany === name) selectedCompany = list[0] || "گئومات";
@@ -1364,6 +1385,8 @@
       updatePreview();
       updateSupportPreview();
       showToast(`«${val}» اضافه شد`);
+    } else {
+      showToast(`«${val}» در لیست موجود است`);
     }
     closeAddModal();
   }
@@ -1393,18 +1416,12 @@
     playTactileFeedback();
     currentDateObj = new Date();
     currentDateObj.setDate(currentDateObj.getDate() + offset);
-    document.getElementById('chipToday').classList.toggle('selected', offset === 0);
-    document.getElementById('chipYesterday').classList.toggle('selected', offset === -1);
-    document.getElementById('chipDayBefore').classList.toggle('selected', offset === -2);
     updateDateDisplay();
   }
 
   function changeDateByDays(delta) {
     playTactileFeedback();
     currentDateObj.setDate(currentDateObj.getDate() + delta);
-    document.getElementById('chipToday').classList.remove('selected');
-    document.getElementById('chipYesterday').classList.remove('selected');
-    document.getElementById('chipDayBefore').classList.remove('selected');
     updateDateDisplay();
   }
 
@@ -1412,6 +1429,18 @@
     const { dateStr, dayName } = getPersianDateParts(currentDateObj);
     document.getElementById('dateDisplay').textContent = dateStr;
     selectedDay = dayName;
+
+    // همگام‌سازی خودکار دکمه‌های امروز / دیروز / پریروز
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const target = new Date(currentDateObj);
+    target.setHours(0,0,0,0);
+    const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+
+    document.getElementById('chipToday').classList.toggle('selected', diffDays === 0);
+    document.getElementById('chipYesterday').classList.toggle('selected', diffDays === -1);
+    document.getElementById('chipDayBefore').classList.toggle('selected', diffDays === -2);
+
     renderDays();
     updatePreview();
     updateSupportPreview();
@@ -1529,19 +1558,47 @@
 
   function openWhatsAppDirect(text) {
     const encoded = encodeURIComponent(text);
+    const start = Date.now();
     window.location.href = `whatsapp://send?text=${encoded}`;
     setTimeout(() => {
+      // اگر برنامه واتساپ باز شده باشد، تب اضافی وب باز نمی‌شود
+      if (document.hidden || (Date.now() - start > 1200)) return;
       window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
-    }, 600);
+    }, 800);
   }
 
   function executeCopyText() {
     playTactileFeedback();
     const text = systemMode === 'attendance' ? generateAttendanceText() : generateSupportText();
-    navigator.clipboard.writeText(text).then(() => {
-      showToast('پیام کپی شد! ✅');
-      saveToSystemLog(systemMode === 'attendance' ? 'attendance' : 'support', text);
-    });
+    
+    const fallbackCopy = (str) => {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = str;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('پیام کپی شد! ✅');
+        saveToSystemLog(systemMode === 'attendance' ? 'attendance' : 'support', str);
+      } catch (err) {
+        showToast('خطا در کپی متن');
+      }
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('پیام کپی شد! ✅');
+        saveToSystemLog(systemMode === 'attendance' ? 'attendance' : 'support', text);
+      }).catch(() => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
   }
 
   // ثبت در آرشیو
@@ -1607,9 +1664,9 @@
       return;
     }
 
-    stream.innerHTML = filtered.slice(0, 20).map(item => `
+    stream.innerHTML = filtered.slice(0, 30).map(item => `
       <div class="record-card-item">
-        <div>
+        <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-weight:800; color:var(--gold); font-size:13px;">${item.company}</span>
             <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
@@ -1618,9 +1675,21 @@
             ${item.type === 'attendance' ? 'مدت: ' + item.durationText : (item.actions ? item.actions.slice(0, 30) + '...' : 'گزارش ساپورت')}
           </div>
         </div>
-        <div style="font-size:11px; color:var(--text-dim); text-align:left;">${item.date}</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="font-size:11px; color:var(--text-dim); text-align:left;">${item.date}</div>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" onclick="deleteLogItem(${item.id})" title="حذف رکورد">🗑</button>
+        </div>
       </div>
     `).join('');
+  }
+
+  function deleteLogItem(id) {
+    playTactileFeedback();
+    let logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    logs = logs.filter(l => l.id !== id);
+    localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+    renderArchive();
+    showToast('رکورد حذف شد');
   }
 
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
