@@ -1897,8 +1897,7 @@
   }
   function renderCalendar() {
     const { jy, jm, selected } = calState;
-    // سال لازم نیست؛ فقط ماه نمایش داده می‌شود (عبور از اسفند/فروردین همچنان سال را درست جابه‌جا می‌کند)
-    document.getElementById('jcalTitle').textContent = JALALI_MONTHS[jm - 1];
+    document.getElementById('jcalTitle').textContent = `${JALALI_MONTHS[jm - 1]} ${toPersianDigits(jy)}`;
     const today = dateToJalali(new Date());
     // ستون اول شنبه است: getDay() شنبه=۶ ← ستون ۰
     const lead = (jalaliToDate(jy, jm, 1).getDay() + 1) % 7;
@@ -1913,6 +1912,12 @@
       html += `<button class="${cls.join(' ')}" onclick="pickCalendarDate(${jy}, ${jm}, ${d})">${toPersianDigits(d)}</button>`;
     }
     document.getElementById('jcalGrid').innerHTML = html;
+  }
+
+  // تاریخ نمایشی داخل تب‌ها فقط روز و ماه است (مثلاً «۱۸ مهر»)؛ پیام و آرشیو همچنان سال را دارند
+  function shortDateLabel(date) {
+    const j = dateToJalali(date);
+    return `${toPersianDigits(j.jd)} ${JALALI_MONTHS[j.jm - 1]}`;
   }
 
   function openAttendanceCalendar() {
@@ -1945,8 +1950,8 @@
     return Math.round((target - today) / (1000 * 60 * 60 * 24));
   }
   function updateSupportDateDisplay() {
-    const { dateStr, dayName } = getPersianDateParts(supportDateObj);
-    document.getElementById('supportDateDisplay').textContent = dateStr;
+    const { dayName } = getPersianDateParts(supportDateObj);
+    document.getElementById('supportDateDisplay').textContent = shortDateLabel(supportDateObj);
     document.getElementById('supportDayName').textContent = dayName;
     const diffDays = dayOffsetFromToday(supportDateObj);
     document.getElementById('supChipToday').classList.toggle('selected', diffDays === 0);
@@ -2244,8 +2249,8 @@
   }
 
   function updateDateDisplay() {
-    const { dateStr, dayName } = getPersianDateParts(currentDateObj);
-    document.getElementById('dateDisplay').textContent = dateStr;
+    const { dayName } = getPersianDateParts(currentDateObj);
+    document.getElementById('dateDisplay').textContent = shortDateLabel(currentDateObj);
     selectedDay = dayName;
 
     // همگام‌سازی خودکار دکمه‌های امروز / دیروز / پریروز
