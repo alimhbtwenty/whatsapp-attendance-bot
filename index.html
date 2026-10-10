@@ -1388,28 +1388,68 @@
   <!-- ==================== تب ۳: آرشیو هوشمند و فیلتر هر شرکت ==================== -->
   <div class="tab-section" id="secArchive">
 
-    <!-- کارت‌های آمار کل -->
-    <div class="stats-hud-grid">
+    <!-- کارت‌های آمار کل و کوتای حافظه -->
+    <div class="stats-hud-grid" style="grid-template-columns: repeat(3, 1fr);">
       <div class="hud-stat-box">
         <span class="stat-caption">مجموع ساعت کارکرد:</span>
         <span class="stat-number" id="archiveTotalHours">0 ساعت</span>
       </div>
       <div class="hud-stat-box">
-        <span class="stat-caption">تعداد رکوردهای ثبت‌شده:</span>
+        <span class="stat-caption">تعداد گزارش‌ها:</span>
         <span class="stat-number" id="archiveTotalCount">0 مورد</span>
+      </div>
+      <div class="hud-stat-box">
+        <span class="stat-caption">وضعیت حافظه محلی:</span>
+        <span class="stat-number" id="archiveStorageQuota" style="font-size:12px; color:var(--blue);">محاسبه...</span>
       </div>
     </div>
 
-    <!-- فیلتر اختصاصی بر اساس هر شرکت -->
+    <!-- تحلیل آماری کارکرد پروژه‌ها -->
     <div class="frost-card">
       <div class="card-header-bar">
-        <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
-        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" onclick="exportFilteredExcel()">
-          📥 دانلود اکسل
+        <div class="title-tag"><span class="gold-marker"></span> تحلیل سهم و ساعات کارکرد پروژه‌ها</div>
+      </div>
+      <div id="archiveCompanyBreakdown" style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+        <!-- نوارهای آماری هر پروژه به صورت داینامیک -->
+      </div>
+    </div>
+
+    <!-- پشتیبان‌گیری و بازیابی داده‌ها (Backup / Restore) -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> مدیریت داده‌ها و پشتیبان‌گیری (JSON)</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;">
+        <button type="button" style="flex:1; min-width:130px; background:rgba(243,203,3,0.15); border:1px solid var(--gold-border); color:var(--gold); padding:8px 10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer;" onclick="exportFullJsonBackup()">
+          💾 خروجی پشتیبان (JSON)
+        </button>
+        <label style="flex:1; min-width:130px; background:rgba(56,189,248,0.15); border:1px solid rgba(56,189,248,0.3); color:var(--blue); padding:8px 10px; border-radius:10px; font-size:12px; font-weight:700; text-align:center; cursor:pointer;">
+          🔄 بازیابی پشتیبان (Import)
+          <input type="file" id="jsonImportInput" accept=".json" style="display:none;" onchange="handleJsonImport(event)">
+        </label>
+        <button type="button" style="flex:1; min-width:110px; background:rgba(244,63,94,0.12); border:1px solid rgba(244,63,94,0.3); color:var(--danger); padding:8px 10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer;" onclick="confirmClearAllLogs()">
+          🗑 حذف کل تاریخچه
+        </button>
+      </div>
+    </div>
+
+    <!-- فیلتر اختصاصی بر اساس هر شرکت و بازه زمانی -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> فیلتر، جستجو و خروجی اکسل</div>
+        <button style="background:var(--gold); border:none; color:#000; padding:5px 12px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" onclick="exportFilteredExcel()">
+          📥 دانلود اکسل (CSV)
         </button>
       </div>
 
-      <div class="filter-pills-row" id="archiveCompanyFilters">
+      <!-- نوار فیلتر و جستجوی متنی و تاریخی -->
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
+        <input type="text" id="archiveSearchInput" placeholder="🔍 جستجو در متن لاگ..." style="flex:2; min-width:140px; background:rgba(0,0,0,0.35); border:1px solid var(--border-subtle); border-radius:8px; padding:7px 10px; color:#fff; font-size:12px;" oninput="renderArchive()">
+        <input type="text" id="archiveDateFrom" placeholder="از تاریخ (مثلاً 1405/01/01)" style="flex:1; min-width:120px; background:rgba(0,0,0,0.35); border:1px solid var(--border-subtle); border-radius:8px; padding:7px 10px; color:#fff; font-size:12px;" oninput="renderArchive()">
+        <input type="text" id="archiveDateTo" placeholder="تا تاریخ (مثلاً 1405/01/30)" style="flex:1; min-width:120px; background:rgba(0,0,0,0.35); border:1px solid var(--border-subtle); border-radius:8px; padding:7px 10px; color:#fff; font-size:12px;" oninput="renderArchive()">
+      </div>
+
+      <div class="filter-pills-row" id="archiveCompanyFilters" style="margin-top:8px;">
         <!-- چیپ‌های فیلتر: همه، صدف، مایسا و... -->
       </div>
 
@@ -2119,51 +2159,151 @@
       pending: document.getElementById('supportPendingText')?.value || '',
       tech: document.getElementById('supportTechInfo')?.value || ''
     });
-    if (logs.length > 150) logs.pop();
+    if (logs.length > 1000) logs.pop();
     localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
   }
 
-  // آرشیو و فیلتر هر شرکت
-  function renderArchive() {
+  // ضدعفونی‌سازی ورودی‌ها برای حفظ امنیت و حریم خصوصی
+  function sanitizeText(str) {
+    return String(str || '').replace(/[<>]/g, '').trim();
+  }
+
+  // دریافت لاگ‌های فیلترشده بر اساس شرکت، جستجو و بازه زمانی
+  function getFilteredLogs() {
     const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
-    const comps = getCompanies();
+    const targetComp = archiveCompanyFilter;
+    const searchVal = (document.getElementById('archiveSearchInput')?.value || '').trim().toLowerCase();
+    const dateFrom = (document.getElementById('archiveDateFrom')?.value || '').trim();
+    const dateTo = (document.getElementById('archiveDateTo')?.value || '').trim();
 
-    // فیلتر بار
-    const filterBar = document.getElementById('archiveCompanyFilters');
-    filterBar.innerHTML = '';
-    
-    const allChip = document.createElement('div');
-    allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
-    allChip.textContent = 'همه شرکت‌ها';
-    allChip.onclick = () => { archiveCompanyFilter = 'all'; renderArchive(); };
-    filterBar.appendChild(allChip);
+    return logs.filter(l => {
+      // فیلتر شرکت
+      if (targetComp !== 'all' && l.company !== targetComp) return false;
+      // فیلتر جستجوی متنی
+      if (searchVal) {
+        const fullContent = `${l.company} ${l.actions || ''} ${l.pending || ''} ${l.tech || ''} ${l.text || ''}`.toLowerCase();
+        if (!fullContent.includes(searchVal)) return false;
+      }
+      // فیلتر تاریخ شروع
+      if (dateFrom && l.date < dateFrom) return false;
+      // فیلتر تاریخ پایان
+      if (dateTo && l.date > dateTo) return false;
+      return true;
+    });
+  }
 
-    comps.forEach(c => {
-      const chip = document.createElement('div');
-      chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
-      chip.textContent = c;
-      chip.onclick = () => { archiveCompanyFilter = c; renderArchive(); };
-      filterBar.appendChild(chip);
+  // نمایش وضعیت ظرفیت و سلامت حافظه محلی
+  function updateStorageQuotaDisplay() {
+    const quotaEl = document.getElementById('archiveStorageQuota');
+    if (!quotaEl) return;
+    try {
+      let bytes = 0;
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        bytes += (k.length + (localStorage.getItem(k) || '').length) * 2;
+      }
+      const kb = (bytes / 1024).toFixed(1);
+      if (navigator.storage && navigator.storage.estimate) {
+        navigator.storage.estimate().then(est => {
+          quotaEl.textContent = `${kb} KB (سالم)`;
+        }).catch(() => {
+          quotaEl.textContent = `${kb} KB (سالم)`;
+        });
+      } else {
+        quotaEl.textContent = `${kb} KB (سالم)`;
+      }
+    } catch (e) {
+      quotaEl.textContent = 'سالم';
+    }
+  }
+
+  // رسم نمودار تفکیکی سهم و ساعت پروژه‌ها
+  function renderArchiveCompanyBreakdown(logs) {
+    const box = document.getElementById('archiveCompanyBreakdown');
+    if (!box) return;
+    if (!logs || logs.length === 0) {
+      box.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:10px;">داده‌ای برای تحلیل ساعات کارکرد موجود نیست.</div>';
+      return;
+    }
+    const totals = {};
+    let grandTotalMins = 0;
+    logs.forEach(l => {
+      const c = l.company || 'نامشخص';
+      const mins = Number(l.durationMins) || 0;
+      totals[c] = (totals[c] || 0) + mins;
+      grandTotalMins += mins;
     });
 
-    const filtered = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+    const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    if (grandTotalMins === 0) {
+      box.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:10px;">مجموع کارکرد ساعتی ثبت‌شده صفر است.</div>';
+      return;
+    }
 
-    // آمار
+    box.innerHTML = sorted.map(([comp, mins]) => {
+      const pct = Math.round((mins / grandTotalMins) * 100);
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `
+        <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:10px; padding:7px 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; font-weight:700;">
+            <span style="color:var(--gold);">${comp}</span>
+            <span style="color:var(--text-muted); direction:ltr;">${h}h ${m}m (${pct}%)</span>
+          </div>
+          <div style="width:100%; height:5px; background:rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; margin-top:5px;">
+            <div style="width:${pct}%; height:100%; background:linear-gradient(90deg, var(--gold) 0%, #f59e0b 100%); border-radius:999px;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // آرشیو و فیلتر هر شرکت و بازه زمانی
+  function renderArchive() {
+    const comps = getCompanies();
+
+    // فیلتر بار شرکت‌ها
+    const filterBar = document.getElementById('archiveCompanyFilters');
+    if (filterBar) {
+      filterBar.innerHTML = '';
+      const allChip = document.createElement('div');
+      allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
+      allChip.textContent = 'همه شرکت‌ها';
+      allChip.onclick = () => { archiveCompanyFilter = 'all'; renderArchive(); };
+      filterBar.appendChild(allChip);
+
+      comps.forEach(c => {
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
+        chip.textContent = c;
+        chip.onclick = () => { archiveCompanyFilter = c; renderArchive(); };
+        filterBar.appendChild(chip);
+      });
+    }
+
+    const filtered = getFilteredLogs();
+
+    // آمار کل
     let totalMins = 0;
     filtered.forEach(item => totalMins += (item.durationMins || 0));
     const h = Math.floor(totalMins / 60);
     const m = totalMins % 60;
     document.getElementById('archiveTotalHours').textContent = `${h}h ${m}m`;
     document.getElementById('archiveTotalCount').textContent = `${filtered.length} گزارش`;
+    
+    // به‌روزرسانی کوتا و نمودار تفکیکی
+    updateStorageQuotaDisplay();
+    renderArchiveCompanyBreakdown(filtered);
 
     // لیست لاگ‌ها
     const stream = document.getElementById('archiveStream');
+    if (!stream) return;
     if (filtered.length === 0) {
-      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:18px;">هیچ رکوردی برای این شرکت ثبت نشده است.</div>';
+      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:18px;">هیچ رکوردی متناسب با این فیلترها یافت نشد.</div>';
       return;
     }
 
-    stream.innerHTML = filtered.slice(0, 30).map(item => `
+    stream.innerHTML = filtered.slice(0, 50).map(item => `
       <div class="record-card-item">
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
@@ -2171,7 +2311,7 @@
             <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-            ${item.type === 'attendance' ? 'مدت: ' + item.durationText : (item.actions ? item.actions.slice(0, 30) + '...' : 'گزارش ساپورت')}
+            ${item.type === 'attendance' ? 'مدت: ' + (item.durationText || '-') : (item.actions ? item.actions.slice(0, 45) + '...' : 'گزارش ساپورت')}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
@@ -2191,15 +2331,126 @@
     showToast('رکورد حذف شد');
   }
 
-  // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
+  // پشتیبان‌گیری کامل از تمام داده‌ها به صورت فایل JSON
+  function exportFullJsonBackup() {
+    playTactileFeedback();
+    const backupData = {
+      app: "geomat-attendance-assistant",
+      version: "1.1.0",
+      exportedAt: new Date().toISOString(),
+      userName: getUserName(),
+      companies: getCompanies(),
+      logs: JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]')
+    };
+    const jsonStr = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.download = `geomat_backup_${dateStr}.json`;
+    a.click();
+    showToast('فایل پشتیبان JSON با موفقیت ذخیره شد 💾');
+  }
+
+  // بازیابی داده‌ها از فایل JSON با اعتبارسنجی دقیق داده‌ها
+  function handleJsonImport(event) {
+    playTactileFeedback();
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        let rawLogs = [];
+        if (Array.isArray(parsed)) {
+          rawLogs = parsed;
+        } else if (parsed && Array.isArray(parsed.logs)) {
+          rawLogs = parsed.logs;
+          if (parsed.userName && typeof parsed.userName === 'string') {
+            localStorage.setItem('geomat_user_name', sanitizeText(parsed.userName));
+            const uHeader = document.getElementById('userNameHeader');
+            if (uHeader) uHeader.textContent = sanitizeText(parsed.userName);
+          }
+          if (Array.isArray(parsed.companies)) {
+            const cleanComps = parsed.companies.filter(c => typeof c === 'string').map(sanitizeText);
+            if (cleanComps.length > 0) {
+              localStorage.setItem('geomat_companies_v2', JSON.stringify(cleanComps));
+            }
+          }
+        } else {
+          showToast('فرمت فایل پشتیبان نامعتبر است');
+          return;
+        }
+
+        const cleanLogs = [];
+        rawLogs.forEach((item, idx) => {
+          if (!item || typeof item !== 'object') return;
+          cleanLogs.push({
+            id: Number(item.id) || (Date.now() + idx),
+            type: item.type === 'support' ? 'support' : 'attendance',
+            company: sanitizeText(item.company || 'شرکت پیش‌فرض'),
+            date: sanitizeText(item.date || '1405/01/01'),
+            day: sanitizeText(item.day || 'نامشخص'),
+            durationMins: Math.max(0, Math.min(1440, Number(item.durationMins) || 0)),
+            durationText: sanitizeText(item.durationText || '-'),
+            text: sanitizeText(item.text || ''),
+            actions: sanitizeText(item.actions || ''),
+            pending: sanitizeText(item.pending || ''),
+            tech: sanitizeText(item.tech || '')
+          });
+        });
+
+        if (cleanLogs.length === 0) {
+          showToast('هیچ رکورد معتبری در فایل یافت نشد');
+          return;
+        }
+
+        const shouldMerge = confirm(`تعداد ${cleanLogs.length} رکورد معتبر خوانده شد.\n\nبرای "ادغام" با رکوردهای فعلی روی OK بزنید.`);
+        if (!shouldMerge) return;
+
+        const current = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+        const existingIds = new Set(current.map(c => c.id));
+        let added = 0;
+        cleanLogs.forEach(c => {
+          if (!existingIds.has(c.id)) {
+            current.push(c);
+            existingIds.add(c.id);
+            added++;
+          }
+        });
+        current.sort((a, b) => (b.id || 0) - (a.id || 0));
+        localStorage.setItem('geomat_logs_v2', JSON.stringify(current));
+        renderArchive();
+        renderCompanies();
+        showToast(`پشتیبان با موفقیت بازیابی شد (${added} رکورد جدید) ✓`);
+      } catch (err) {
+        showToast('خطا در بارگذاری فایل: ' + (err.message || 'فایل نامعتبر است'));
+      } finally {
+        event.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // پاکسازی کامل لاگ‌ها با تاییدیه ایمن
+  function confirmClearAllLogs() {
+    playTactileFeedback();
+    if (confirm('⚠️ آیا از پاکسازی کامل تمام گزارش‌های ثبت‌شده اطمینان دارید؟ این عملیات برگشت‌پذیر نیست.')) {
+      localStorage.setItem('geomat_logs_v2', '[]');
+      renderArchive();
+      showToast('تمامی گزارش‌ها پاکسازی شدند');
+    }
+  }
+
+  // دانلود فایل اکسل (CSV) با اعمال تمام فیلترهای فعال (شرکت، جستجو، تاریخ)
   function exportFilteredExcel() {
     playTactileFeedback();
-    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
-    const targetComp = archiveCompanyFilter;
-    const filtered = targetComp === 'all' ? logs : logs.filter(l => l.company === targetComp);
+    const filtered = getFilteredLogs();
 
     if (filtered.length === 0) {
-      showToast('گزارشی برای این شرکت موجود نیست');
+      showToast('هیچ رکوردی متناسب با فیلترهای فعلی برای دانلود موجود نیست');
       return;
     }
 
@@ -2217,10 +2468,11 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
+    const targetComp = archiveCompanyFilter;
     const filename = targetComp === 'all' ? `گزارش_جامع_تردد_گئومات.csv` : `گزارش_اختصاصی_شرکت_${targetComp}.csv`;
     a.download = filename;
     a.click();
-    showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
+    showToast(`فایل اکسل (${filtered.length} رکورد) دانلود شد 📊`);
   }
 
   let toastTimer = null;
