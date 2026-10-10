@@ -1521,32 +1521,6 @@
     .site-panel.show {
       display: flex;
     }
-    .site-panel-actions {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .site-panel-actions button {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text);
-      font-size: 11.5px;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-    .site-panel-actions input {
-      width: 70px;
-      background: rgba(10, 13, 18, 0.7);
-      border: 1px solid var(--border-subtle);
-      color: #fff;
-      border-radius: 9px;
-      padding: 5px 8px;
-      font-size: 12px;
-      text-align: center;
-    }
     .geo-row.warn {
       background: rgba(245, 158, 11, 0.08);
       border-color: rgba(245, 158, 11, 0.35);
@@ -1676,13 +1650,6 @@
       <div class="company-chips-grid" id="attendanceProjectsGrid"></div>
       <div class="site-panel" id="sitePanel">
         <div id="sitePanelText">📍 موقعیت محل</div>
-        <div class="site-panel-actions">
-          <button onclick="captureSiteLocation()">📍 ثبت موقعیت این محل</button>
-          <span>شعاع</span>
-          <input type="text" id="siteRadiusInput" inputmode="numeric" maxlength="4" onchange="setSiteRadius(this.value)">
-          <span>متر</span>
-          <button id="siteRemoveBtn" onclick="removeSite()">🗑 حذف موقعیت</button>
-        </div>
       </div>
       <button class="add-comp-pill" onclick="openAddModal()">➕ افزودن محل جدید</button>
     </div>
@@ -3471,24 +3438,23 @@
     }
   }
 
+  // موقعیت هر محل یک بار ثبت می‌شود و ثابت است؛ اینجا فقط وضعیتش نمایش داده می‌شود
   function renderSitePanel() {
     const panel = document.getElementById('sitePanel');
     if (!panel) return;
     panel.classList.toggle('show', isEditMode);
     if (!isEditMode) return;
+    const text = document.getElementById('sitePanelText');
     if (!selectedCompany) {
-      document.getElementById('sitePanelText').textContent = '📍 اول یک محل اضافه یا انتخاب کنید';
-      document.getElementById('siteRemoveBtn').style.display = 'none';
+      text.textContent = '📍 اول یک محل اضافه یا انتخاب کنید';
       return;
     }
     const site = getSites()[selectedCompany];
-    document.getElementById('sitePanelText').textContent = site
-      ? `📍 موقعیت «${selectedCompany}» ثبت شده (شعاع ${toPersianDigits(site.radius)} متر)`
-      : `📍 موقعیت «${selectedCompany}» ثبت نشده؛ داخل همین محل «ثبت موقعیت» را بزنید`;
-    const radius = document.getElementById('siteRadiusInput');
-    if (document.activeElement !== radius) radius.value = site ? site.radius : SITE_DEFAULT_RADIUS;
-    document.getElementById('siteRemoveBtn').style.display = site ? 'inline-block' : 'none';
+    text.textContent = site
+      ? `📍 موقعیت «${selectedCompany}» ثبت شده و ثابت است (شعاع ${toPersianDigits(site.radius)} متر). برای تغییر، محل را حذف و داخل خودش دوباره اضافه کنید.`
+      : `📍 موقعیت «${selectedCompany}» هنوز ثبت نشده؛ اولین «ورود همین لحظه» داخل همین محل آن را ثبت می‌کند.`;
   }
+
 
   // موقعیت تازه (نه کش‌شده) با پیام خطای فارسی
   function getFreshPosition() {
@@ -3506,34 +3472,17 @@
     });
   }
 
+  // فقط برای محلی که هنوز موقعیت ندارد؛ موقعیت ثبت‌شده عوض نمی‌شود
   function saveSitePosition(name, pos) {
     const sites = getSites();
-    const radiusInput = document.getElementById('siteRadiusInput');
-    const radiusVal = isEditMode ? parseInt(radiusInput.value, 10) : 0;
-    sites[name] = {
-      lat: pos.lat,
-      lng: pos.lng,
-      radius: clampSiteRadius(radiusVal || (sites[name] && sites[name].radius) || SITE_DEFAULT_RADIUS),
-      acc: pos.acc
-    };
+    if (sites[name]) return sites[name];
+    sites[name] = { lat: pos.lat, lng: pos.lng, radius: SITE_DEFAULT_RADIUS, acc: pos.acc };
     saveSites(sites);
     renderCompanies();
     updatePreview();
     return sites[name];
   }
 
-  async function captureSiteLocation() {
-    playTactileFeedback();
-    const name = selectedCompany;
-    if (!name) return;
-    showToast('📍 در حال دریافت موقعیت...');
-    try {
-      const site = saveSitePosition(name, await getFreshPosition());
-      showToast(`📍 موقعیت «${name}» ثبت شد (دقت ±${toPersianDigits(site.acc)} متر)`);
-    } catch(err) {
-      showToast(`⚠️ ${err.message}`);
-    }
-  }
 
   // ورودِ همین لحظه برای محلی که موقعیتش ثبت نشده (مثلاً محل‌های نسخه قبل): اول موقعیتش ثبت شود
   async function ensureSiteForLiveEntry() {
@@ -3556,34 +3505,8 @@
     }
   }
 
-  function clampSiteRadius(v) {
-    v = parseInt(String(v).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)), 10);
-    if (!Number.isFinite(v)) v = SITE_DEFAULT_RADIUS;
-    return Math.min(5000, Math.max(30, v));
-  }
 
-  function setSiteRadius(value) {
-    const sites = getSites();
-    const radius = clampSiteRadius(value);
-    document.getElementById('siteRadiusInput').value = radius;
-    if (!sites[selectedCompany]) return; // هنوز موقعیتی ثبت نشده؛ موقع ثبت از همین مقدار استفاده می‌شود
-    sites[selectedCompany].radius = radius;
-    saveSites(sites);
-    renderSitePanel();
-    updatePreview();
-    showToast(`شعاع «${selectedCompany}» ${toPersianDigits(radius)} متر شد`);
-  }
 
-  async function removeSite() {
-    const name = selectedCompany;
-    if (!await appConfirm(`موقعیت ثبت‌شده «${name}» حذف شود؟`)) return;
-    const sites = getSites();
-    delete sites[name];
-    saveSites(sites);
-    renderCompanies();
-    updatePreview();
-    showToast(`موقعیت «${name}» حذف شد`);
-  }
 
   function initGeo() {
     try { localStorage.removeItem('geomat_geo_enabled'); } catch(e) {}

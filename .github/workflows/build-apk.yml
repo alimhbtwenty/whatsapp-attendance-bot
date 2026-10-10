@@ -44,7 +44,20 @@ jobs:
           name: geomat-attendance-apk
           path: geomat-attendance.apk
 
-      # فقط main ریلیز می‌سازد؛ PR و اجرای دستی روی برنچ‌ها فقط APK را می‌سازند
+      # برنچ‌ها و PRها: APK در پیش‌ریلیز ثابت «preview» گذاشته می‌شود تا قبل از ادغام روی گوشی تست شود
+      # (لینک همیشه یکی است: releases/download/preview/geomat-attendance.apk)
+      - name: Publish preview APK (before merge)
+        if: github.ref != 'refs/heads/main' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          gh release delete preview --cleanup-tag -y || true
+          gh release create preview geomat-attendance.apk --prerelease --target "$TARGET_SHA" \
+            --title "پیش‌نمایش (قبل از ادغام)" \
+            --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود."
+
+      # فقط main ریلیز رسمی می‌سازد
       - name: Attach APK to GitHub Release v1.2.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
