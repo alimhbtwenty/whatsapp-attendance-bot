@@ -1897,7 +1897,8 @@
   }
   function renderCalendar() {
     const { jy, jm, selected } = calState;
-    document.getElementById('jcalTitle').textContent = `${JALALI_MONTHS[jm - 1]} ${toPersianDigits(jy)}`;
+    // سال لازم نیست؛ فقط ماه نمایش داده می‌شود (عبور از اسفند/فروردین همچنان سال را درست جابه‌جا می‌کند)
+    document.getElementById('jcalTitle').textContent = JALALI_MONTHS[jm - 1];
     const today = dateToJalali(new Date());
     // ستون اول شنبه است: getDay() شنبه=۶ ← ستون ۰
     const lead = (jalaliToDate(jy, jm, 1).getDay() + 1) % 7;
