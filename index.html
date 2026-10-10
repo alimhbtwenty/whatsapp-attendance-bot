@@ -1269,6 +1269,60 @@
       font-weight: 800;
     }
 
+    /* موقعیت ثبت‌شده هر محل (ژئوفنس) */
+    .site-badge {
+      position: absolute;
+      top: -5px;
+      right: -4px;
+      font-size: 10px;
+      line-height: 1;
+    }
+    .site-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.05);
+      border: 1px dashed rgba(56, 189, 248, 0.3);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .site-panel.show {
+      display: flex;
+    }
+    .site-panel-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .site-panel-actions button {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .site-panel-actions input {
+      width: 70px;
+      background: rgba(10, 13, 18, 0.7);
+      border: 1px solid var(--border-subtle);
+      color: #fff;
+      border-radius: 9px;
+      padding: 5px 8px;
+      font-size: 12px;
+      text-align: center;
+    }
+    .geo-row.warn {
+      background: rgba(245, 158, 11, 0.08);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fde68a;
+    }
+
     /* لوکیشن ورود */
     .geo-row {
       display: flex;
@@ -1373,6 +1427,16 @@
         </button>
       </div>
       <div class="company-chips-grid" id="attendanceProjectsGrid"></div>
+      <div class="site-panel" id="sitePanel">
+        <div id="sitePanelText">📍 موقعیت محل</div>
+        <div class="site-panel-actions">
+          <button onclick="captureSiteLocation()">📍 ثبت موقعیت این محل</button>
+          <span>شعاع</span>
+          <input type="text" id="siteRadiusInput" inputmode="numeric" maxlength="4" onchange="setSiteRadius(this.value)">
+          <span>متر</span>
+          <button id="siteRemoveBtn" onclick="removeSite()">🗑 حذف موقعیت</button>
+        </div>
+      </div>
       <button class="add-comp-pill" onclick="openAddModal()">➕ افزودن شرکت / محل جدید</button>
     </div>
 
@@ -2166,6 +2230,7 @@
 
   function renderCompanies() {
     const comps = getCompanies();
+    const sites = getSites();
     const renderTo = (containerId) => {
       const el = document.getElementById(containerId);
       if (!el) return;
@@ -2175,6 +2240,12 @@
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
         btn.textContent = c;
+        if (containerId === 'attendanceProjectsGrid' && sites[c]) {
+          const pin = document.createElement('span');
+          pin.className = 'site-badge';
+          pin.textContent = '📍';
+          btn.appendChild(pin);
+        }
         btn.onclick = () => {
           playTactileFeedback();
           selectedCompany = c;
@@ -2197,6 +2268,7 @@
     };
     renderTo('attendanceProjectsGrid');
     renderTo('supportProjectsGrid');
+    renderSitePanel();
   }
 
   function toggleEditLocations() {
@@ -2210,6 +2282,11 @@
     if (!await appConfirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
     let list = getCompanies().filter(c => c !== name);
     saveCompanies(list);
+    const sites = getSites();
+    if (sites[name]) {
+      delete sites[name];
+      saveSites(sites);
+    }
     if (selectedCompany === name) selectedCompany = list[0] || "گئومات";
     renderCompanies();
     updatePreview();
@@ -2421,6 +2498,7 @@
         acc: Math.round(pos.coords.accuracy || 0),
         ts: Date.now()
       };
+      applyGeofence();
       finish(true);
     }, (err) => {
       const msg = err && err.code === 1 ? 'اجازه دسترسی به لوکیشن داده نشد'
@@ -2428,7 +2506,7 @@
         : 'لوکیشن در دسترس نیست (GPS روشن است؟)';
       entryGeo = { status: 'error', err: msg };
       finish(false);
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: userAction ? 0 : 60000 });
     return waiter;
   }
 
@@ -2468,8 +2546,16 @@
       text.textContent = '📍 در حال دریافت لوکیشن...';
       btn.style.display = 'none';
     } else if (entryGeo.status === 'ok') {
-      row.classList.add('ok');
-      text.textContent = `📍 لوکیشن ورود ثبت شد (دقت ±${toPersianDigits(entryGeo.acc)} متر)`;
+      const fence = fenceStatus();
+      if (fence && !fence.inside) {
+        row.classList.add('warn');
+        text.textContent = `⚠️ ${toPersianDigits(fence.distance)} متر بیرون از محدوده «${selectedCompany}»`;
+      } else {
+        row.classList.add('ok');
+        text.textContent = fence
+          ? `📍 داخل محدوده «${selectedCompany}» (دقت ±${toPersianDigits(entryGeo.acc)} متر)`
+          : `📍 لوکیشن ورود ثبت شد (دقت ±${toPersianDigits(entryGeo.acc)} متر)`;
+      }
       btn.textContent = '🔄 به‌روزرسانی';
     } else if (entryGeo.status === 'error') {
       row.classList.add('error');
@@ -2479,6 +2565,129 @@
       text.textContent = '📍 لوکیشن هنگام ارسال ورود گرفته می‌شود';
       btn.textContent = '📍 دریافت';
     }
+  }
+
+  // ==================== ژئوفنس: موقعیت ثبت‌شده هر محل ====================
+  // هر محل یک بار (در حالت «مدیریت») موقعیتش ثبت می‌شود؛ موقع ورودِ همین لحظه نزدیک‌ترین محل
+  // داخل شعاع خودکار انتخاب می‌شود و بیرون از محدوده فقط هشدار داده می‌شود (ارسال آزاد است)
+  const SITES_KEY = 'geomat_sites_v1';
+  const SITE_DEFAULT_RADIUS = 200;
+
+  function getSites() {
+    try {
+      const o = JSON.parse(localStorage.getItem(SITES_KEY) || '{}');
+      return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
+    } catch(e) {
+      return {};
+    }
+  }
+  function saveSites(sites) {
+    try { localStorage.setItem(SITES_KEY, JSON.stringify(sites)); } catch(e) { showToast('ذخیره موقعیت ممکن نشد ⚠️'); }
+  }
+  function distanceMeters(lat1, lng1, lat2, lng2) {
+    const R = 6371000, rad = Math.PI / 180;
+    const dLat = (lat2 - lat1) * rad, dLng = (lng2 - lng1) * rad;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2;
+    return Math.round(2 * R * Math.asin(Math.sqrt(a)));
+  }
+
+  // وضعیت محل انتخاب‌شده نسبت به لوکیشن ورود؛ null یعنی محل موقعیت ثبت‌شده ندارد
+  function fenceStatus() {
+    if (entryGeo.status !== 'ok') return null;
+    const site = getSites()[selectedCompany];
+    if (!site) return null;
+    const distance = distanceMeters(entryGeo.lat, entryGeo.lng, site.lat, site.lng);
+    return { distance, inside: distance <= site.radius };
+  }
+
+  // با هر لوکیشن تازه یک بار نزدیک‌ترین محل داخل شعاع را انتخاب کن (انتخاب دستی بعدی کاربر حفظ می‌شود)
+  function applyGeofence() {
+    if (!needsEntryGeo() || entryGeo.status !== 'ok') return;
+    const sites = getSites();
+    const comps = getCompanies();
+    let best = null;
+    for (const name of comps) {
+      const site = sites[name];
+      if (!site) continue;
+      const d = distanceMeters(entryGeo.lat, entryGeo.lng, site.lat, site.lng);
+      if (d <= site.radius && (!best || d < best.d)) best = { name, d };
+    }
+    if (best && best.name !== selectedCompany) {
+      selectedCompany = best.name;
+      renderCompanies();
+      updateSupportPreview();
+      showToast(`📍 محل «${best.name}» خودکار انتخاب شد`);
+    }
+  }
+
+  function renderSitePanel() {
+    const panel = document.getElementById('sitePanel');
+    if (!panel) return;
+    panel.classList.toggle('show', isEditMode);
+    if (!isEditMode) return;
+    const site = getSites()[selectedCompany];
+    document.getElementById('sitePanelText').textContent = site
+      ? `📍 موقعیت «${selectedCompany}» ثبت شده (شعاع ${toPersianDigits(site.radius)} متر)`
+      : `📍 موقعیت «${selectedCompany}» ثبت نشده؛ داخل همین محل «ثبت موقعیت» را بزنید`;
+    const radius = document.getElementById('siteRadiusInput');
+    if (document.activeElement !== radius) radius.value = site ? site.radius : SITE_DEFAULT_RADIUS;
+    document.getElementById('siteRemoveBtn').style.display = site ? 'inline-block' : 'none';
+  }
+
+  function captureSiteLocation() {
+    playTactileFeedback();
+    if (!navigator.geolocation) {
+      showToast('⚠️ این دستگاه از لوکیشن پشتیبانی نمی‌کند');
+      return;
+    }
+    const name = selectedCompany;
+    showToast('📍 در حال دریافت موقعیت...');
+    navigator.geolocation.getCurrentPosition((pos) => {
+      geoPermissionGranted = true;
+      const sites = getSites();
+      const radiusVal = parseInt(document.getElementById('siteRadiusInput').value, 10);
+      sites[name] = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        radius: clampSiteRadius(radiusVal || (sites[name] && sites[name].radius) || SITE_DEFAULT_RADIUS),
+        acc: Math.round(pos.coords.accuracy || 0)
+      };
+      saveSites(sites);
+      renderCompanies();
+      updatePreview();
+      showToast(`📍 موقعیت «${name}» ثبت شد (دقت ±${toPersianDigits(sites[name].acc)} متر)`);
+    }, (err) => {
+      showToast(err && err.code === 1 ? '⚠️ اجازه دسترسی به لوکیشن داده نشد' : '⚠️ لوکیشن در دسترس نیست (GPS روشن است؟)');
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+  }
+
+  function clampSiteRadius(v) {
+    v = parseInt(String(v).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)), 10);
+    if (!Number.isFinite(v)) v = SITE_DEFAULT_RADIUS;
+    return Math.min(5000, Math.max(30, v));
+  }
+
+  function setSiteRadius(value) {
+    const sites = getSites();
+    const radius = clampSiteRadius(value);
+    document.getElementById('siteRadiusInput').value = radius;
+    if (!sites[selectedCompany]) return; // هنوز موقعیتی ثبت نشده؛ موقع ثبت از همین مقدار استفاده می‌شود
+    sites[selectedCompany].radius = radius;
+    saveSites(sites);
+    renderSitePanel();
+    updatePreview();
+    showToast(`شعاع «${selectedCompany}» ${toPersianDigits(radius)} متر شد`);
+  }
+
+  async function removeSite() {
+    const name = selectedCompany;
+    if (!await appConfirm(`موقعیت ثبت‌شده «${name}» حذف شود؟`)) return;
+    const sites = getSites();
+    delete sites[name];
+    saveSites(sites);
+    renderCompanies();
+    updatePreview();
+    showToast(`موقعیت «${name}» حذف شد`);
   }
 
   function onGeoToggle() {
@@ -3196,7 +3405,7 @@
       if (systemMode === 'messenger') renderChatMessages();
     } else if (e.key === 'geomat_logs_v2') {
       if (systemMode === 'archive') renderArchive();
-    } else if (e.key === 'geomat_companies_v2') {
+    } else if (e.key === 'geomat_companies_v2' || e.key === SITES_KEY) {
       renderCompanies();
     } else if (e.key === 'geomat_user_name') {
       document.getElementById('userNameHeader').textContent = getUserName();
