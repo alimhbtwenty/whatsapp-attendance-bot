@@ -1,8 +1,9 @@
-const CACHE_NAME = 'attendance-bot-v1';
+const CACHE_NAME = 'geomat-attendance-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './logo-geomatco.png',
   './icon-192.png',
   './icon-512.png'
 ];
