@@ -727,6 +727,180 @@
       align-items: center;
     }
 
+    /* ==================== TELEGRAM-STYLE IN-APP MESSENGER ==================== */
+    .tg-messenger-card {
+      background: rgba(14, 18, 25, 0.88);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 540px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+    .tg-header-bar {
+      padding: 12px 14px;
+      background: rgba(19, 25, 35, 0.85);
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .tg-channel-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding: 8px 12px;
+      background: rgba(11, 14, 20, 0.7);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .tg-chan-chip {
+      padding: 5px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .tg-chan-chip.active {
+      background: rgba(56, 189, 248, 0.16);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      font-weight: 800;
+    }
+    .tg-chat-stream {
+      flex: 1;
+      padding: 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      background: radial-gradient(circle at 50% 20%, rgba(20, 27, 40, 0.4) 0%, rgba(8, 11, 16, 0.95) 100%);
+    }
+    .tg-bubble-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 88%;
+      animation: tgBubbleFade 0.18s ease-out;
+    }
+    @keyframes tgBubbleFade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tg-bubble-row.mine {
+      align-self: flex-start;
+    }
+    .tg-bubble-row.other {
+      align-self: flex-end;
+    }
+    .tg-msg-bubble {
+      padding: 10px 14px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.65;
+      color: #f1f5f9;
+      position: relative;
+      word-break: break-word;
+      white-space: pre-wrap;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+    }
+    .tg-bubble-row.mine .tg-msg-bubble {
+      background: linear-gradient(135deg, #1e3a5f 0%, #162942 100%);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-top-right-radius: 3px;
+    }
+    .tg-bubble-row.other .tg-msg-bubble {
+      background: #171e29;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top-left-radius: 3px;
+    }
+    .tg-msg-author {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .tg-bubble-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 10px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      direction: ltr;
+    }
+    .tg-composer {
+      padding: 8px 10px;
+      background: rgba(16, 21, 30, 0.95);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .tg-quick-attach-shelf {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tg-attach-pill {
+      background: rgba(243, 203, 3, 0.08);
+      border: 1px solid rgba(243, 203, 3, 0.25);
+      color: var(--gold);
+      padding: 4px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tg-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .tg-chat-input {
+      flex: 1;
+      background: rgba(10, 13, 18, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 13px;
+      outline: none;
+    }
+    .tg-chat-input:focus {
+      border-color: #38bdf8;
+    }
+    .tg-send-btn {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #fff;
+      border: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+      transition: all 0.16s;
+    }
+    .tg-send-btn:active {
+      transform: scale(0.92);
+    }
+
     /* Modal Glass */
     .glass-modal-bg {
       position: fixed;
@@ -814,16 +988,19 @@
     </div>
   </div>
 
-  <!-- Primary Dynamic Mode Switcher (تردد | ساپورت و گزارش فنی | آرشیو) -->
+  <!-- Primary Dynamic Mode Switcher (تردد | ساپورت و گزارش فنی | آرشیو | چت بتا) -->
   <div class="mode-switcher-dock">
     <button class="mode-tab-btn active" id="tabAttendanceBtn" onclick="switchSystemMode('attendance')">
-      <span>🕒</span> ثبت تردد
+      <span>🕒</span> تردد
     </button>
     <button class="mode-tab-btn" id="tabSupportBtn" onclick="switchSystemMode('support')">
-      <span>🛠</span> گزارش فنی
+      <span>🛠</span> ساپورت
     </button>
     <button class="mode-tab-btn" id="tabArchiveBtn" onclick="switchSystemMode('archive')">
       <span>📊</span> آرشیو
+    </button>
+    <button class="mode-tab-btn" id="tabMessengerBtn" onclick="switchSystemMode('messenger')">
+      <span>💬</span> چت بتا
     </button>
   </div>
 
@@ -890,7 +1067,7 @@
             <button class="time-now-pill" onclick="setSpecificNow('in')">⏱ الان</button>
           </div>
           <div class="digital-digits-wrapper">
-            <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" oninput="handleDigitInput(this, 'inMin')" onblur="padZeroOnBlur(this)">
+            <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" oninput="handleDigitInput(this, 'inMin')" onpaste="handleDigitPaste(event, 'inHour', 'inMin')" onblur="padZeroOnBlur(this)">
             <span class="digital-colon">:</span>
             <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onkeydown="handleDigitKeydown(event, 'inHour')" onblur="padZeroOnBlur(this)">
           </div>
@@ -904,7 +1081,7 @@
             <button class="time-now-pill" onclick="setSpecificNow('out')">⏱ الان</button>
           </div>
           <div class="digital-digits-wrapper">
-            <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" oninput="handleDigitInput(this, 'outMin')" onblur="padZeroOnBlur(this)">
+            <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" oninput="handleDigitInput(this, 'outMin')" onpaste="handleDigitPaste(event, 'outHour', 'outMin')" onblur="padZeroOnBlur(this)">
             <span class="digital-colon">:</span>
             <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onkeydown="handleDigitKeydown(event, 'outHour')" onblur="padZeroOnBlur(this)">
           </div>
@@ -1035,6 +1212,58 @@
 
   </div>
 
+  <!-- ==================== تب ۴: پیام‌رسان ابری تیم گئومات (نسخه بتا) ==================== -->
+  <div class="tab-section" id="secMessenger">
+    <div class="tg-messenger-card">
+      
+      <!-- هدر تلگرامی -->
+      <div class="tg-header-bar">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; box-shadow:0 2px 10px rgba(2,132,199,0.4);">
+            👥
+          </div>
+          <div>
+            <div style="font-size:13px; font-weight:800; color:#fff;">گروه فنی گئومات (بتا)</div>
+            <div style="font-size:10.5px; color:#38bdf8;">آنلاین • همگام با تیم</div>
+          </div>
+        </div>
+        <button style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" onclick="clearChatHistory()">
+          🗑 پاکسازی
+        </button>
+      </div>
+
+      <!-- فیلتر کانال‌های تلگرامی -->
+      <div class="tg-channel-pills">
+        <div class="tg-chan-chip active" id="tgFilterAll" onclick="filterChatRoom('all')">💬 همه پیام‌ها</div>
+        <div class="tg-chan-chip" id="tgFilterAtt" onclick="filterChatRoom('attendance')">🕒 ترددها</div>
+        <div class="tg-chan-chip" id="tgFilterSup" onclick="filterChatRoom('support')">🛠 ساپورت فنی</div>
+        <div class="tg-chan-chip" id="tgFilterGen" onclick="filterChatRoom('general')">📢 عمومی</div>
+      </div>
+
+      <!-- استریم چت پیام‌ها -->
+      <div class="tg-chat-stream" id="tgChatStream">
+        <!-- پیام‌ها به صورت تلگرامی رندر می‌شوند -->
+      </div>
+
+      <!-- اینپوت بار تلگرامی -->
+      <div class="tg-composer">
+        <div class="tg-quick-attach-shelf">
+          <div class="tg-attach-pill" onclick="attachCurrentReportToChat('attendance')">⚡ الصاق تردد جاری</div>
+          <div class="tg-attach-pill" onclick="attachCurrentReportToChat('support')">🛠 الصاق گزارش ساپورت</div>
+        </div>
+        <div class="tg-input-row">
+          <input type="text" id="tgMessageInput" class="tg-chat-input" placeholder="نوشتن پیام تیمی..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+          <button class="tg-send-btn" onclick="sendChatMessage()" title="ارسال پیام">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 
@@ -1154,24 +1383,28 @@
   }
 
   function getPersianDateParts(date) {
-    const formatterDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    });
-    const formatterDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
-      weekday: 'long'
-    });
-    const parts = formatterDate.formatToParts(date);
-    let year = '', month = '', day = '';
-    parts.forEach(p => {
-      if (p.type === 'year') year = p.value;
-      if (p.type === 'month') month = p.value;
-      if (p.type === 'day') day = p.value;
-    });
-    const dayName = formatterDay.format(date);
-    const dateStr = `${year}/${month}/${day}`;
-    return { dateStr, dayName };
+    try {
+      const formatterDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      const formatterDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
+        weekday: 'long'
+      });
+      const parts = formatterDate.formatToParts(date);
+      let year = '', month = '', day = '';
+      parts.forEach(p => {
+        if (p.type === 'year') year = p.value;
+        if (p.type === 'month') month = p.value;
+        if (p.type === 'day') day = p.value;
+      });
+      const dayName = formatterDay.format(date);
+      if (year && month && day) {
+        return { dateStr: `${year}/${month}/${day}`, dayName };
+      }
+    } catch(e) {}
+    return { dateStr: "۱۴۰۵/۰۷/۱۸", dayName: "شنبه" };
   }
 
   function init() {
@@ -1184,6 +1417,7 @@
     updatePreview();
     updateSupportPreview();
     renderArchive();
+    renderChatMessages();
 
     setInterval(() => {
       const d = new Date();
@@ -1198,20 +1432,48 @@
     document.getElementById('tabAttendanceBtn').classList.toggle('active', mode === 'attendance');
     document.getElementById('tabSupportBtn').classList.toggle('active', mode === 'support');
     document.getElementById('tabArchiveBtn').classList.toggle('active', mode === 'archive');
+    document.getElementById('tabMessengerBtn').classList.toggle('active', mode === 'messenger');
 
     document.getElementById('secAttendance').classList.toggle('active', mode === 'attendance');
     document.getElementById('secSupport').classList.toggle('active', mode === 'support');
     document.getElementById('secArchive').classList.toggle('active', mode === 'archive');
+    document.getElementById('secMessenger').classList.toggle('active', mode === 'messenger');
 
     const dock = document.getElementById('floatingDock');
     const sendLabel = document.getElementById('sendBtnLabel');
 
-    if (mode === 'archive') {
+    if (mode === 'archive' || mode === 'messenger') {
       dock.style.display = 'none';
-      renderArchive();
+      if (mode === 'archive') renderArchive();
+      if (mode === 'messenger') renderChatMessages();
     } else {
       dock.style.display = 'flex';
       sendLabel.textContent = mode === 'attendance' ? 'ارسال به گروه تردد واتساپ' : 'ارسال به گروه ساپورت واتساپ';
+    }
+  }
+
+  // چسباندن هوشمند ساعت و دقیقه (Smart Paste)
+  function handleDigitPaste(event, hourId, minId) {
+    event.preventDefault();
+    const paste = (event.clipboardData || window.clipboardData).getData('text') || '';
+    const digits = paste
+      .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+      .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+      .replace(/[^0-9]/g, '');
+
+    if (digits.length >= 4) {
+      const hh = digits.slice(0, 2);
+      const mm = digits.slice(2, 4);
+      if (parseInt(hh) <= 23 && parseInt(mm) <= 59) {
+        document.getElementById(hourId).value = hh;
+        document.getElementById(minId).value = mm;
+        calculateDuration();
+        updatePreview();
+        showToast(`ساعت ${hh}:${mm} درج شد`);
+      }
+    } else if (digits.length === 2) {
+      event.target.value = digits;
+      handleDigitInput(event.target, minId);
     }
   }
 
@@ -1546,6 +1808,14 @@
   function executeSendWhatsApp() {
     playTactileFeedback();
     const isAtt = systemMode === 'attendance';
+    if (!isAtt) {
+      const actions = document.getElementById('supportActionsText')?.value.trim();
+      if (!actions) {
+        showToast('⚠️ لطفاً شرح اقدامات انجام‌شده را بنویسید');
+        document.getElementById('supportActionsText')?.focus();
+        return;
+      }
+    }
     const text = isAtt ? generateAttendanceText() : generateSupportText();
     saveToSystemLog(isAtt ? 'attendance' : 'support', text);
 
@@ -1735,6 +2005,160 @@
       t.classList.remove('show');
     }, 2200);
   }
+
+  // ==================== پیام‌رسان اختصاصی تیم گئومات (BETA) ====================
+  const DEFAULT_CHAT_MESSAGES = [
+    {
+      id: 1,
+      sender: "عباس رحیمی",
+      isMine: false,
+      channel: "support",
+      time: "10:15",
+      date: "امروز",
+      text: "📌 تنظیمات UCM شرکت راه آینده با موفقیت انجام شد. دسترسی ترانک داخلی‌ها برقرار است."
+    },
+    {
+      id: 2,
+      sender: "علی محبی",
+      isMine: true,
+      channel: "attendance",
+      time: "09:00",
+      date: "امروز",
+      text: "۱۴۰۵/۰۷/۱۸\nشنبه\n#صدف\nورود 09:00"
+    },
+    {
+      id: 3,
+      sender: "مدیریت مهندسی گئومات",
+      isMine: false,
+      channel: "general",
+      time: "08:30",
+      date: "امروز",
+      text: "سلام به همگی همکاران عزیز، لطفاً گزارش کارگاه‌ها و سوئیچ‌های تعویضی را پس از اتمام ثبت بفرمایید."
+    }
+  ];
+
+  let chatChannelFilter = 'all';
+
+  function getChatMessages() {
+    try {
+      const saved = localStorage.getItem('geomat_chat_messages_v1');
+      return saved ? JSON.parse(saved) : DEFAULT_CHAT_MESSAGES;
+    } catch(e) {
+      return DEFAULT_CHAT_MESSAGES;
+    }
+  }
+
+  function saveChatMessages(msgs) {
+    try {
+      localStorage.setItem('geomat_chat_messages_v1', JSON.stringify(msgs));
+    } catch(e) {}
+  }
+
+  function filterChatRoom(ch) {
+    playTactileFeedback();
+    chatChannelFilter = ch;
+    document.getElementById('tgFilterAll').classList.toggle('active', ch === 'all');
+    document.getElementById('tgFilterAtt').classList.toggle('active', ch === 'attendance');
+    document.getElementById('tgFilterSup').classList.toggle('active', ch === 'support');
+    document.getElementById('tgFilterGen').classList.toggle('active', ch === 'general');
+    renderChatMessages();
+  }
+
+  function renderChatMessages() {
+    const msgs = getChatMessages();
+    const stream = document.getElementById('tgChatStream');
+    if (!stream) return;
+
+    const filtered = chatChannelFilter === 'all' 
+      ? msgs 
+      : msgs.filter(m => m.channel === chatChannelFilter);
+
+    if (filtered.length === 0) {
+      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:35px 15px;">هیچ پیامی در این کانال وجود ندارد. اولین پیام را ارسال کنید! 💬</div>';
+      return;
+    }
+
+    const myName = getUserName();
+
+    stream.innerHTML = filtered.map(m => {
+      const isMine = m.isMine || (m.sender === myName);
+      return `
+        <div class="tg-bubble-row ${isMine ? 'mine' : 'other'}">
+          <div class="tg-msg-bubble">
+            ${!isMine ? `<div class="tg-msg-author">👤 ${m.sender}</div>` : ''}
+            <div>${m.text}</div>
+            <div class="tg-bubble-meta">
+              <span>${m.time}</span>
+              ${isMine ? '<span style="color:#38bdf8;">✓✓</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    setTimeout(() => {
+      stream.scrollTop = stream.scrollHeight;
+    }, 40);
+  }
+
+  function sendChatMessage() {
+    const input = document.getElementById('tgMessageInput');
+    const text = input.value.trim();
+    if (!text) return;
+    playTactileFeedback();
+
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+
+    const msgs = getChatMessages();
+    msgs.push({
+      id: Date.now(),
+      sender: getUserName(),
+      isMine: true,
+      channel: chatChannelFilter === 'all' ? 'general' : chatChannelFilter,
+      time: `${hh}:${mm}`,
+      date: 'امروز',
+      text: text
+    });
+
+    saveChatMessages(msgs);
+    input.value = '';
+    renderChatMessages();
+    showToast('پیام در پیام‌رسان ثبت شد 💬');
+  }
+
+  function attachCurrentReportToChat(type) {
+    playTactileFeedback();
+    const text = type === 'attendance' ? generateAttendanceText() : generateSupportText();
+    const input = document.getElementById('tgMessageInput');
+    input.value = text;
+    input.focus();
+    showToast('گزارش در باکس پیام الصاق شد ⚡');
+  }
+
+  function clearChatHistory() {
+    if (!confirm('آیا از پاکسازی تاریخچه پیام‌های چت اطمینان دارید؟')) return;
+    playTactileFeedback();
+    saveChatMessages([]);
+    renderChatMessages();
+    showToast('تاریخچه چت پاکسازی شد');
+  }
+
+  // مدیریت واکنش به باز شدن کیبورد مجازی در موبایل
+  window.addEventListener('resize', () => {
+    const dock = document.getElementById('floatingDock');
+    if (!dock || systemMode === 'archive' || systemMode === 'messenger') return;
+    if (window.innerHeight < 520) {
+      dock.style.transform = 'translateX(-50%) translateY(120px)';
+      dock.style.opacity = '0';
+      dock.style.pointerEvents = 'none';
+    } else {
+      dock.style.transform = 'translateX(-50%) translateY(0)';
+      dock.style.opacity = '1';
+      dock.style.pointerEvents = 'auto';
+    }
+  });
 
   window.onload = init;
 </script>
