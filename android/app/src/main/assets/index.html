@@ -1684,7 +1684,7 @@
           <button id="siteRemoveBtn" onclick="removeSite()">🗑 حذف موقعیت</button>
         </div>
       </div>
-      <button class="add-comp-pill" onclick="openAddModal()">➕ افزودن شرکت / محل جدید</button>
+      <button class="add-comp-pill" onclick="openAddModal()">➕ افزودن محل جدید</button>
     </div>
 
     <!-- روز و تاریخ -->
@@ -1770,9 +1770,6 @@
         </label>
         <label class="toggle-chip-item">
           <input type="checkbox" id="includeUserCheck" onchange="updatePreview()"> نام پرسنل
-        </label>
-        <label class="toggle-chip-item">
-          <input type="checkbox" id="includeGeoCheck" checked onchange="onGeoToggle()"> لوکیشن ورود
         </label>
       </div>
     </div>
@@ -2038,10 +2035,11 @@
 <!-- Glass Modal: افزودن شرکت -->
 <div class="glass-modal-bg" id="addModal" onclick="if(event.target === this) closeAddModal()">
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن شرکت یا محل جدید</div>
-    <input type="text" id="modalProjectInput" class="cyber-input" placeholder="مثال: شرکت صدف، برایند، ونک...">
+    <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن محل جدید</div>
+    <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک...">
+    <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;">📍 موقعیت فعلی شما به‌عنوان موقعیت این محل ثبت می‌شود؛ داخل همان محل باشید و GPS روشن باشد.</div>
     <div style="display:flex; gap:8px;">
-      <button class="install-btn" style="flex:1; padding:11px;" onclick="saveNewProjectFromModal()">افزودن</button>
+      <button class="install-btn" style="flex:1; padding:11px;" id="addProjectBtn" onclick="saveNewProjectFromModal()">📍 ثبت محل و موقعیت</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="closeAddModal()">انصراف</button>
     </div>
   </div>
@@ -2134,16 +2132,12 @@
     } catch(e) {}
   }
 
-  // پروژه‌ها و شرکت‌ها بر اساس چت‌های ارسالی هر دو گروه
-  const DEFAULT_COMPANIES = [
-    "گئومات", "مایسا", "صدف", "برایند", 
-    "سرشار", "راستاد", "راه آینده مستقیم", "پایش", "راگا", "کرانه", "آرکا"
-  ];
+  // شرکت پیش‌فرضی وجود ندارد: هر کاربر محل‌هایش را خودش، داخل همان محل و با موقعیتش، اضافه می‌کند
   const WEEK_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
   let systemMode = 'attendance'; // 'attendance', 'support', 'archive'
   let attendanceAction = 'both';
-  let selectedCompany = "مایسا";
+  let selectedCompany = '';
   let selectedDay = "";
   let currentDateObj = new Date();
   let isEditMode = false;
@@ -2154,10 +2148,10 @@
       const saved = JSON.parse(localStorage.getItem('geomat_companies_v2') || 'null');
       if (Array.isArray(saved)) {
         const list = saved.filter(c => typeof c === 'string' && c.trim());
-        if (list.length) return list;
+        return list;
       }
     } catch(e) {}
-    return DEFAULT_COMPANIES.slice();
+    return [];
   }
 
   // آرشیو خراب (مثلاً از یک فایل پشتیبان ناقص) نباید کل برنامه را از کار بیندازد
@@ -2393,6 +2387,7 @@
 
   function init() {
     document.getElementById('userNameHeader').textContent = getUserName();
+    if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
     renderCompanies();
     initGeo();
@@ -2537,13 +2532,15 @@
       document.getElementById('outMin').value = mm;
     }
     calculateDuration();
+    if (type === 'in' && needsEntryGeo()) {
+      // «الان» یعنی همین‌جا هستم: موقعیت تازه بگیر (ممکن است چند دقیقه پیش در محل قبلی بوده باشیم).
+      // قبل از updatePreview، تا درخواست خودکارِ آن (که موقعیت تا ۶۰ ثانیه قدیمی را قبول می‌کند) جایش را نگیرد
+      geofenceForceNext = true;
+      if (entryGeo.status === 'pending') freshFixAfterPending = true;
+      else requestEntryLocation(false, true);
+    }
     updatePreview();
     showToast(`ساعت ${hh}:${mm} تنظیم شد`);
-    if (type === 'in' && needsEntryGeo()) {
-      geofenceForceNext = true;
-      if (hasFreshGeo()) applyGeofence();
-      else requestEntryLocation(false);
-    }
   }
 
   function toPersianDigits(n) {
@@ -2596,6 +2593,12 @@
       if (!el) return;
       el.className = `company-chips-grid ${isEditMode ? 'edit-mode' : ''}`;
       el.innerHTML = '';
+      if (!comps.length) {
+        const empty = document.createElement('div');
+        empty.style.cssText = 'grid-column:1/-1; color:var(--text-dim); font-size:12px; line-height:1.8; text-align:center; padding:6px;';
+        empty.textContent = 'هنوز محلی ثبت نشده. وقتی برای اولین بار به یک محل می‌روید، همان‌جا «افزودن محل جدید» را بزنید تا نام و موقعیتش ثبت شود.';
+        el.appendChild(empty);
+      }
       comps.forEach(c => {
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
@@ -2614,7 +2617,7 @@
           updatePreview();
           updateSupportPreview();
         };
-        if (isEditMode && c !== "گئومات") {
+        if (isEditMode) {
           const del = document.createElement('span');
           del.className = 'del-badge';
           del.textContent = '✕';
@@ -2648,7 +2651,7 @@
       delete sites[name];
       saveSites(sites);
     }
-    if (selectedCompany === name) selectedCompany = list[0] || "گئومات";
+    if (selectedCompany === name) selectedCompany = list[0] || '';
     renderCompanies();
     updatePreview();
     updateSupportPreview();
@@ -2664,22 +2667,45 @@
   function closeAddModal() {
     document.getElementById('addModal').classList.remove('open');
   }
-  function saveNewProjectFromModal() {
-    const val = document.getElementById('modalProjectInput').value.trim();
-    if (!val) return;
-    const list = getCompanies();
-    if (!list.includes(val)) {
-      list.push(val);
+  // محل جدید فقط با موقعیتش اضافه می‌شود (کاربر همان لحظه داخل محل است)
+  let addingProject = false;
+  async function saveNewProjectFromModal() {
+    if (addingProject) return;
+    const val = document.getElementById('modalProjectInput').value.replace(/\s+/g, ' ').trim();
+    if (!val) {
+      showToast('نام محل را بنویسید');
+      return;
+    }
+    if (getCompanies().includes(val)) {
+      showToast(`«${val}» در لیست موجود است`);
+      return;
+    }
+    const btn = document.getElementById('addProjectBtn');
+    addingProject = true;
+    btn.disabled = true;
+    btn.textContent = '📍 در حال دریافت موقعیت...';
+    try {
+      const pos = await getFreshPosition();
+      const list = getCompanies();
+      if (!list.includes(val)) list.push(val);
       saveCompanies(list);
+      const sites = getSites();
+      sites[val] = { lat: pos.lat, lng: pos.lng, radius: SITE_DEFAULT_RADIUS, acc: pos.acc };
+      saveSites(sites);
       selectedCompany = val;
+      companyPickedManually = true;
+      closeAddModal();
       renderCompanies();
       updatePreview();
       updateSupportPreview();
-      showToast(`«${val}» اضافه شد`);
-    } else {
-      showToast(`«${val}» در لیست موجود است`);
+      showToast(`«${val}» با موقعیتش ثبت شد (دقت ±${toPersianDigits(pos.acc)} متر)`);
+    } catch(err) {
+      showToast(`⚠️ ${err.message} — محل اضافه نشد`);
+    } finally {
+      addingProject = false;
+      btn.disabled = false;
+      btn.textContent = '📍 ثبت محل و موقعیت';
     }
-    closeAddModal();
   }
 
   function renderDays() {
@@ -2786,7 +2812,7 @@
       lines.push(dateStr);
       lines.push(selectedDay);
     }
-    lines.push(tag);
+    if (selectedCompany) lines.push(tag);
 
     const geoLine = entryGeoLine();
     if (attendanceAction === 'both') {
@@ -2830,9 +2856,9 @@
   let geoWaiters = [];
   let geoPermissionGranted = false;
 
+  // لوکیشن ورودِ همین لحظه همیشه روشن است (تیک خاموش‌کردنش به خواست مالک حذف شد)
   function isGeoEnabled() {
-    const el = document.getElementById('includeGeoCheck');
-    return !!(el && el.checked);
+    return true;
   }
   function isLiveEntry() {
     if (attendanceAction === 'out') return false;
@@ -2853,7 +2879,8 @@
     return `📍 https://maps.google.com/?q=${entryGeo.lat.toFixed(6)},${entryGeo.lng.toFixed(6)}`;
   }
 
-  function requestEntryLocation(userAction) {
+  // userAction: دکمه به‌روزرسانی (پیام و لرزش)؛ fresh: حتماً موقعیت تازه، نه کش‌شده
+  function requestEntryLocation(userAction, fresh) {
     if (userAction) {
       playTactileFeedback();
       geofenceForceNext = true;
@@ -2867,6 +2894,13 @@
     if (entryGeo.status === 'pending') return waiter;
 
     const finish = (ok) => {
+      if (freshFixAfterPending) {
+        // یک درخواست قدیمی‌تر در جریان بود؛ حالا موقعیت تازه بگیر و منتظرها با همان جواب بگیرند
+        freshFixAfterPending = false;
+        entryGeo = { status: 'idle' };
+        requestEntryLocation(false, true);
+        return;
+      }
       const waiting = geoWaiters;
       geoWaiters = [];
       waiting.forEach(f => f(ok));
@@ -2884,7 +2918,7 @@
         acc: Math.round(pos.coords.accuracy || 0),
         ts: Date.now()
       };
-      applyGeofence();
+      if (!freshFixAfterPending) applyGeofence();
       finish(true);
     }, (err) => {
       const msg = err && err.code === 1 ? 'اجازه دسترسی به لوکیشن داده نشد'
@@ -2892,7 +2926,7 @@
         : 'لوکیشن در دسترس نیست (GPS روشن است؟)';
       entryGeo = { status: 'error', err: msg };
       finish(false);
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: userAction ? 0 : 60000 });
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: userAction || fresh ? 0 : 60000 });
     return waiter;
   }
 
@@ -3108,7 +3142,7 @@
     const box = document.getElementById('checklistItems');
     if (!box) return;
     const state = checklistState(selectedCompany);
-    document.getElementById('checklistTitle').textContent = `چک‌لیست «${selectedCompany}»`;
+    document.getElementById('checklistTitle').textContent = selectedCompany ? `چک‌لیست «${selectedCompany}»` : 'چک‌لیست';
     document.getElementById('checklistCount').textContent = state.length
       ? `${toPersianDigits(state.filter(c => c.done).length)}/${toPersianDigits(state.length)}`
       : '';
@@ -3148,6 +3182,10 @@
     const input = document.getElementById('checklistNewItem');
     const item = input.value.replace(/\s+/g, ' ').trim();
     if (!item) return;
+    if (!selectedCompany) {
+      showToast('اول مشتری را انتخاب کنید');
+      return;
+    }
     playTactileFeedback();
     const items = getChecklistItems(selectedCompany);
     if (items.includes(item)) {
@@ -3409,6 +3447,7 @@
   // انتخاب دستی کاربر را عوض نمی‌کند، فقط «⏱ الان» ورود یا دکمه به‌روزرسانی لوکیشن
   let companyPickedManually = false;
   let geofenceForceNext = false;
+  let freshFixAfterPending = false;
   function applyGeofence() {
     const force = geofenceForceNext;
     geofenceForceNext = false;
@@ -3437,6 +3476,11 @@
     if (!panel) return;
     panel.classList.toggle('show', isEditMode);
     if (!isEditMode) return;
+    if (!selectedCompany) {
+      document.getElementById('sitePanelText').textContent = '📍 اول یک محل اضافه یا انتخاب کنید';
+      document.getElementById('siteRemoveBtn').style.display = 'none';
+      return;
+    }
     const site = getSites()[selectedCompany];
     document.getElementById('sitePanelText').textContent = site
       ? `📍 موقعیت «${selectedCompany}» ثبت شده (شعاع ${toPersianDigits(site.radius)} متر)`
@@ -3446,31 +3490,70 @@
     document.getElementById('siteRemoveBtn').style.display = site ? 'inline-block' : 'none';
   }
 
-  function captureSiteLocation() {
+  // موقعیت تازه (نه کش‌شده) با پیام خطای فارسی
+  function getFreshPosition() {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('این دستگاه از لوکیشن پشتیبانی نمی‌کند'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition((pos) => {
+        geoPermissionGranted = true;
+        resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: Math.round(pos.coords.accuracy || 0) });
+      }, (err) => {
+        reject(new Error(err && err.code === 1 ? 'اجازه دسترسی به لوکیشن داده نشد' : 'لوکیشن در دسترس نیست (GPS روشن است؟)'));
+      }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    });
+  }
+
+  function saveSitePosition(name, pos) {
+    const sites = getSites();
+    const radiusInput = document.getElementById('siteRadiusInput');
+    const radiusVal = isEditMode ? parseInt(radiusInput.value, 10) : 0;
+    sites[name] = {
+      lat: pos.lat,
+      lng: pos.lng,
+      radius: clampSiteRadius(radiusVal || (sites[name] && sites[name].radius) || SITE_DEFAULT_RADIUS),
+      acc: pos.acc
+    };
+    saveSites(sites);
+    renderCompanies();
+    updatePreview();
+    return sites[name];
+  }
+
+  async function captureSiteLocation() {
     playTactileFeedback();
-    if (!navigator.geolocation) {
-      showToast('⚠️ این دستگاه از لوکیشن پشتیبانی نمی‌کند');
-      return;
-    }
     const name = selectedCompany;
+    if (!name) return;
     showToast('📍 در حال دریافت موقعیت...');
-    navigator.geolocation.getCurrentPosition((pos) => {
-      geoPermissionGranted = true;
-      const sites = getSites();
-      const radiusVal = parseInt(document.getElementById('siteRadiusInput').value, 10);
-      sites[name] = {
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        radius: clampSiteRadius(radiusVal || (sites[name] && sites[name].radius) || SITE_DEFAULT_RADIUS),
-        acc: Math.round(pos.coords.accuracy || 0)
-      };
-      saveSites(sites);
-      renderCompanies();
-      updatePreview();
-      showToast(`📍 موقعیت «${name}» ثبت شد (دقت ±${toPersianDigits(sites[name].acc)} متر)`);
-    }, (err) => {
-      showToast(err && err.code === 1 ? '⚠️ اجازه دسترسی به لوکیشن داده نشد' : '⚠️ لوکیشن در دسترس نیست (GPS روشن است؟)');
-    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
+    try {
+      const site = saveSitePosition(name, await getFreshPosition());
+      showToast(`📍 موقعیت «${name}» ثبت شد (دقت ±${toPersianDigits(site.acc)} متر)`);
+    } catch(err) {
+      showToast(`⚠️ ${err.message}`);
+    }
+  }
+
+  // ورودِ همین لحظه برای محلی که موقعیتش ثبت نشده (مثلاً محل‌های نسخه قبل): اول موقعیتش ثبت شود
+  async function ensureSiteForLiveEntry() {
+    if (!isLiveEntry() || getSites()[selectedCompany]) return true;
+    const name = selectedCompany;
+    if (!await appConfirm(`موقعیت «${name}» هنوز ثبت نشده. اگر الان داخل همین محل هستید، موقعیتش ثبت شود و بعد ورود ارسال شود.`, '📍 ثبت موقعیت')) {
+      showToast('بدون ثبت موقعیت محل، ورود همین لحظه ارسال نمی‌شود');
+      return false;
+    }
+    try {
+      const pos = entryGeo.status === 'ok' && hasFreshGeo()
+        ? { lat: entryGeo.lat, lng: entryGeo.lng, acc: entryGeo.acc }
+        : await getFreshPosition();
+      saveSitePosition(name, pos);
+      showToast(`📍 موقعیت «${name}» ثبت شد`);
+      return true;
+    } catch(err) {
+      showToast(`⚠️ ${err.message}`);
+      return false;
+    }
   }
 
   function clampSiteRadius(v) {
@@ -3502,17 +3585,8 @@
     showToast(`موقعیت «${name}» حذف شد`);
   }
 
-  function onGeoToggle() {
-    try { localStorage.setItem('geomat_geo_enabled', isGeoEnabled() ? '1' : '0'); } catch(e) {}
-    updatePreview();
-  }
-
   function initGeo() {
-    try {
-      if (localStorage.getItem('geomat_geo_enabled') === '0') {
-        document.getElementById('includeGeoCheck').checked = false;
-      }
-    } catch(e) {}
+    try { localStorage.removeItem('geomat_geo_enabled'); } catch(e) {}
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' }).then((p) => {
         geoPermissionGranted = p.state === 'granted';
@@ -3547,7 +3621,7 @@
     let lines = [];
     lines.push(dateStr);
     lines.push(dayName);
-    lines.push(tag);
+    if (selectedCompany) lines.push(tag);
 
     if (techInfo) lines.push(techInfo);
     if (actions) lines.push(actions);
@@ -3576,7 +3650,7 @@
   function reportSignature(type) {
     if (type === 'attendance') {
       return [type, selectedCompany, toISODate(currentDateObj), selectedDay, attendanceAction, timeInputValue('in'), timeInputValue('out'),
-        ...['includeDateCheck', 'hashtagCheck', 'includeDurationCheck', 'includeUserCheck', 'includeGeoCheck'].map(id => document.getElementById(id).checked)].join('|');
+        ...['includeDateCheck', 'hashtagCheck', 'includeDurationCheck', 'includeUserCheck'].map(id => document.getElementById(id).checked)].join('|');
     }
     return [type, selectedCompany, toISODate(supportDateObj),
       ...['supportActionsText', 'supportPendingText', 'supportTechInfo'].map(id => document.getElementById(id).value.trim())].join('|');
@@ -3591,6 +3665,10 @@
   async function prepareReport(type) {
     const repeat = repeatedReport(type);
     if (repeat) return { text: repeat.text, repeat: true };
+    if (!selectedCompany) {
+      showToast('⚠️ اول محل را انتخاب کنید (یا «افزودن محل جدید» را بزنید)');
+      return null;
+    }
     if (type === 'support') {
       const actions = document.getElementById('supportActionsText').value.trim();
       if (!actions && !checklistState(selectedCompany).some(c => c.done)) {
@@ -3601,6 +3679,7 @@
       return { text: generateSupportText(), repeat: false };
     }
     await ensureEntryGeoBeforeSend();
+    if (!await ensureSiteForLiveEntry()) return null;
     return { text: generateAttendanceText(), repeat: false };
   }
 
@@ -4000,7 +4079,7 @@
   }
 
   // ==================== پشتیبان‌گیری و بازگردانی ====================
-  const APP_VERSION = '1.1.0';
+  const APP_VERSION = '1.2.0';
   const BACKUP_APP_ID = 'geomat-attendance';
   const BACKUP_MAX_BYTES = 5 * 1024 * 1024;
 
