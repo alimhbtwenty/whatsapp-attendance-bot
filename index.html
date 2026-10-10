@@ -418,6 +418,8 @@
       padding: 8px 12px;
       border-radius: 14px;
       border: 1px solid var(--border-subtle);
+      flex-wrap: wrap;
+      gap: 6px;
     }
     .date-chips-quick {
       display: flex;
@@ -1167,6 +1169,113 @@
       visibility: visible;
       transform: translateX(-50%) translateY(0) scale(1);
     }
+
+    /* تاریخ قابل لمس که تقویم داخلی را باز می‌کند */
+    .date-pick-btn {
+      background: rgba(243, 203, 3, 0.06);
+      border: 1px solid var(--gold-border);
+      border-radius: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .date-pick-btn:active {
+      background: var(--gold-dim);
+    }
+
+    /* تقویم شمسی داخلی */
+    .jcal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .jcal-title {
+      font-size: 14.5px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .jcal-nav {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .jcal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      text-align: center;
+    }
+    .jcal-wd {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      padding: 2px 0 4px;
+    }
+    .jcal-day {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 0;
+      cursor: pointer;
+    }
+    .jcal-day.friday {
+      color: var(--danger);
+    }
+    .jcal-day.today {
+      border-color: var(--gold-border);
+      color: var(--gold);
+    }
+    .jcal-day.selected {
+      background: var(--gold);
+      color: #000;
+      font-weight: 800;
+    }
+
+    /* لوکیشن ورود */
+    .geo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .geo-row.ok {
+      background: rgba(34, 197, 94, 0.07);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #bbf7d0;
+    }
+    .geo-row.error {
+      background: rgba(244, 63, 94, 0.07);
+      border-color: rgba(244, 63, 94, 0.3);
+      color: #fecdd3;
+    }
+    .geo-row button {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: 9px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -1252,9 +1361,9 @@
           <button class="date-q-btn" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-          <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">◀ روز قبل</button>
-          <span class="date-display-tag" id="dateDisplay">--/--/----</span>
-          <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">روز بعد ▶</button>
+          <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">▶</button>
+          <button class="date-pick-btn" onclick="openAttendanceCalendar()" title="انتخاب از تقویم">📅 <span class="date-display-tag" id="dateDisplay">--/--/----</span></button>
+          <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">◀</button>
         </div>
       </div>
     </div>
@@ -1295,6 +1404,12 @@
           </div>
         </div>
 
+        <!-- لوکیشن ورود (فقط ورودِ همین لحظه؛ برای تردد فراموش‌شده لازم نیست) -->
+        <div class="geo-row" id="geoRow" style="display:none;">
+          <span id="geoStatusText">📍 لوکیشن ورود</span>
+          <button id="geoRetryBtn" onclick="requestEntryLocation(true)">📍 دریافت</button>
+        </div>
+
         <!-- گیج هوشمند مدت کارکرد -->
         <div class="duration-meter-card" id="durationBar">
           <span>⚡ مجموع ساعت کارکرد:</span>
@@ -1317,6 +1432,9 @@
         <label class="toggle-chip-item">
           <input type="checkbox" id="includeUserCheck" onchange="updatePreview()"> نام پرسنل
         </label>
+        <label class="toggle-chip-item">
+          <input type="checkbox" id="includeGeoCheck" checked onchange="onGeoToggle()"> لوکیشن ورود
+        </label>
       </div>
     </div>
 
@@ -1333,6 +1451,22 @@
 
   <!-- ==================== تب ۲: گزارش کار و پشتیبانی فنی (گروه ساپورت) ==================== -->
   <div class="tab-section" id="secSupport">
+
+    <!-- تاریخ گزارش (بدون ساعت) با تقویم داخلی -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> تاریخ گزارش</div>
+        <span id="supportDayName" style="color:var(--gold);">--</span>
+      </div>
+      <div class="date-stepper-panel">
+        <div class="date-chips-quick">
+          <button class="date-q-btn selected" onclick="setSupportDateOffset(0)" id="supChipToday">امروز</button>
+          <button class="date-q-btn" onclick="setSupportDateOffset(-1)" id="supChipYesterday">دیروز</button>
+          <button class="date-q-btn" onclick="setSupportDateOffset(-2)" id="supChipDayBefore">پریروز</button>
+        </div>
+        <button class="date-pick-btn" onclick="openSupportCalendar()" title="انتخاب از تقویم">📅 <span class="date-display-tag" id="supportDateDisplay">--/--/----</span></button>
+      </div>
+    </div>
 
     <!-- شرکت / مشتری -->
     <div class="frost-card">
@@ -1526,6 +1660,33 @@
   </div>
 </div>
 
+<!-- Glass Modal: تقویم شمسی داخلی -->
+<div class="glass-modal-bg" id="calendarModal" onclick="if(event.target === this) closeCalendar()">
+  <div class="glass-modal-box" style="gap:12px;">
+    <div class="jcal-head">
+      <button class="jcal-nav" onclick="shiftCalendarMonth(-1)" title="ماه قبل">▶</button>
+      <span class="jcal-title" id="jcalTitle"></span>
+      <button class="jcal-nav" onclick="shiftCalendarMonth(1)" title="ماه بعد">◀</button>
+    </div>
+    <div class="jcal-grid" id="jcalGrid"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:10px;" onclick="pickCalendarToday()">امروز</button>
+      <button class="dock-copy-btn" style="flex:1; padding:10px;" onclick="closeCalendar()">بستن</button>
+    </div>
+  </div>
+</div>
+
+<!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
+<div class="glass-modal-bg" id="confirmModal" onclick="if(event.target === this) resolveConfirm(false)">
+  <div class="glass-modal-box">
+    <div style="font-size:14px; font-weight:700; color:#fff; line-height:1.8;" id="confirmText"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:#fff;" id="confirmOkBtn" onclick="resolveConfirm(true)">حذف</button>
+      <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="resolveConfirm(false)">انصراف</button>
+    </div>
+  </div>
+</div>
+
 <div class="cyber-toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
@@ -1631,11 +1792,177 @@
     return { dateStr: "۱۴۰۵/۰۷/۱۸", dayName: "شنبه" };
   }
 
+  // ==================== تقویم شمسی داخلی ====================
+  // تبدیل جلالی/میلادی (الگوریتم jalaali-js) تا تقویم بدون اینترنت و کتابخانه کار کند
+  const JALALI_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
+  function jDiv(a, b) { return ~~(a / b); }
+  function jMod(a, b) { return a - ~~(a / b) * b; }
+  function jalCal(jy) {
+    const breaks = [-61, 9, 38, 199, 426, 686, 756, 818, 1111, 1181, 1210, 1635, 2060, 2097, 2192, 2262, 2324, 2394, 2456, 3178];
+    const gy = jy + 621;
+    let leapJ = -14, jp = breaks[0], jump = 0;
+    for (let i = 1; i < breaks.length; i++) {
+      const jm = breaks[i];
+      jump = jm - jp;
+      if (jy < jm) break;
+      leapJ += jDiv(jump, 33) * 8 + jDiv(jMod(jump, 33), 4);
+      jp = jm;
+    }
+    let n = jy - jp;
+    leapJ += jDiv(n, 33) * 8 + jDiv(jMod(n, 33) + 3, 4);
+    if (jMod(jump, 33) === 4 && jump - n === 4) leapJ += 1;
+    const leapG = jDiv(gy, 4) - jDiv((jDiv(gy, 100) + 1) * 3, 4) - 150;
+    const march = 20 + leapJ - leapG;
+    if (jump - n < 6) n = n - jump + jDiv(jump + 4, 33) * 33;
+    let leap = jMod(jMod(n + 1, 33) - 1, 4);
+    if (leap === -1) leap = 4;
+    return { leap, gy, march };
+  }
+  function g2d(gy, gm, gd) {
+    let d = jDiv((gy + jDiv(gm - 8, 6) + 100100) * 1461, 4) + jDiv(153 * jMod(gm + 9, 12) + 2, 5) + gd - 34840408;
+    return d - jDiv(jDiv(gy + 100100 + jDiv(gm - 8, 6), 100) * 3, 4) + 752;
+  }
+  function d2g(jdn) {
+    let j = 4 * jdn + 139361631;
+    j = j + jDiv(jDiv(4 * jdn + 183187720, 146097) * 3, 4) * 4 - 3908;
+    const i = jDiv(jMod(j, 1461), 4) * 5 + 308;
+    const gd = jDiv(jMod(i, 153), 5) + 1;
+    const gm = jMod(jDiv(i, 153), 12) + 1;
+    const gy = jDiv(j, 1461) - 100100 + jDiv(8 - gm, 6);
+    return { gy, gm, gd };
+  }
+  function j2d(jy, jm, jd) {
+    const r = jalCal(jy);
+    return g2d(r.gy, 3, r.march) + (jm - 1) * 31 - jDiv(jm, 7) * (jm - 7) + jd - 1;
+  }
+  function d2j(jdn) {
+    const gy = d2g(jdn).gy;
+    let jy = gy - 621;
+    const r = jalCal(jy);
+    let k = jdn - g2d(gy, 3, r.march);
+    if (k >= 0) {
+      if (k <= 185) return { jy, jm: 1 + jDiv(k, 31), jd: jMod(k, 31) + 1 };
+      k -= 186;
+    } else {
+      jy -= 1;
+      k += 179;
+      if (r.leap === 1) k += 1;
+    }
+    return { jy, jm: 7 + jDiv(k, 30), jd: jMod(k, 30) + 1 };
+  }
+  function dateToJalali(date) {
+    return d2j(g2d(date.getFullYear(), date.getMonth() + 1, date.getDate()));
+  }
+  function jalaliToDate(jy, jm, jd) {
+    const g = d2g(j2d(jy, jm, jd));
+    return new Date(g.gy, g.gm - 1, g.gd, 12, 0, 0);
+  }
+  function jalaliMonthLength(jy, jm) {
+    if (jm <= 6) return 31;
+    if (jm <= 11) return 30;
+    return jalCal(jy).leap === 0 ? 30 : 29;
+  }
+
+  let calState = null; // { jy, jm, selected: {jy,jm,jd}, onPick }
+
+  function openCalendar(date, onPick) {
+    playTactileFeedback();
+    const sel = dateToJalali(date);
+    calState = { jy: sel.jy, jm: sel.jm, selected: sel, onPick };
+    renderCalendar();
+    document.getElementById('calendarModal').classList.add('open');
+  }
+  function closeCalendar() {
+    calState = null;
+    document.getElementById('calendarModal').classList.remove('open');
+  }
+  function shiftCalendarMonth(delta) {
+    if (!calState) return;
+    playTactileFeedback();
+    let m = calState.jm + delta, y = calState.jy;
+    if (m < 1) { m = 12; y--; }
+    if (m > 12) { m = 1; y++; }
+    calState.jm = m;
+    calState.jy = y;
+    renderCalendar();
+  }
+  function pickCalendarDate(jy, jm, jd) {
+    if (!calState) return;
+    const cb = calState.onPick;
+    closeCalendar();
+    playTactileFeedback();
+    cb(jalaliToDate(jy, jm, jd));
+  }
+  function pickCalendarToday() {
+    const t = dateToJalali(new Date());
+    pickCalendarDate(t.jy, t.jm, t.jd);
+  }
+  function renderCalendar() {
+    const { jy, jm, selected } = calState;
+    document.getElementById('jcalTitle').textContent = `${JALALI_MONTHS[jm - 1]} ${toPersianDigits(jy)}`;
+    const today = dateToJalali(new Date());
+    // ستون اول شنبه است: getDay() شنبه=۶ ← ستون ۰
+    const lead = (jalaliToDate(jy, jm, 1).getDay() + 1) % 7;
+    const len = jalaliMonthLength(jy, jm);
+    let html = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'].map(w => `<div class="jcal-wd">${w}</div>`).join('');
+    for (let i = 0; i < lead; i++) html += '<div></div>';
+    for (let d = 1; d <= len; d++) {
+      const cls = ['jcal-day'];
+      if ((lead + d - 1) % 7 === 6) cls.push('friday');
+      if (today.jy === jy && today.jm === jm && today.jd === d) cls.push('today');
+      if (selected.jy === jy && selected.jm === jm && selected.jd === d) cls.push('selected');
+      html += `<button class="${cls.join(' ')}" onclick="pickCalendarDate(${jy}, ${jm}, ${d})">${toPersianDigits(d)}</button>`;
+    }
+    document.getElementById('jcalGrid').innerHTML = html;
+  }
+
+  function openAttendanceCalendar() {
+    openCalendar(currentDateObj, (date) => {
+      currentDateObj = date;
+      updateDateDisplay();
+    });
+  }
+
+  // تاریخ گزارش ساپورت مستقل از تب تردد است و ساعت ندارد
+  let supportDateObj = new Date();
+
+  function openSupportCalendar() {
+    openCalendar(supportDateObj, (date) => {
+      supportDateObj = date;
+      updateSupportDateDisplay();
+    });
+  }
+  function setSupportDateOffset(offset) {
+    playTactileFeedback();
+    supportDateObj = new Date();
+    supportDateObj.setDate(supportDateObj.getDate() + offset);
+    updateSupportDateDisplay();
+  }
+  function dayOffsetFromToday(date) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(date);
+    target.setHours(0, 0, 0, 0);
+    return Math.round((target - today) / (1000 * 60 * 60 * 24));
+  }
+  function updateSupportDateDisplay() {
+    const { dateStr, dayName } = getPersianDateParts(supportDateObj);
+    document.getElementById('supportDateDisplay').textContent = dateStr;
+    document.getElementById('supportDayName').textContent = dayName;
+    const diffDays = dayOffsetFromToday(supportDateObj);
+    document.getElementById('supChipToday').classList.toggle('selected', diffDays === 0);
+    document.getElementById('supChipYesterday').classList.toggle('selected', diffDays === -1);
+    document.getElementById('supChipDayBefore').classList.toggle('selected', diffDays === -2);
+    updateSupportPreview();
+  }
+
   function init() {
     document.getElementById('userNameHeader').textContent = getUserName();
     renderDays();
     renderCompanies();
+    initGeo();
     setDateOffset(0);
+    updateSupportDateDisplay();
     setCurrentTimeToInputs(false);
     calculateDuration();
     updatePreview();
@@ -1758,6 +2085,7 @@
     calculateDuration();
     updatePreview();
     showToast(`ساعت ${hh}:${mm} تنظیم شد`);
+    if (type === 'in' && needsEntryGeo() && !hasFreshGeo()) requestEntryLocation(false);
   }
 
   function toPersianDigits(n) {
@@ -1844,8 +2172,8 @@
     showToast(isEditMode ? 'حالت ویرایش فعال شد (✕ برای حذف)' : 'حالت ویرایش غیرفعال شد');
   }
 
-  function deleteCompany(name) {
-    if (!confirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
+  async function deleteCompany(name) {
+    if (!await appConfirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
     let list = getCompanies().filter(c => c !== name);
     saveCompanies(list);
     if (selectedCompany === name) selectedCompany = list[0] || "گئومات";
@@ -1922,11 +2250,7 @@
     selectedDay = dayName;
 
     // همگام‌سازی خودکار دکمه‌های امروز / دیروز / پریروز
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const target = new Date(currentDateObj);
-    target.setHours(0,0,0,0);
-    const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+    const diffDays = dayOffsetFromToday(currentDateObj);
 
     document.getElementById('chipToday').classList.toggle('selected', diffDays === 0);
     document.getElementById('chipYesterday').classList.toggle('selected', diffDays === -1);
@@ -1977,8 +2301,10 @@
     }
     lines.push(tag);
 
+    const geoLine = entryGeoLine();
     if (attendanceAction === 'both') {
       lines.push(`ورود ${inH}:${inM}`);
+      if (geoLine) lines.push(geoLine);
       lines.push(`خروج ${outH}:${outM}`);
       if (includeDuration) {
         const dur = calculateDuration();
@@ -1986,6 +2312,7 @@
       }
     } else if (attendanceAction === 'in') {
       lines.push(`ورود ${inH}:${inM}`);
+      if (geoLine) lines.push(geoLine);
     } else {
       lines.push(`خروج ${outH}:${outM}`);
     }
@@ -1994,7 +2321,153 @@
   }
 
   function updatePreview() {
+    maybeAutoRequestGeo();
+    renderGeoRow();
     document.getElementById('attendancePreview').textContent = generateAttendanceText();
+  }
+
+  // ==================== لوکیشن ورود (GPS) ====================
+  // فقط وقتی ورودِ همین لحظه ثبت می‌شود (تاریخ امروز و ساعت ورود نزدیک ساعت فعلی) لوکیشن گرفته می‌شود؛
+  // ثبت تردد فراموش‌شده (روزهای قبل یا ساعت دور از الان) بدون لوکیشن ارسال می‌شود
+  const GEO_LIVE_WINDOW_MIN = 30;
+  const GEO_MAX_AGE_MS = 3 * 60 * 1000;
+  const GEO_SEND_WAIT_MS = 4500;
+  let entryGeo = { status: 'idle' }; // idle | pending | ok | error
+  let geoWaiters = [];
+  let geoPermissionGranted = false;
+
+  function isGeoEnabled() {
+    const el = document.getElementById('includeGeoCheck');
+    return !!(el && el.checked);
+  }
+  function isLiveEntry() {
+    if (attendanceAction === 'out') return false;
+    if (dayOffsetFromToday(currentDateObj) !== 0) return false;
+    const inH = parseInt(document.getElementById('inHour').value) || 0;
+    const inM = parseInt(document.getElementById('inMin').value) || 0;
+    const now = new Date();
+    return Math.abs(inH * 60 + inM - (now.getHours() * 60 + now.getMinutes())) <= GEO_LIVE_WINDOW_MIN;
+  }
+  function needsEntryGeo() {
+    return isGeoEnabled() && isLiveEntry();
+  }
+  function hasFreshGeo() {
+    return entryGeo.status === 'ok' && Date.now() - entryGeo.ts < GEO_MAX_AGE_MS;
+  }
+  function entryGeoLine() {
+    if (!needsEntryGeo() || entryGeo.status !== 'ok') return '';
+    return `📍 https://maps.google.com/?q=${entryGeo.lat.toFixed(6)},${entryGeo.lng.toFixed(6)}`;
+  }
+
+  function requestEntryLocation(userAction) {
+    if (userAction) playTactileFeedback();
+    if (!navigator.geolocation) {
+      entryGeo = { status: 'error', err: 'این دستگاه از لوکیشن پشتیبانی نمی‌کند' };
+      updatePreview();
+      return Promise.resolve(false);
+    }
+    const waiter = new Promise(resolve => geoWaiters.push(resolve));
+    if (entryGeo.status === 'pending') return waiter;
+
+    const finish = (ok) => {
+      const waiting = geoWaiters;
+      geoWaiters = [];
+      waiting.forEach(f => f(ok));
+      updatePreview();
+      if (userAction) showToast(ok ? '📍 لوکیشن ورود ثبت شد' : `⚠️ ${entryGeo.err}`);
+    };
+    entryGeo = { status: 'pending' };
+    renderGeoRow();
+    navigator.geolocation.getCurrentPosition((pos) => {
+      geoPermissionGranted = true;
+      entryGeo = {
+        status: 'ok',
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        acc: Math.round(pos.coords.accuracy || 0),
+        ts: Date.now()
+      };
+      finish(true);
+    }, (err) => {
+      const msg = err && err.code === 1 ? 'اجازه دسترسی به لوکیشن داده نشد'
+        : err && err.code === 3 ? 'دریافت لوکیشن طول کشید'
+        : 'لوکیشن در دسترس نیست (GPS روشن است؟)';
+      entryGeo = { status: 'error', err: msg };
+      finish(false);
+    }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+    return waiter;
+  }
+
+  // اگر اجازه لوکیشن از قبل داده شده، بی‌صدا لوکیشن ورود را آماده نگه دار
+  function maybeAutoRequestGeo() {
+    if (!geoPermissionGranted || !needsEntryGeo()) return;
+    if (entryGeo.status === 'idle' || (entryGeo.status === 'ok' && !hasFreshGeo())) {
+      requestEntryLocation(false);
+    }
+  }
+
+  // پیش از ارسال/کپی ورودِ همین لحظه، حداکثر چند ثانیه برای لوکیشن صبر کن (اجباری نیست)
+  async function ensureEntryGeoBeforeSend() {
+    if (!needsEntryGeo() || hasFreshGeo()) return;
+    showToast('📍 در حال دریافت لوکیشن ورود...');
+    const ok = await Promise.race([
+      requestEntryLocation(false),
+      new Promise(resolve => setTimeout(() => resolve(false), GEO_SEND_WAIT_MS))
+    ]);
+    if (!ok) showToast('⚠️ لوکیشن دریافت نشد؛ تردد بدون لوکیشن ارسال شد');
+  }
+
+  function renderGeoRow() {
+    const row = document.getElementById('geoRow');
+    if (!row) return;
+    const show = isGeoEnabled() && attendanceAction !== 'out';
+    row.style.display = show ? 'flex' : 'none';
+    if (!show) return;
+    const text = document.getElementById('geoStatusText');
+    const btn = document.getElementById('geoRetryBtn');
+    row.classList.remove('ok', 'error');
+    btn.style.display = 'inline-block';
+    if (!isLiveEntry()) {
+      text.textContent = '📍 لوکیشن فقط برای ورودِ همین لحظه ثبت می‌شود';
+      btn.style.display = 'none';
+    } else if (entryGeo.status === 'pending') {
+      text.textContent = '📍 در حال دریافت لوکیشن...';
+      btn.style.display = 'none';
+    } else if (entryGeo.status === 'ok') {
+      row.classList.add('ok');
+      text.textContent = `📍 لوکیشن ورود ثبت شد (دقت ±${toPersianDigits(entryGeo.acc)} متر)`;
+      btn.textContent = '🔄 به‌روزرسانی';
+    } else if (entryGeo.status === 'error') {
+      row.classList.add('error');
+      text.textContent = `⚠️ ${entryGeo.err}`;
+      btn.textContent = 'تلاش دوباره';
+    } else {
+      text.textContent = '📍 لوکیشن هنگام ارسال ورود گرفته می‌شود';
+      btn.textContent = '📍 دریافت';
+    }
+  }
+
+  function onGeoToggle() {
+    try { localStorage.setItem('geomat_geo_enabled', isGeoEnabled() ? '1' : '0'); } catch(e) {}
+    updatePreview();
+  }
+
+  function initGeo() {
+    try {
+      if (localStorage.getItem('geomat_geo_enabled') === '0') {
+        document.getElementById('includeGeoCheck').checked = false;
+      }
+    } catch(e) {}
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((p) => {
+        geoPermissionGranted = p.state === 'granted';
+        p.onchange = () => {
+          geoPermissionGranted = p.state === 'granted';
+          updatePreview();
+        };
+        updatePreview();
+      }).catch(() => {});
+    }
   }
 
   // پشتیبانی فنی
@@ -2010,7 +2483,7 @@
   }
 
   function generateSupportText() {
-    const { dateStr } = getPersianDateParts(currentDateObj);
+    const { dateStr, dayName } = getPersianDateParts(supportDateObj);
     const tag = `#${selectedCompany.replace(/\s+/g, '_')}`;
     const actions = document.getElementById('supportActionsText').value.trim();
     const pending = document.getElementById('supportPendingText').value.trim();
@@ -2018,7 +2491,7 @@
 
     let lines = [];
     lines.push(dateStr);
-    lines.push(selectedDay);
+    lines.push(dayName);
     lines.push(tag);
 
     if (techInfo) lines.push(techInfo);
@@ -2034,7 +2507,7 @@
   }
 
   // ارسال نهایی به واتساپ
-  function executeSendWhatsApp() {
+  async function executeSendWhatsApp() {
     playTactileFeedback();
     const isAtt = systemMode === 'attendance';
     if (!isAtt) {
@@ -2045,6 +2518,7 @@
         return;
       }
     }
+    if (isAtt) await ensureEntryGeoBeforeSend();
     const text = isAtt ? generateAttendanceText() : generateSupportText();
     saveToSystemLog(isAtt ? 'attendance' : 'support', text);
 
@@ -2066,8 +2540,9 @@
     }, 800);
   }
 
-  function executeCopyText() {
+  async function executeCopyText() {
     playTactileFeedback();
+    if (systemMode === 'attendance') await ensureEntryGeoBeforeSend();
     const text = systemMode === 'attendance' ? generateAttendanceText() : generateSupportText();
     
     const fallbackCopy = (str) => {
@@ -2103,15 +2578,20 @@
   // ثبت در آرشیو
   function saveToSystemLog(type, text) {
     let logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
-    const { dateStr } = getPersianDateParts(currentDateObj);
+    const isSupport = type === 'support';
+    const { dateStr, dayName } = getPersianDateParts(isSupport ? supportDateObj : currentDateObj);
     const dur = calculateDuration();
+    const geo = !isSupport && entryGeoLine()
+      ? { lat: entryGeo.lat, lng: entryGeo.lng, acc: entryGeo.acc }
+      : null;
 
     logs.unshift({
       id: Date.now(),
       type: type, // 'attendance' or 'support'
       company: selectedCompany,
       date: dateStr,
-      day: selectedDay,
+      day: isSupport ? dayName : selectedDay,
+      geo: geo,
       durationMins: type === 'attendance' && attendanceAction === 'both' ? dur.totalMins : 0,
       durationText: type === 'attendance' && attendanceAction === 'both' ? `${dur.h}:${String(dur.m).padStart(2,'0')}` : '-',
       text: text,
@@ -2169,6 +2649,7 @@
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-weight:800; color:var(--gold); font-size:13px;">${item.company}</span>
             <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
+            ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
             ${item.type === 'attendance' ? 'مدت: ' + item.durationText : (item.actions ? item.actions.slice(0, 30) + '...' : 'گزارش ساپورت')}
@@ -2203,14 +2684,15 @@
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const cleanActions = (r.actions || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
       const cleanPending = (r.pending || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
       const cleanTech = (r.tech || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
+      const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
 
-      csv += `${idx + 1},"${r.date}","${r.day}","${r.company}","${typeStr}","${r.durationText || '-'}","${cleanActions}","${cleanPending}","${cleanTech}"\n`;
+      csv += `${idx + 1},"${r.date}","${r.day}","${r.company}","${typeStr}","${r.durationText || '-'}","${cleanActions}","${cleanPending}","${cleanTech}","${geoLink}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2221,6 +2703,23 @@
     a.download = filename;
     a.click();
     showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
+  }
+
+  // پنجره تأیید داخل خود اپ: confirm() مرورگر داخل WebView اندروید نمایش داده نمی‌شد
+  // و همیشه false برمی‌گرداند، برای همین حذف پیام‌ها و شرکت‌ها هیچ‌وقت انجام نمی‌شد
+  let confirmResolver = null;
+  function appConfirm(message, okLabel) {
+    if (confirmResolver) confirmResolver(false);
+    document.getElementById('confirmText').textContent = message;
+    document.getElementById('confirmOkBtn').textContent = okLabel || 'حذف';
+    document.getElementById('confirmModal').classList.add('open');
+    return new Promise(resolve => { confirmResolver = resolve; });
+  }
+  function resolveConfirm(ok) {
+    document.getElementById('confirmModal').classList.remove('open');
+    const r = confirmResolver;
+    confirmResolver = null;
+    if (r) r(ok);
   }
 
   let toastTimer = null;
@@ -2539,10 +3038,10 @@
     if (msg) openWhatsAppDirect(msg.text);
   }
 
-  function chatActionDelete() {
+  async function chatActionDelete() {
     const id = chatActiveMessageId;
     closeChatActions();
-    if (!id || !confirm('این پیام از روی این دستگاه حذف شود؟')) return;
+    if (!id || !await appConfirm('این پیام از روی این دستگاه حذف شود؟')) return;
     playTactileFeedback();
     saveChatMessages(getChatMessages().filter(m => m.id !== id));
     renderChatMessages();
@@ -2633,10 +3132,10 @@
     showToast(type === 'attendance' ? '⚡ تردد جاری الصاق شد' : '🛠 گزارش ساپورت الصاق شد');
   }
 
-  function clearChatHistory() {
+  async function clearChatHistory() {
     const scoped = chatChannelFilter !== 'all';
     const label = scoped ? `کانال «${CHAT_CHANNELS[chatChannelFilter].label}»` : 'همه کانال‌ها';
-    if (!confirm(`پیام‌های ${label} از روی این دستگاه پاک شوند؟`)) return;
+    if (!await appConfirm(`پیام‌های ${label} از روی این دستگاه پاک شوند؟`, 'پاکسازی')) return;
     playTactileFeedback();
     const remaining = scoped ? getChatMessages().filter(m => m.channel !== chatChannelFilter) : [];
     saveChatMessages(remaining);
@@ -2711,7 +3210,11 @@
       stream.addEventListener('scroll', updateChatScrollButton, { passive: true });
     }
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeChatActions();
+      if (e.key === 'Escape') {
+        closeChatActions();
+        resolveConfirm(false);
+        closeCalendar();
+      }
     });
   });
 

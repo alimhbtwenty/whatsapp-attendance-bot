@@ -43,8 +43,9 @@ jobs:
           name: geomat-attendance-apk
           path: geomat-attendance.apk
 
-      - name: Attach APK to GitHub Release v1.0.8
+      - name: Attach APK to GitHub Release v1.0.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.0.8 geomat-attendance.apk --clobber || true
+          gh release view v1.0.9 >/dev/null 2>&1 || gh release create v1.0.9 --title "v1.0.9" --notes "Chat message delete fix, in-app Jalali calendar (support report date), entry GPS location." || true
+          gh release upload v1.0.9 geomat-attendance.apk --clobber || true
