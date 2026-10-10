@@ -17,17 +17,18 @@
   <style>
     :root {
       --bg-color: #111417;
-      --card-bg: #191c21;
-      --bubble-in: #14161a;
+      --card-bg: #181b20;
+      --bubble-in: #131518;
       --primary: #F3CB03;
       --primary-hover: #ffd700;
-      --primary-glow: rgba(243, 203, 3, 0.25);
+      --primary-glow: rgba(243, 203, 3, 0.22);
       --whatsapp: #25D366;
       --whatsapp-hover: #20ba59;
       --text-main: #f5f7fa;
       --text-muted: #8d97a5;
-      --border: #282d37;
+      --border: #262b33;
       --danger: #ff4757;
+      --danger-bg: rgba(255, 71, 87, 0.15);
     }
 
     * {
@@ -45,7 +46,7 @@
       display: flex;
       justify-content: center;
       padding: 12px;
-      padding-bottom: 45px;
+      padding-bottom: 50px;
     }
 
     .container {
@@ -53,7 +54,7 @@
       max-width: 480px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 13px;
     }
 
     /* Install Banner */
@@ -109,9 +110,9 @@
 
     /* Header */
     .header {
-      background: linear-gradient(180deg, #1b1e24 0%, #17191d 100%);
+      background: linear-gradient(180deg, #1a1d22 0%, #15181c 100%);
       border-radius: 18px;
-      padding: 16px 18px;
+      padding: 15px 18px;
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -135,14 +136,14 @@
       justify-content: space-between;
     }
     .brand-logo-img {
-      max-width: 140px;
+      max-width: 135px;
       height: auto;
       object-fit: contain;
     }
     .live-clock-badge {
       background-color: var(--bubble-in);
       border: 1px solid var(--border);
-      padding: 5px 10px;
+      padding: 5px 12px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 700;
@@ -187,9 +188,14 @@
       color: var(--text-muted);
       display: flex;
       align-items: center;
+      justify-content: space-between;
+    }
+    .bubble-title-left {
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
-    .bubble-title span.accent-dot {
+    .accent-dot {
       display: inline-block;
       width: 7px;
       height: 7px;
@@ -206,23 +212,27 @@
     .btn-grid.cols-2 {
       grid-template-columns: repeat(2, 1fr);
     }
+    .btn-grid.cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
 
     .inline-btn {
       background-color: var(--bubble-in);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 12px 8px;
+      padding: 11px 8px;
       border-radius: 12px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.18s ease;
+      transition: all 0.15s ease;
       text-align: center;
       user-select: none;
+      position: relative;
     }
     .inline-btn:active {
       transform: scale(0.96);
@@ -235,57 +245,188 @@
       box-shadow: 0 4px 14px var(--primary-glow);
     }
 
-    /* Inputs */
-    .time-picker-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    .time-group {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-    .time-group label {
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-    .custom-input {
-      background-color: var(--bubble-in);
-      border: 1px solid var(--border);
+    /* حذف مکان */
+    .delete-loc-btn {
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      background: var(--danger);
       color: #fff;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      text-align: center;
-      width: 100%;
-      outline: none;
-      direction: ltr;
-      transition: border-color 0.2s;
+      border: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 11px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
     }
-    .custom-input:focus {
-      border-color: var(--primary);
+    .edit-mode .delete-loc-btn {
+      display: flex;
     }
 
-    /* Custom Project Add */
-    .add-project-row {
+    /* روزهای هفته (دکمه‌های نواری گزینه‌ای) */
+    .days-row {
       display: flex;
-      gap: 8px;
-      margin-top: 4px;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
     }
-    .add-project-input {
+    .days-row::-webkit-scrollbar {
+      display: none;
+    }
+    .day-chip {
       flex: 1;
+      min-width: 46px;
+      padding: 10px 4px;
       background-color: var(--bubble-in);
       border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 13px;
-      outline: none;
+      border-radius: 11px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      white-space: nowrap;
+      transition: all 0.15s;
     }
-    .add-project-input:focus {
+    .day-chip.selected {
+      background: var(--primary);
+      color: #111417;
+      border-color: var(--primary);
+      font-weight: 800;
+      box-shadow: 0 3px 10px var(--primary-glow);
+    }
+
+    /* گزینه‌های تاریخ (امروز / دیروز / تغییر روز) */
+    .date-control-card {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .date-quick-chips {
+      display: flex;
+      gap: 8px;
+    }
+    .date-chip {
+      flex: 1;
+      padding: 9px 8px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+    }
+    .date-chip.selected {
+      background-color: var(--primary);
+      color: #111417;
+      border-color: var(--primary);
+      font-weight: 800;
+    }
+    .date-stepper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--card-bg);
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .date-display {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      direction: rtl;
+    }
+    .stepper-btn {
+      background: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stepper-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* انتخابگر هوشمند ساعت (بدون تایپ، کاملاً تپی) */
+    .time-box-group {
+      background-color: var(--bubble-in);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .time-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .time-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+    .time-val-display {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--primary);
+      letter-spacing: 1px;
+      direction: ltr;
+    }
+    .time-quick-presets {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .time-preset-chip {
+      padding: 6px 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .time-adjust-row {
+      display: flex;
+      gap: 8px;
+    }
+    .time-adjust-btn {
+      flex: 1;
+      padding: 7px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+    .time-adjust-btn:active {
+      color: var(--primary);
       border-color: var(--primary);
     }
 
@@ -346,29 +487,101 @@
       background-color: var(--border);
     }
 
-    /* History Log */
+    /* مودال افزودن محل جدید */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--primary);
+      border-radius: 18px;
+      padding: 22px;
+      width: 100%;
+      max-width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    }
+    .modal-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .modal-input {
+      background: var(--bubble-in);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    .modal-input:focus {
+      border-color: var(--primary);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 11px;
+      border-radius: 10px;
+      border: none;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-btn.save {
+      background: var(--primary);
+      color: #111417;
+    }
+    .modal-btn.cancel {
+      background: var(--bubble-in);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    /* تاریخچه و گزارشات */
     .history-card {
       margin-top: 6px;
+    }
+    .history-actions {
+      display: flex;
+      gap: 10px;
+      font-size: 11.5px;
     }
     .history-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 180px;
+      max-height: 200px;
       overflow-y: auto;
     }
     .history-item {
       background-color: var(--bubble-in);
-      padding: 10px 14px;
+      padding: 11px 14px;
       border-radius: 12px;
       font-size: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border: 1px solid rgba(255,255,255,0.03);
-    }
-    .history-text {
-      color: var(--text-muted);
     }
     .history-badge {
       font-weight: 700;
@@ -388,7 +601,7 @@
       font-size: 14px;
       box-shadow: 0 6px 22px rgba(0,0,0,0.6);
       transition: transform 0.25s ease;
-      z-index: 999;
+      z-index: 1001;
       pointer-events: none;
     }
     .toast.show {
@@ -400,7 +613,7 @@
 
 <div class="container">
 
-  <!-- PWA Install Prompt Banner (با لوگوی رسمی گئومات) -->
+  <!-- PWA Install Banner -->
   <div class="install-banner" id="installBanner">
     <div class="install-info">
       <img src="icon-192.png" alt="Geomat App Icon" class="install-logo-mini">
@@ -429,10 +642,12 @@
 
   <!-- Step 1: نوع ثبت -->
   <div class="chat-bubble">
-    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۱: نوع ثبت را انتخاب کنید</div>
-    <div class="btn-grid cols-2" id="actionTypeGrid">
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۱: نوع ثبت را انتخاب کنید</div>
+    </div>
+    <div class="btn-grid cols-3" id="actionTypeGrid">
       <button class="inline-btn selected" onclick="setActionType('both')">
-        🔄 هر دو (ورود و خروج)
+        🔄 بازه کامل
       </button>
       <button class="inline-btn" onclick="setActionType('in')">
         🟢 فقط ورود
@@ -440,63 +655,124 @@
       <button class="inline-btn" onclick="setActionType('out')">
         🔴 فقط خروج
       </button>
-      <button class="inline-btn" onclick="setNowTime()">
-        ⏱ ساعت الان
+    </div>
+  </div>
+
+  <!-- Step 2: انتخاب و مدیریت شرکت‌ها/محل‌ها -->
+  <div class="chat-bubble">
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۲: شرکت یا محل را انتخاب کنید</div>
+      <button style="background:none; border:none; color:var(--primary); font-size:12px; cursor:pointer;" onclick="toggleEditLocations()">
+        ⚙ مدیریت محل‌ها
       </button>
     </div>
-  </div>
 
-  <!-- Step 2: انتخاب پروژه/مکان -->
-  <div class="chat-bubble">
-    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۲: نام پروژه / ساختمان را انتخاب کنید</div>
     <div class="btn-grid" id="projectsGrid">
-      <!-- Generated via JS -->
+      <!-- Dynamic Projects Buttons -->
     </div>
-    <div class="add-project-row">
-      <input type="text" id="newProjectInput" class="add-project-input" placeholder="افزودن نام پروژه جدید...">
-      <button class="inline-btn" style="padding: 10px 16px; background: var(--bubble-in); border-color: var(--primary); color: var(--primary);" onclick="addNewProject()">+ افزودن</button>
+
+    <!-- دکمه اختصاصی افزودن شرکت یا محل جدید -->
+    <button class="inline-btn" style="border-style:dashed; border-color:var(--primary); color:var(--primary); font-weight:700;" onclick="openAddModal()">
+      ➕ افزودن شرکت / محل جدید
+    </button>
+  </div>
+
+  <!-- Step 3: انتخاب روز هفته (کاملاً گزینه‌ای - بدون تایپ) -->
+  <div class="chat-bubble">
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۳: روز هفته را انتخاب کنید</div>
+    </div>
+    <div class="days-row" id="daysRow">
+      <!-- Generated via JS: شنبه تا جمعه -->
     </div>
   </div>
 
-  <!-- Step 3: تنظیم زمان و تاریخ -->
+  <!-- Step 4: تنظیم تاریخ (کاملاً گزینه‌ای با دکمه‌های سریع) -->
   <div class="chat-bubble">
-    <div class="bubble-title"><span class="accent-dot"></span> مرحله ۳: تاریخ و ساعت</div>
-    <div class="time-picker-row">
-      <div class="time-group">
-        <label>تاریخ شمسی:</label>
-        <input type="text" id="shamsiDateInput" class="custom-input" style="direction: rtl; font-size: 13px;">
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۴: تاریخ گزارش</div>
+    </div>
+    <div class="date-control-card">
+      <div class="date-quick-chips">
+        <button class="date-chip selected" onclick="setDateOffset(0)" id="chipToday">📅 امروز</button>
+        <button class="date-chip" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
+        <button class="date-chip" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
       </div>
-      <div class="time-group">
-        <label>روز هفته:</label>
-        <input type="text" id="shamsiDayInput" class="custom-input" style="direction: rtl; font-size: 13px;">
+      <div class="date-stepper">
+        <button class="stepper-btn" onclick="changeDateByDays(-1)">➖</button>
+        <span class="date-display" id="dateDisplay">--/--/----</span>
+        <button class="stepper-btn" onclick="changeDateByDays(1)">➕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: تنظیم ساعت هوشمند (تپی، بدون نیاز به کیبورد) -->
+  <div class="chat-bubble">
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> مرحله ۵: تنظیم ساعت</div>
+      <button style="background:none; border:none; color:var(--primary); font-size:12px; cursor:pointer;" onclick="setNowTime()">
+        ⏱ ساعت فعلی
+      </button>
+    </div>
+
+    <!-- بخش ساعت ورود -->
+    <div class="time-box-group" id="inTimeBox">
+      <div class="time-header-row">
+        <span class="time-title">🟢 ساعت ورود:</span>
+        <span class="time-val-display" id="inTimeDisplay">09:00</span>
+      </div>
+      <div class="time-quick-presets">
+        <button class="time-preset-chip" onclick="setTimeVal('in', '08:30')">08:30</button>
+        <button class="time-preset-chip" onclick="setTimeVal('in', '09:00')">09:00</button>
+        <button class="time-preset-chip" onclick="setTimeVal('in', '09:15')">09:15</button>
+        <button class="time-preset-chip" onclick="setTimeVal('in', '09:30')">09:30</button>
+        <button class="time-preset-chip" onclick="setTimeVal('in', '10:00')">10:00</button>
+      </div>
+      <div class="time-adjust-row">
+        <button class="time-adjust-btn" onclick="adjustMinutes('in', -15)">➖ ۱۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('in', -5)">➖ ۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('in', 5)">➕ ۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('in', 15)">➕ ۱۵ دقیقه</button>
       </div>
     </div>
 
-    <div class="time-picker-row" style="margin-top: 6px;">
-      <div class="time-group" id="inTimeContainer">
-        <label>ساعت ورود:</label>
-        <input type="time" id="timeInInput" class="custom-input" onchange="updatePreview()">
+    <!-- بخش ساعت خروج -->
+    <div class="time-box-group" id="outTimeBox">
+      <div class="time-header-row">
+        <span class="time-title">🔴 ساعت خروج:</span>
+        <span class="time-val-display" id="outTimeDisplay">17:00</span>
       </div>
-      <div class="time-group" id="outTimeContainer">
-        <label>ساعت خروج:</label>
-        <input type="time" id="timeOutInput" class="custom-input" onchange="updatePreview()">
+      <div class="time-quick-presets">
+        <button class="time-preset-chip" onclick="setTimeVal('out', '13:00')">13:00</button>
+        <button class="time-preset-chip" onclick="setTimeVal('out', '14:30')">14:30</button>
+        <button class="time-preset-chip" onclick="setTimeVal('out', '17:00')">17:00</button>
+        <button class="time-preset-chip" onclick="setTimeVal('out', '18:00')">18:00</button>
+        <button class="time-preset-chip" onclick="setTimeVal('out', '21:00')">21:00</button>
+      </div>
+      <div class="time-adjust-row">
+        <button class="time-adjust-btn" onclick="adjustMinutes('out', -15)">➖ ۱۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('out', -5)">➖ ۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('out', 5)">➕ ۵ دقیقه</button>
+        <button class="time-adjust-btn" onclick="adjustMinutes('out', 15)">➕ ۱۵ دقیقه</button>
       </div>
     </div>
 
     <!-- تنظیمات فرمت پیام -->
     <div style="display: flex; gap: 14px; margin-top: 4px; font-size: 12px; color: var(--text-muted);">
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-        <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> شامل تاریخ و روز
+        <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> درج تاریخ و روز
       </label>
       <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
-        <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> هشتگ پروژه (#)
+        <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> افزودن هشتگ (#)
       </label>
     </div>
   </div>
 
-  <!-- Step 4: پیش‌نمایش پیام -->
+  <!-- Step 6: پیش‌نمایش و ارسال -->
   <div class="chat-bubble">
-    <div class="bubble-title"><span class="accent-dot"></span> پیش‌نمایش پیام جهت ارسال:</div>
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> پیش‌نمایش پیام نهایی:</div>
+    </div>
     <div class="preview-box" id="messagePreview">در حال آماده‌سازی پیام...</div>
     
     <button class="whatsapp-btn" onclick="sendToWhatsApp()">
@@ -508,11 +784,14 @@
     <button class="copy-btn" onclick="copyMessage()">📋 کپی متن پیام</button>
   </div>
 
-  <!-- تاریخچه پیام‌های ارسالی امروز -->
+  <!-- تاریخچه پیام‌های ارسالی با قابلیت خروجی اکسل -->
   <div class="chat-bubble history-card">
-    <div class="bubble-title" style="justify-content: space-between;">
-      <span>🕒 آخرین ثبت‌های امروز</span>
-      <span style="font-size: 11px; cursor: pointer; color: var(--danger);" onclick="clearHistory()">پاک کردن</span>
+    <div class="bubble-title">
+      <div class="bubble-title-left"><span class="accent-dot"></span> آرشیو ترددهای ثبت شده</div>
+      <div class="history-actions">
+        <span style="cursor: pointer; color: var(--primary);" onclick="exportHistoryCSV()">📥 دانلود اکسل</span>
+        <span style="cursor: pointer; color: var(--danger);" onclick="clearHistory()">حذف همه</span>
+      </div>
     </div>
     <div class="history-list" id="historyList">
       <!-- Dynamic history items -->
@@ -521,19 +800,29 @@
 
 </div>
 
+<!-- مودال افزودن شرکت/محل جدید -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal-card">
+    <div class="modal-title">➕ افزودن شرکت یا محل جدید</div>
+    <input type="text" id="modalProjectInput" class="modal-input" placeholder="مثال: کارگاه ونک، پتروشیمی، ...">
+    <div class="modal-actions">
+      <button class="modal-btn save" onclick="saveNewProjectFromModal()">ثبت و افزودن</button>
+      <button class="modal-btn cancel" onclick="closeAddModal()">انصراف</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">پیام کپی شد!</div>
 
 <script>
-  // ثبت Service Worker برای قابلیت آفلاین و PWA
+  // ثبت Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').catch(err => {
-        console.log('SW registration failed: ', err);
-      });
+      navigator.serviceWorker.register('./sw.js').catch(err => console.log(err));
     });
   }
 
-  // مدیریت نصب PWA
+  // PWA Install Prompt
   let deferredPrompt;
   const installBanner = document.getElementById('installBanner');
   const installAppBtn = document.getElementById('installAppBtn');
@@ -557,7 +846,10 @@
     }
   });
 
-  // پروژه‌های پیش‌فرض مطابق با گزارش‌های شما (شامل گئومات)
+  // روزهای هفته
+  const WEEK_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
+
+  // پروژه‌ها
   const DEFAULT_PROJECTS = [
     "گئومات", "مایسا", "پایش", "راگا", 
     "کرانه", "آرکا", "روانمهر ، کالاتیک"
@@ -565,6 +857,11 @@
 
   let selectedProject = "گئومات";
   let actionType = "both";
+  let selectedDay = "";
+  let currentDateObj = new Date();
+  let timeInStr = "09:00";
+  let timeOutStr = "17:00";
+  let isEditMode = false;
 
   function getProjects() {
     const saved = localStorage.getItem('geomat_attendance_projects');
@@ -575,8 +872,8 @@
     localStorage.setItem('geomat_attendance_projects', JSON.stringify(list));
   }
 
-  // محاسبه تاریخ و زمان شمسی
-  function getPersianDateTime(date = new Date()) {
+  // تبدیل تاریخ میلادی به تاریخ شمسی
+  function getPersianDateParts(date) {
     const formatterDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
       year: 'numeric',
       month: '2-digit',
@@ -595,39 +892,59 @@
     });
 
     const dayName = formatterDay.format(date);
-    const shamsiDateStr = `${year}/${month}/${day}`;
-
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const timeStr = `${hours}:${minutes}`;
-
-    return { shamsiDateStr, dayName, timeStr };
+    const dateStr = `${year}/${month}/${day}`;
+    return { dateStr, dayName };
   }
 
   function init() {
-    const nowInfo = getPersianDateTime();
-    document.getElementById('shamsiDateInput').value = nowInfo.shamsiDateStr;
-    document.getElementById('shamsiDayInput').value = nowInfo.dayName;
-    document.getElementById('timeInInput').value = "09:00";
-    document.getElementById('timeOutInput').value = nowInfo.timeStr;
+    // تنظیم زمان پیش‌فرض
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    timeOutStr = `${hh}:${mm}`;
 
+    renderDays();
+    renderProjects();
+    setDateOffset(0);
+    renderTimes();
+    renderHistory();
+
+    // ساعت زنده
     setInterval(() => {
       const d = new Date();
       document.getElementById('liveClock').textContent = 
         `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     }, 1000);
-
-    renderProjects();
-    renderHistory();
-    updatePreview();
   }
 
+  // رندر دکمه‌های گزینه‌ای روزهای هفته
+  function renderDays() {
+    const container = document.getElementById('daysRow');
+    container.innerHTML = '';
+    const { dayName } = getPersianDateParts(currentDateObj);
+    if (!selectedDay) selectedDay = dayName;
+
+    WEEK_DAYS.forEach(day => {
+      const chip = document.createElement('div');
+      chip.className = `day-chip ${selectedDay === day ? 'selected' : ''}`;
+      chip.textContent = day;
+      chip.onclick = () => {
+        selectedDay = day;
+        renderDays();
+        updatePreview();
+      };
+      container.appendChild(chip);
+    });
+  }
+
+  // رندر پروژه‌ها
   function renderProjects() {
     const container = document.getElementById('projectsGrid');
+    container.className = `btn-grid ${isEditMode ? 'edit-mode' : ''}`;
     container.innerHTML = '';
     const projects = getProjects();
 
-    projects.forEach(proj => {
+    projects.forEach((proj, idx) => {
       const btn = document.createElement('button');
       btn.className = `inline-btn ${selectedProject === proj ? 'selected' : ''}`;
       btn.textContent = proj;
@@ -636,46 +953,120 @@
         renderProjects();
         updatePreview();
       };
+
+      if (isEditMode && proj !== "گئومات") {
+        const del = document.createElement('span');
+        del.className = 'delete-loc-btn';
+        del.innerHTML = '✕';
+        del.onclick = (e) => {
+          e.stopPropagation();
+          deleteProject(proj);
+        };
+        btn.appendChild(del);
+      }
+
       container.appendChild(btn);
     });
   }
 
-  function addNewProject() {
-    const input = document.getElementById('newProjectInput');
-    const val = input.value.trim();
+  function toggleEditLocations() {
+    isEditMode = !isEditMode;
+    renderProjects();
+    showToast(isEditMode ? 'حالت ویرایش فعال شد (✕ برای حذف)' : 'حالت ویرایش غیرفعال شد');
+  }
+
+  function deleteProject(name) {
+    let list = getProjects();
+    list = list.filter(p => p !== name);
+    saveProjects(list);
+    if (selectedProject === name) selectedProject = list[0] || "گئومات";
+    renderProjects();
+    updatePreview();
+    showToast(`محل «${name}» حذف شد`);
+  }
+
+  // مودال افزودن محل جدید
+  function openAddModal() {
+    document.getElementById('modalProjectInput').value = '';
+    document.getElementById('addModal').classList.add('open');
+    setTimeout(() => document.getElementById('modalProjectInput').focus(), 100);
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModal').classList.remove('open');
+  }
+
+  function saveNewProjectFromModal() {
+    const val = document.getElementById('modalProjectInput').value.trim();
     if (!val) return;
-    const projects = getProjects();
-    if (!projects.includes(val)) {
-      projects.push(val);
-      saveProjects(projects);
+    const list = getProjects();
+    if (!list.includes(val)) {
+      list.push(val);
+      saveProjects(list);
       selectedProject = val;
       renderProjects();
       updatePreview();
-      showToast(`پروژه «${val}» اضافه شد`);
+      showToast(`محل جدید «${val}» اضافه شد`);
     }
-    input.value = '';
+    closeAddModal();
   }
 
-  function setActionType(type) {
-    actionType = type;
-    const buttons = document.querySelectorAll('#actionTypeGrid .inline-btn');
-    buttons[0].classList.toggle('selected', type === 'both');
-    buttons[1].classList.toggle('selected', type === 'in');
-    buttons[2].classList.toggle('selected', type === 'out');
+  // تنظیم تاریخ با دکمه‌های سریع
+  function setDateOffset(offset) {
+    currentDateObj = new Date();
+    currentDateObj.setDate(currentDateObj.getDate() + offset);
 
-    const inContainer = document.getElementById('inTimeContainer');
-    const outContainer = document.getElementById('outTimeContainer');
+    document.getElementById('chipToday').classList.toggle('selected', offset === 0);
+    document.getElementById('chipYesterday').classList.toggle('selected', offset === -1);
+    document.getElementById('chipDayBefore').classList.toggle('selected', offset === -2);
 
-    if (type === 'in') {
-      inContainer.style.display = 'flex';
-      outContainer.style.display = 'none';
-    } else if (type === 'out') {
-      inContainer.style.display = 'none';
-      outContainer.style.display = 'flex';
-    } else {
-      inContainer.style.display = 'flex';
-      outContainer.style.display = 'flex';
-    }
+    updateDateUI();
+  }
+
+  function changeDateByDays(delta) {
+    currentDateObj.setDate(currentDateObj.getDate() + delta);
+    document.getElementById('chipToday').classList.remove('selected');
+    document.getElementById('chipYesterday').classList.remove('selected');
+    document.getElementById('chipDayBefore').classList.remove('selected');
+    updateDateUI();
+  }
+
+  function updateDateUI() {
+    const { dateStr, dayName } = getPersianDateParts(currentDateObj);
+    document.getElementById('dateDisplay').textContent = dateStr;
+    selectedDay = dayName;
+    renderDays();
+    updatePreview();
+  }
+
+  // کنترل هوشمند ساعت
+  function renderTimes() {
+    document.getElementById('inTimeDisplay').textContent = timeInStr;
+    document.getElementById('outTimeDisplay').textContent = timeOutStr;
+  }
+
+  function setTimeVal(type, val) {
+    if (type === 'in') timeInStr = val;
+    else timeOutStr = val;
+    renderTimes();
+    updatePreview();
+  }
+
+  function adjustMinutes(type, deltaMins) {
+    let cur = type === 'in' ? timeInStr : timeOutStr;
+    let [h, m] = cur.split(':').map(Number);
+    let total = h * 60 + m + deltaMins;
+    if (total < 0) total += 24 * 60;
+    total = total % (24 * 60);
+
+    let newH = String(Math.floor(total / 60)).padStart(2, '0');
+    let newM = String(total % 60).padStart(2, '0');
+    let finalStr = `${newH}:${newM}`;
+
+    if (type === 'in') timeInStr = finalStr;
+    else timeOutStr = finalStr;
+
+    renderTimes();
     updatePreview();
   }
 
@@ -686,19 +1077,41 @@
     const now = `${hh}:${mm}`;
 
     if (actionType === 'in') {
-      document.getElementById('timeInInput').value = now;
+      timeInStr = now;
     } else {
-      document.getElementById('timeOutInput').value = now;
+      timeOutStr = now;
     }
+    renderTimes();
     updatePreview();
     showToast(`ساعت به ${now} تغییر یافت`);
   }
 
+  function setActionType(type) {
+    actionType = type;
+    const buttons = document.querySelectorAll('#actionTypeGrid .inline-btn');
+    buttons[0].classList.toggle('selected', type === 'both');
+    buttons[1].classList.toggle('selected', type === 'in');
+    buttons[2].classList.toggle('selected', type === 'out');
+
+    const inBox = document.getElementById('inTimeBox');
+    const outBox = document.getElementById('outTimeBox');
+
+    if (type === 'in') {
+      inBox.style.display = 'flex';
+      outBox.style.display = 'none';
+    } else if (type === 'out') {
+      inBox.style.display = 'none';
+      outBox.style.display = 'flex';
+    } else {
+      inBox.style.display = 'flex';
+      outBox.style.display = 'flex';
+    }
+    updatePreview();
+  }
+
+  // تولید متن پیام
   function generateMessageText() {
-    const dateStr = document.getElementById('shamsiDateInput').value.trim();
-    const dayStr = document.getElementById('shamsiDayInput').value.trim();
-    const timeIn = document.getElementById('timeInInput').value.trim();
-    const timeOut = document.getElementById('timeOutInput').value.trim();
+    const { dateStr } = getPersianDateParts(currentDateObj);
     const includeDate = document.getElementById('includeDateCheck').checked;
     const useHashtag = document.getElementById('hashtagCheck').checked;
 
@@ -712,18 +1125,18 @@
 
     if (includeDate) {
       lines.push(dateStr);
-      lines.push(dayStr);
+      lines.push(selectedDay);
     }
 
     lines.push(projTag);
 
     if (actionType === 'both') {
-      lines.push(`ورود ${timeIn}`);
-      lines.push(`خروج ${timeOut}`);
+      lines.push(`ورود ${timeInStr}`);
+      lines.push(`خروج ${timeOutStr}`);
     } else if (actionType === 'in') {
-      lines.push(`ورود ${timeIn}`);
+      lines.push(`ورود ${timeInStr}`);
     } else if (actionType === 'out') {
-      lines.push(`خروج ${timeOut}`);
+      lines.push(`خروج ${timeOutStr}`);
     }
 
     return lines.join('\n');
@@ -774,14 +1187,17 @@
 
   function saveToHistory(text, proj) {
     let history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
-    const d = new Date();
-    const time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    const { dateStr } = getPersianDateParts(currentDateObj);
     history.unshift({
-      time: time,
+      date: dateStr,
+      day: selectedDay,
       project: proj,
-      preview: text.split('\n').filter(Boolean).slice(-2).join(' | ')
+      in: timeInStr,
+      out: timeOutStr,
+      action: actionType,
+      text: text
     });
-    if (history.length > 20) history.pop();
+    if (history.length > 50) history.pop();
     localStorage.setItem('geomat_attendance_history', JSON.stringify(history));
     renderHistory();
   }
@@ -790,22 +1206,43 @@
     const list = document.getElementById('historyList');
     const history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
     if (history.length === 0) {
-      list.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center;">هنوز ثبتی انجام نشده است.</div>';
+      list.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding: 10px;">هنوز ثبتی در آرشیو موجود نیست.</div>';
       return;
     }
-    list.innerHTML = history.map(item => `
+    list.innerHTML = history.slice(0, 10).map(item => `
       <div class="history-item">
         <span class="history-badge">${item.project}</span>
-        <span class="history-text">${item.preview}</span>
-        <span style="font-size:11px; color:var(--text-muted);">${item.time}</span>
+        <span style="color:#b0bac8;">${item.action === 'in' ? 'ورود ' + item.in : item.action === 'out' ? 'خروج ' + item.out : item.in + ' تا ' + item.out}</span>
+        <span style="font-size:11px; color:var(--text-muted);">${item.date}</span>
       </div>
     `).join('');
   }
 
+  function exportHistoryCSV() {
+    const history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
+    if (history.length === 0) {
+      showToast('تاریخچه‌ای برای دانلود وجود ندارد');
+      return;
+    }
+    let csvContent = "\uFEFFتاریخ,روز,پروژه,ورود,خروج,نوع ثبت\n";
+    history.forEach(row => {
+      csvContent += `"${row.date}","${row.day}","${row.project}","${row.in || '-'}","${row.out || '-'}","${row.action}"\n`;
+    });
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `گزارش_تردد_گئومات_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showToast('فایل اکسل/CSV دانلود شد 📊');
+  }
+
   function clearHistory() {
-    localStorage.removeItem('geomat_attendance_history');
-    renderHistory();
-    showToast('تاریخچه پاک شد');
+    if (confirm('آیا از پاک کردن کامل تاریخچه مطمئن هستید؟')) {
+      localStorage.removeItem('geomat_attendance_history');
+      renderHistory();
+      showToast('تاریخچه پاک شد');
+    }
   }
 
   function showToast(msg) {
