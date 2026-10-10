@@ -3645,18 +3645,18 @@
       <div class="record-card-item">
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
-            <span style="font-weight:800; color:var(--gold); font-size:13px;">${item.company}</span>
+            <span style="font-weight:800; color:var(--gold); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-            ${item.type === 'attendance' ? 'مدت: ' + item.durationText : (item.actions ? item.actions.slice(0, 30) + '...' : 'گزارش ساپورت')}
+            ${item.type === 'attendance' ? 'مدت: ' + escapeHtml(item.durationText || '-') : (item.actions ? escapeHtml(String(item.actions).slice(0, 30)) + '...' : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="font-size:11px; color:var(--text-dim); text-align:left;">${item.date}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" onclick="deleteLogItem(${item.id})" title="حذف رکورد">🗑</button>
+          <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" onclick="deleteLogItem(${Number(item.id) || 0})" title="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('');
@@ -3686,12 +3686,9 @@
     let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
-      const cleanActions = (r.actions || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
-      const cleanPending = (r.pending || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
-      const cleanTech = (r.tech || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
-
-      csv += `${idx + 1},"${r.date}","${r.day}","${r.company}","${typeStr}","${r.durationText || '-'}","${cleanActions}","${cleanPending}","${cleanTech}","${geoLink}",${csvCell(Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '')}\n`;
+      const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.durationText || '-', r.actions, r.pending, r.tech, geoLink, checks].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
@@ -3835,8 +3832,11 @@
     </table>`;
   }
 
+  // هر خانه CSV: نقل‌قول امن، و خنثی‌سازی فرمول (= + - @) تا اکسل متن کاربر را اجرا نکند
   function csvCell(v) {
-    return `"${String(v == null ? '' : v).replace(/[\n\r]+/g, ' - ').replace(/"/g, '""')}"`;
+    let str = String(v == null ? '' : v).replace(/[\n\r]+/g, ' - ');
+    if (/^[=+@\t]/.test(str) || (/^-./.test(str) && !/^-\d+(\.\d+)?$/.test(str))) str = "'" + str;
+    return `"${str.replace(/"/g, '""')}"`;
   }
 
   function exportMonthlyCsv() {
