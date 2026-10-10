@@ -1,4 +1,4 @@
-const CACHE_NAME = 'geomat-attendance-v9';
+const CACHE_NAME = 'geomat-attendance-v11';
 const ASSETS = [
   './',
   './index.html',
@@ -11,7 +11,8 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
+      // cache: 'reload' از کش HTTP مرورگر رد می‌شود؛ وگرنه نسخه جدید ممکن بود index.html قدیمی را ذخیره کند
+      return cache.addAll(ASSETS.map((url) => new Request(url, { cache: 'reload' })));
     })
   );
   self.skipWaiting();
@@ -34,7 +35,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
+    caches.match(event.request, { ignoreSearch: event.request.mode === 'navigate' }).then((cachedResponse) => {
       return cachedResponse || fetch(event.request);
     })
   );
