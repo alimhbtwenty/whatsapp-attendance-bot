@@ -2163,9 +2163,15 @@
     localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
   }
 
-  // ضدعفونی‌سازی ورودی‌ها برای حفظ امنیت و حریم خصوصی
+  // ضدعفونی‌سازی و کدگذاری کامل موجودیت‌های HTML برای جلوگیری قطعی از XSS
   function sanitizeText(str) {
-    return String(str || '').replace(/[<>]/g, '').trim();
+    return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[ch])).trim();
   }
 
   // دریافت لاگ‌های فیلترشده بر اساس شرکت، جستجو و بازه زمانی
