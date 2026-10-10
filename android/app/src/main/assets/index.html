@@ -1168,6 +1168,36 @@
       transform: translateX(-50%) translateY(0) scale(1);
     }
 
+    /* ردیف تاریخ تب تردد: همه دکمه‌ها در یک خط، فشرده‌تر روی گوشی */
+    .compact-date-row {
+      flex-wrap: nowrap;
+      gap: 3px;
+      padding: 7px 5px;
+    }
+    .compact-date-row .date-chips-quick,
+    .compact-date-row > div:last-child {
+      gap: 3px !important;
+      flex-shrink: 0;
+    }
+    .compact-date-row .date-q-btn {
+      padding: 5px 4px;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .compact-date-row .date-pick-btn {
+      padding: 4px 5px;
+      gap: 2px;
+      white-space: nowrap;
+    }
+    .compact-date-row .date-display-tag {
+      font-size: 11.5px;
+      letter-spacing: 0;
+    }
+
+    @media (max-width: 359px) {
+      .compact-date-row { flex-wrap: wrap; }
+    }
+
     /* تاریخ قابل لمس که تقویم داخلی را باز می‌کند */
     .date-pick-btn {
       background: rgba(243, 203, 3, 0.06);
@@ -1352,7 +1382,7 @@
         <div class="title-tag"><span class="gold-marker"></span> روز و تاریخ</div>
       </div>
       <div class="days-carousel" id="attendanceDaysRow"></div>
-      <div class="date-stepper-panel" style="flex-wrap:wrap; gap:6px;">
+      <div class="date-stepper-panel compact-date-row">
         <div class="date-chips-quick">
           <button class="date-q-btn selected" onclick="setDateOffset(0)" id="chipToday">امروز</button>
           <button class="date-q-btn" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
