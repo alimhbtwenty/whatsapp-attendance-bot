@@ -3578,6 +3578,13 @@
       return;
     }
 
+    // همین گزارش اگر قبلاً آفلاین در صف رفته بود، الان فرستاده می‌شود؛ از صف برش دار تا دوباره ارسال نشود
+    const queued = getOutbox();
+    if (queued.some(x => x.text === text)) {
+      saveOutbox(queued.filter(x => x.text !== text));
+      renderOutbox();
+    }
+
     if (navigator.share) {
       navigator.share({ text: text }).catch(() => openWhatsAppDirect(text));
     } else {
