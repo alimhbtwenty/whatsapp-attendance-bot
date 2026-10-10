@@ -418,8 +418,6 @@
       padding: 8px 12px;
       border-radius: 14px;
       border: 1px solid var(--border-subtle);
-      flex-wrap: wrap;
-      gap: 6px;
     }
     .date-chips-quick {
       display: flex;
@@ -1361,9 +1359,9 @@
           <button class="date-q-btn" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-          <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">▶</button>
-          <button class="date-pick-btn" onclick="openAttendanceCalendar()" title="انتخاب از تقویم">📅 <span class="date-display-tag" id="dateDisplay">--/--/----</span></button>
-          <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">◀</button>
+          <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">◀ روز قبل</button>
+          <span class="date-display-tag" id="dateDisplay">--/--/----</span>
+          <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">روز بعد ▶</button>
         </div>
       </div>
     </div>
@@ -1458,7 +1456,7 @@
         <div class="title-tag"><span class="gold-marker"></span> تاریخ گزارش</div>
         <span id="supportDayName" style="color:var(--gold);">--</span>
       </div>
-      <div class="date-stepper-panel">
+      <div class="date-stepper-panel" style="flex-wrap:wrap; gap:6px;">
         <div class="date-chips-quick">
           <button class="date-q-btn selected" onclick="setSupportDateOffset(0)" id="supChipToday">امروز</button>
           <button class="date-q-btn" onclick="setSupportDateOffset(-1)" id="supChipYesterday">دیروز</button>
@@ -1914,13 +1912,6 @@
       html += `<button class="${cls.join(' ')}" onclick="pickCalendarDate(${jy}, ${jm}, ${d})">${toPersianDigits(d)}</button>`;
     }
     document.getElementById('jcalGrid').innerHTML = html;
-  }
-
-  function openAttendanceCalendar() {
-    openCalendar(currentDateObj, (date) => {
-      currentDateObj = date;
-      updateDateDisplay();
-    });
   }
 
   // تاریخ گزارش ساپورت مستقل از تب تردد است و ساعت ندارد
