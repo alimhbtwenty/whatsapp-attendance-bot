@@ -2,37 +2,44 @@
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>سامانه ثبت تردد گئومات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>سامانه دستیار کارگاهی گئومات</title>
   
-  <!-- PWA Meta Tags & Icons (Geomat Brand) -->
+  <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0c0e12">
+  <meta name="theme-color" content="#07080a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="تردد گئومات">
+  <meta name="apple-mobile-web-app-title" content="گئومات">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
   <style>
     :root {
-      --bg-color: #0c0e12;
-      --surface-1: #13161c;
-      --surface-2: #191c24;
-      --surface-3: #20242e;
-      --primary: #F3CB03;
-      --primary-hover: #ffd700;
-      --primary-glow: rgba(243, 203, 3, 0.28);
-      --primary-subtle: rgba(243, 203, 3, 0.1);
+      --bg: #07080b;
+      --surface-glass: rgba(18, 22, 30, 0.72);
+      --surface-solid: #11141b;
+      --surface-card: #151923;
+      --surface-hover: #1c212f;
+      --surface-active: #222838;
+      
+      --gold: #F3CB03;
+      --gold-glow: rgba(243, 203, 3, 0.35);
+      --gold-dim: rgba(243, 203, 3, 0.12);
+      --gold-border: rgba(243, 203, 3, 0.28);
+      
       --whatsapp: #25D366;
-      --whatsapp-hover: #22bf5b;
-      --text-main: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --border: rgba(255, 255, 255, 0.07);
-      --border-focus: rgba(243, 203, 3, 0.45);
+      --whatsapp-glow: rgba(37, 211, 102, 0.35);
+      
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-highlight: rgba(255, 255, 255, 0.12);
+      
       --danger: #f43f5e;
-      --card-radius: 20px;
+      --blue: #38bdf8;
     }
 
     * {
@@ -44,251 +51,267 @@
     }
 
     body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
+      background-color: var(--bg);
+      color: var(--text);
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      padding: 14px 12px 60px;
+      padding: 12px 12px 90px;
       overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Lighting Background Effects */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 380px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(243, 203, 3, 0.14) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 70%);
+      filter: blur(50px);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: -150px;
+      right: -80px;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(37, 211, 102, 0.08) 0%, transparent 70%);
+      filter: blur(60px);
+      z-index: -1;
+      pointer-events: none;
     }
 
     .container {
       width: 100%;
-      max-width: 460px;
+      max-width: 440px;
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
 
     /* PWA Banner */
-    .install-banner {
+    .install-bar {
       display: none;
-      background: linear-gradient(135deg, rgba(243, 203, 3, 0.12) 0%, rgba(25, 28, 36, 0.8) 100%);
-      border: 1px solid rgba(243, 203, 3, 0.3);
-      border-radius: 16px;
-      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(243, 203, 3, 0.16), rgba(18, 22, 30, 0.85));
+      border: 1px solid var(--gold-border);
+      border-radius: 18px;
+      padding: 10px 14px;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
     }
-    .install-banner.show {
+    .install-bar.show {
       display: flex;
-    }
-    .install-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .install-logo-mini {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      object-fit: contain;
-      background: #000;
-      padding: 3px;
-      border: 1px solid var(--border);
-    }
-    .install-text {
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .install-sub {
-      font-size: 11px;
-      color: var(--primary);
     }
     .install-btn {
-      background: var(--primary);
-      color: #0c0e12;
+      background: var(--gold);
+      color: #000;
       border: none;
-      padding: 8px 14px;
+      padding: 7px 14px;
       border-radius: 10px;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 800;
       cursor: pointer;
     }
 
-    /* Header */
-    .top-bar {
+    /* Top HUD / Status Bar */
+    .hud-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 4px 6px;
+      padding: 4px 6px;
     }
-    .brand-section {
+    .brand-cluster {
       display: flex;
       align-items: center;
       gap: 10px;
     }
     .brand-logo-img {
-      max-width: 120px;
+      max-width: 110px;
       height: auto;
       object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
     }
-    .header-actions {
+    .hud-right {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .user-pill {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
+    .hud-chip {
+      background: var(--surface-glass);
+      border: 1px solid var(--border-subtle);
+      backdrop-filter: blur(10px);
+      padding: 5px 12px;
       border-radius: 20px;
       font-size: 12px;
-      color: var(--text-secondary);
-      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 5px;
-      transition: all 0.2s;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 var(--border-highlight);
     }
-    .user-pill:active {
-      border-color: var(--primary);
-      color: var(--primary);
+    .hud-chip:active {
+      border-color: var(--gold);
+      color: var(--gold);
     }
-    .user-name-highlight {
-      color: var(--primary);
-      font-weight: 700;
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
     }
-    .clock-pill {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
+    .clock-text {
       direction: ltr;
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--text);
     }
 
-    /* Navigation Tabs (ثبت تردد / آرشیو) */
-    .nav-tabs {
+    /* Primary Dynamic Segmented Switcher */
+    .mode-switcher-dock {
       display: flex;
-      background: var(--surface-1);
+      background: rgba(14, 18, 25, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
       padding: 4px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.6);
       gap: 4px;
+      position: relative;
     }
-    .nav-tab-btn {
+    .mode-tab-btn {
       flex: 1;
-      padding: 10px;
-      border-radius: 12px;
+      padding: 10px 4px;
+      border-radius: 14px;
       border: none;
       background: transparent;
-      color: var(--text-secondary);
-      font-size: 13.5px;
+      color: var(--text-muted);
+      font-size: 12.5px;
       font-weight: 700;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      transition: all 0.2s ease;
+      transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
     }
-    .nav-tab-btn.active {
-      background: var(--surface-2);
-      color: var(--primary);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(243, 203, 3, 0.25);
+    .mode-tab-btn.active {
+      background: linear-gradient(180deg, #1e2433 0%, #151924 100%);
+      color: var(--gold);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(243, 203, 3, 0.3);
     }
 
-    /* Cards / Surfaces */
-    .glass-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: var(--card-radius);
+    /* Glass Surfaces */
+    .frost-card {
+      background: var(--surface-glass);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
       padding: 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 26px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 var(--border-highlight);
       display: flex;
       flex-direction: column;
       gap: 12px;
-      box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
       position: relative;
     }
 
-    .section-title {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: var(--text-secondary);
+    .card-header-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-muted);
     }
-    .section-title-left {
+    .card-header-bar .title-tag {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 8px;
+      color: var(--text);
     }
-    .gold-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--primary);
-      box-shadow: 0 0 8px var(--primary-glow);
+    .gold-marker {
+      width: 4px;
+      height: 14px;
+      border-radius: 4px;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold-glow);
     }
 
-    /* Segmented Controls (نوع ثبت) */
-    .segmented-control {
+    /* Segmented Options inside Card */
+    .segmented-pill-row {
       display: flex;
-      background: var(--surface-2);
-      padding: 4px;
+      background: rgba(10, 13, 18, 0.6);
+      border: 1px solid var(--border-subtle);
       border-radius: 14px;
-      border: 1px solid var(--border);
-      gap: 4px;
+      padding: 3px;
+      gap: 3px;
     }
-    .segment-btn {
+    .pill-opt-btn {
       flex: 1;
-      padding: 10px 4px;
-      border-radius: 10px;
+      padding: 9px 4px;
+      border-radius: 11px;
       border: none;
       background: transparent;
-      color: var(--text-secondary);
-      font-size: 13px;
+      color: var(--text-muted);
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.18s;
       text-align: center;
+      transition: all 0.18s;
     }
-    .segment-btn.selected {
-      background: var(--primary);
-      color: #0c0e12;
+    .pill-opt-btn.selected {
+      background: var(--gold);
+      color: #000;
       font-weight: 800;
-      box-shadow: 0 4px 14px var(--primary-glow);
+      box-shadow: 0 4px 14px var(--gold-glow);
     }
 
-    /* دکمه‌های شبکه‌ای شرکت‌ها و محل‌ها */
-    .grid-projects {
+    /* Grid of Company Chips */
+    .company-chips-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+      gap: 7px;
     }
-    .proj-chip {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 11px 6px;
-      border-radius: 12px;
-      font-size: 13px;
+    .comp-chip {
+      background: rgba(15, 19, 27, 0.75);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      padding: 10px 4px;
+      border-radius: 13px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
+      transition: all 0.16s ease;
       position: relative;
       user-select: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
     }
-    .proj-chip:active {
+    .comp-chip:active {
       transform: scale(0.96);
     }
-    .proj-chip.selected {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #0c0e12;
+    .comp-chip.selected {
+      background: linear-gradient(135deg, var(--gold) 0%, #eab308 100%);
+      border-color: var(--gold);
+      color: #0a0c10;
       font-weight: 800;
-      box-shadow: 0 4px 14px var(--primary-glow);
+      box-shadow: 0 4px 16px var(--gold-glow);
     }
-    .delete-loc-icon {
+    .del-badge {
       position: absolute;
       top: -4px;
       left: -4px;
@@ -302,195 +325,179 @@
       align-items: center;
       justify-content: center;
     }
-    .edit-mode .delete-loc-icon {
+    .edit-mode .del-badge {
       display: flex;
     }
 
-    .add-loc-btn {
+    .add-comp-pill {
       background: transparent;
       border: 1px dashed rgba(243, 203, 3, 0.4);
-      color: var(--primary);
-      padding: 10px;
-      border-radius: 12px;
-      font-size: 12.5px;
+      color: var(--gold);
+      padding: 9px;
+      border-radius: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
       transition: all 0.2s;
     }
-    .add-loc-btn:active {
-      background: var(--primary-subtle);
+    .add-comp-pill:active {
+      background: var(--gold-dim);
     }
 
-    /* روزهای هفته نواری */
-    .days-strip {
+    /* Days Carousel */
+    .days-carousel {
       display: flex;
       gap: 6px;
       overflow-x: auto;
       scrollbar-width: none;
       padding-bottom: 2px;
     }
-    .days-strip::-webkit-scrollbar {
+    .days-carousel::-webkit-scrollbar {
       display: none;
     }
-    .day-pill {
+    .day-item-pill {
       flex: 1;
-      min-width: 48px;
-      padding: 10px 4px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+      min-width: 47px;
+      padding: 9px 2px;
+      background: rgba(14, 18, 25, 0.65);
+      border: 1px solid var(--border-subtle);
       border-radius: 12px;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       text-align: center;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.16s;
     }
-    .day-pill.selected {
-      background: var(--primary);
-      color: #0c0e12;
-      border-color: var(--primary);
+    .day-item-pill.selected {
+      background: var(--gold);
+      color: #000;
       font-weight: 800;
-      box-shadow: 0 4px 12px var(--primary-glow);
+      box-shadow: 0 4px 12px var(--gold-glow);
     }
 
-    /* نوار تاریخ */
-    .date-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: var(--surface-2);
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-    .date-quick-bar {
-      display: flex;
-      gap: 6px;
-    }
-    .date-quick-btn {
-      flex: 1;
-      padding: 8px;
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-align: center;
-    }
-    .date-quick-btn.selected {
-      background: var(--primary);
-      color: #0c0e12;
-      font-weight: 800;
-      border-color: var(--primary);
-    }
-    .date-stepper-box {
+    /* Date Stepper Bar */
+    .date-stepper-panel {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--surface-1);
-      padding: 6px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      background: rgba(10, 13, 18, 0.6);
+      padding: 8px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
     }
-    .date-text-display {
-      font-size: 14px;
+    .date-chips-quick {
+      display: flex;
+      gap: 4px;
+    }
+    .date-q-btn {
+      padding: 5px 9px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .date-q-btn.selected {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
+      font-weight: 700;
+    }
+    .date-display-tag {
+      font-size: 13.5px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text);
+      letter-spacing: 0.5px;
       direction: rtl;
     }
-    .stepper-arrow-btn {
-      background: transparent;
-      border: none;
-      color: var(--primary);
-      font-size: 18px;
-      font-weight: 800;
-      cursor: pointer;
-      padding: 2px 8px;
-    }
 
-    /* ساعت: دو خانه مربعی ۲ تایی عددی با دو نقطه ثابت */
-    .time-cards-container {
+    /* DIGITAL OLED CLOCK POD (ساعت دیجیتال لوکس) */
+    .clock-pod-container {
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
-    .time-row-card {
+    .time-hud-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
+      background: rgba(12, 15, 22, 0.8);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
       padding: 10px 14px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
     }
-    .time-label-group {
+    .time-row-meta {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    .time-tag-badge {
-      font-size: 13px;
+    .time-state-label {
+      font-size: 12.5px;
       font-weight: 700;
-      color: var(--text-main);
+      color: var(--text);
     }
-    .quick-now-tag {
-      background: var(--surface-3);
-      border: 1px solid var(--border);
-      color: var(--primary);
+    .time-now-pill {
+      background: rgba(243, 203, 3, 0.08);
+      border: 1px solid rgba(243, 203, 3, 0.25);
+      color: var(--gold);
       font-size: 11px;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.15s;
     }
-    .quick-now-tag:active {
-      transform: scale(0.93);
-      background: var(--primary-subtle);
+    .time-now-pill:active {
+      transform: scale(0.92);
+      background: var(--gold);
+      color: #000;
     }
-    .time-inputs-cluster {
+
+    .digital-digits-wrapper {
       display: flex;
       align-items: center;
       gap: 6px;
       direction: ltr;
     }
-    .time-digit-square {
+    .oled-square-digit {
       width: 52px;
       height: 52px;
-      background: var(--surface-1);
-      border: 1.5px solid var(--border);
+      background: #090b10;
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
-      color: var(--primary);
-      font-size: 22px;
-      font-weight: 800;
+      color: var(--gold);
+      font-size: 24px;
+      font-weight: 900;
       text-align: center;
       outline: none;
-      caret-color: var(--primary);
-      transition: all 0.15s ease;
+      caret-color: var(--gold);
+      transition: all 0.18s;
       direction: ltr;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
     }
-    .time-digit-square:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 14px var(--primary-glow);
-      background: #1d212b;
+    .oled-square-digit:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 16px var(--gold-glow), inset 0 0 10px rgba(243, 203, 3, 0.1);
+      background: #0e1118;
     }
-    .colon-separator {
-      font-size: 22px;
+    .digital-colon {
+      font-size: 24px;
       font-weight: 900;
-      color: var(--primary);
+      color: var(--gold);
+      text-shadow: 0 0 10px var(--gold-glow);
       user-select: none;
       line-height: 1;
     }
 
-    /* مدت زمان کارکرد زنده */
-    .duration-indicator-pill {
-      background: linear-gradient(90deg, rgba(243, 203, 3, 0.08) 0%, rgba(243, 203, 3, 0.02) 100%);
-      border: 1px solid rgba(243, 203, 3, 0.22);
-      border-radius: 12px;
+    /* Duration Meter Gauge */
+    .duration-meter-card {
+      background: linear-gradient(90deg, rgba(243, 203, 3, 0.09) 0%, rgba(56, 189, 248, 0.03) 100%);
+      border: 1px solid rgba(243, 203, 3, 0.2);
+      border-radius: 14px;
       padding: 9px 14px;
       display: flex;
       align-items: center;
@@ -498,286 +505,272 @@
       font-size: 12.5px;
       font-weight: 700;
     }
-    .duration-number {
-      color: var(--primary);
-      font-weight: 800;
+    .duration-badge-value {
+      color: var(--gold);
+      font-size: 13.5px;
+      font-weight: 900;
       direction: ltr;
+      letter-spacing: 0.5px;
     }
 
-    /* گزینه‌های تکمیلی فرمت پیام */
-    .toggles-cluster {
+    /* Checkbox Toggles */
+    .toggles-shelf {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      font-size: 12px;
-      color: var(--text-secondary);
+      font-size: 11.5px;
+      color: var(--text-muted);
       padding: 2px 4px;
     }
-    .toggle-lbl {
+    .toggle-chip-item {
       display: flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
     }
-    .toggle-lbl input[type="checkbox"] {
-      accent-color: var(--primary);
-      width: 15px;
-      height: 15px;
+    .toggle-chip-item input[type="checkbox"] {
+      accent-color: var(--gold);
+      width: 14px;
+      height: 14px;
     }
 
-    /* شرح فعالیت */
-    .activity-chips-wrap {
+    /* شرح کار و اکشن‌های سریع */
+    .quick-tags-scroll {
       display: flex;
       gap: 6px;
       overflow-x: auto;
       scrollbar-width: none;
       padding-bottom: 2px;
     }
-    .act-chip {
-      padding: 7px 11px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+    .tag-bubble {
+      padding: 6px 11px;
+      background: rgba(14, 18, 25, 0.65);
+      border: 1px solid var(--border-subtle);
       border-radius: 10px;
-      font-size: 12px;
-      color: var(--text-secondary);
+      font-size: 11.5px;
+      color: var(--text-muted);
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s;
     }
-    .act-chip.selected {
-      background: var(--primary-subtle);
-      border-color: var(--primary);
-      color: var(--primary);
+    .tag-bubble.selected {
+      background: var(--gold-dim);
+      border-color: var(--gold);
+      color: var(--gold);
       font-weight: 700;
     }
-    .act-text-input {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+    .cyber-input {
+      background: rgba(10, 13, 18, 0.7);
+      border: 1px solid var(--border-subtle);
       color: #fff;
       padding: 11px 14px;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 13px;
       outline: none;
       width: 100%;
+      transition: border-color 0.2s;
     }
-    .act-text-input:focus {
-      border-color: var(--border-focus);
+    .cyber-input:focus {
+      border-color: var(--border-highlight);
     }
 
-    /* پیش‌نمایش چت */
-    .preview-bubble {
-      background: linear-gradient(180deg, #161920 0%, #111318 100%);
+    /* Preview Message Shell */
+    .preview-chat-shell {
+      background: linear-gradient(180deg, #10131a 0%, #0c0e14 100%);
       border-radius: 16px;
-      padding: 16px;
-      border-right: 4px solid var(--primary);
-      border-left: 1px solid var(--border);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
+      padding: 15px;
+      border-right: 4px solid var(--gold);
+      border-left: 1px solid var(--border-subtle);
+      border-top: 1px solid var(--border-subtle);
+      border-bottom: 1px solid var(--border-subtle);
       white-space: pre-wrap;
-      font-size: 14px;
+      font-size: 13.5px;
       line-height: 1.85;
       font-weight: 500;
       color: #e2e8f0;
       min-height: 85px;
       user-select: all;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
     }
 
-    /* دکمه‌های اقدام نهایی */
-    .action-buttons-wrap {
+    /* FLOATING BOTTOM ACTION DOCK */
+    .floating-action-dock {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 24px);
+      max-width: 440px;
+      background: rgba(14, 17, 24, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 8px 10px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 1px rgba(255,255,255,0.2);
       display: flex;
-      flex-direction: column;
       gap: 8px;
+      z-index: 999;
     }
-    .send-whatsapp-btn {
-      background: linear-gradient(135deg, #25D366 0%, #1ea952 100%);
+    .whatsapp-action-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #25D366 0%, #16a34a 100%);
       color: #fff;
       border: none;
-      border-radius: 16px;
-      padding: 16px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      box-shadow: 0 6px 20px rgba(37, 211, 102, 0.3);
-      transition: all 0.2s;
-    }
-    .send-whatsapp-btn:active {
-      transform: scale(0.98);
-    }
-    .copy-text-btn {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      color: var(--text-main);
       border-radius: 14px;
-      padding: 12px;
-      font-size: 13.5px;
-      font-weight: 600;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 8px;
+      box-shadow: 0 4px 18px var(--whatsapp-glow);
+      transition: all 0.18s ease;
     }
-    .copy-text-btn:active {
-      background: var(--surface-2);
+    .whatsapp-action-btn:active {
+      transform: scale(0.97);
     }
-
-    /* تب آرشیو و آمار */
-    .archive-view {
-      display: none;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .archive-view.active {
+    .dock-copy-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 13px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
       display: flex;
-    }
-
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .metric-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       gap: 6px;
     }
-    .metric-label {
-      font-size: 11.5px;
-      color: var(--text-muted);
-    }
-    .metric-value {
-      font-size: 18px;
-      font-weight: 800;
-      color: var(--primary);
+    .dock-copy-btn:active {
+      background: rgba(255, 255, 255, 0.1);
     }
 
-    .records-list {
+    /* تب‌های مجزا */
+    .tab-section {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .tab-section.active {
+      display: flex;
+    }
+
+    /* تب آرشیو و فیلتر هر شرکت */
+    .filter-pills-row {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 4px;
+    }
+    .filter-chip {
+      padding: 6px 12px;
+      background: rgba(14, 18, 25, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .filter-chip.active {
+      background: var(--gold);
+      color: #000;
+      font-weight: 800;
+    }
+
+    .stats-hud-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .hud-stat-box {
+      background: rgba(14, 18, 25, 0.6);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-caption {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+    .stat-number {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--gold);
+    }
+
+    .record-stream {
       display: flex;
       flex-direction: column;
       gap: 8px;
       max-height: 380px;
       overflow-y: auto;
     }
-    .record-item-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border);
+    .record-card-item {
+      background: rgba(12, 16, 23, 0.75);
+      border: 1px solid var(--border-subtle);
       border-radius: 14px;
       padding: 12px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .record-project-badge {
-      font-weight: 800;
-      color: var(--primary);
-      font-size: 13px;
-    }
-    .record-time-text {
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-    .record-date-text {
-      color: var(--text-muted);
-      font-size: 11px;
-    }
 
-    /* مودال */
-    .modal-backdrop {
+    /* Modal Glass */
+    .glass-modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
+      z-index: 1100;
       padding: 20px;
     }
-    .modal-backdrop.open {
+    .glass-modal-bg.open {
       display: flex;
     }
-    .modal-panel {
-      background: var(--surface-1);
-      border: 1px solid rgba(243, 203, 3, 0.4);
-      border-radius: 20px;
+    .glass-modal-box {
+      background: #11141c;
+      border: 1px solid var(--gold-border);
+      border-radius: 22px;
       padding: 24px;
       width: 100%;
       max-width: 360px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9);
-    }
-    .modal-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-    }
-    .modal-field {
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      color: #fff;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      outline: none;
-    }
-    .modal-field:focus {
-      border-color: var(--primary);
-    }
-    .modal-btns-row {
-      display: flex;
-      gap: 8px;
-    }
-    .modal-confirm-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      background: var(--primary);
-      color: #0c0e12;
-      font-weight: 800;
-      font-size: 13.5px;
-      cursor: pointer;
-    }
-    .modal-cancel-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text-secondary);
-      font-weight: 700;
-      font-size: 13.5px;
-      cursor: pointer;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.9);
     }
 
     /* Toast */
-    .toast-msg {
+    .cyber-toast {
       position: fixed;
-      bottom: 25px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
-      background: rgba(22, 25, 32, 0.96);
-      border: 1px solid var(--primary);
+      background: rgba(18, 22, 30, 0.96);
+      border: 1px solid var(--gold);
       color: #fff;
       padding: 10px 22px;
       border-radius: 20px;
       font-size: 13px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7);
-      transition: transform 0.25s ease;
-      z-index: 1001;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+      transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1200;
       pointer-events: none;
     }
-    .toast-msg.show {
+    .cyber-toast.show {
       transform: translateX(-50%) translateY(0);
     }
   </style>
@@ -787,241 +780,288 @@
 <div class="container">
 
   <!-- PWA Install Banner -->
-  <div class="install-banner" id="installBanner">
-    <div class="install-info">
-      <img src="icon-192.png" alt="Geomat App Icon" class="install-logo-mini">
-      <div>
-        <div class="install-text">نصب نسخه ۱.۰.۱ گئومات</div>
-        <div class="install-sub">اجرای تمام‌صفحه و آفلاین</div>
+  <div class="install-bar" id="installBanner">
+    <div class="install-info" style="display:flex; align-items:center; gap:8px;">
+      <img src="icon-192.png" alt="Geomat" style="width:32px; height:32px; border-radius:8px;">
+      <span style="font-size:12.5px; font-weight:700;">نصب دستیار کارگاهی گئومات</span>
+    </div>
+    <button class="install-btn" id="installAppBtn">نصب اپ</button>
+  </div>
+
+  <!-- Top Status Bar / HUD -->
+  <div class="hud-bar">
+    <div class="brand-cluster">
+      <img src="logo-geomatco.png" alt="گئومات" class="brand-logo-img">
+    </div>
+    <div class="hud-right">
+      <div class="hud-chip" onclick="openUserModal()">
+        <span class="live-dot"></span>
+        <span id="userNameHeader">ثبت‌کننده</span>
       </div>
-    </div>
-    <button class="install-btn" id="installAppBtn">نصب</button>
-  </div>
-
-  <!-- Top Header -->
-  <div class="top-bar">
-    <div class="brand-section">
-      <img src="logo-geomatco.png" alt="شرکت فناوران آتیه گئومات" class="brand-logo-img">
-    </div>
-    <div class="header-actions">
-      <div class="user-pill" onclick="openUserModal()">
-        <span>👤</span>
-        <span class="user-name-highlight" id="userNameHeader">ثبت‌کننده</span>
-      </div>
-      <div class="clock-pill" id="liveClock">--:--</div>
+      <div class="hud-chip clock-text" id="liveClock">--:--</div>
     </div>
   </div>
 
-  <!-- Navigation Switcher (ثبت تردد / آرشیو) -->
-  <div class="nav-tabs">
-    <button class="nav-tab-btn active" id="tabLogBtn" onclick="switchMainTab('log')">
-      <span>✍️</span> ثبت تردد
+  <!-- Primary Dynamic Mode Switcher (تردد | ساپورت و گزارش فنی | آرشیو) -->
+  <div class="mode-switcher-dock">
+    <button class="mode-tab-btn active" id="tabAttendanceBtn" onclick="switchSystemMode('attendance')">
+      <span>🕒</span> ثبت تردد
     </button>
-    <button class="nav-tab-btn" id="tabArchiveBtn" onclick="switchMainTab('archive')">
-      <span>📊</span> آرشیو و آمار
+    <button class="mode-tab-btn" id="tabSupportBtn" onclick="switchSystemMode('support')">
+      <span>🛠</span> گزارش فنی
+    </button>
+    <button class="mode-tab-btn" id="tabArchiveBtn" onclick="switchSystemMode('archive')">
+      <span>📊</span> آرشیو
     </button>
   </div>
 
-  <!-- تب اصلی: فرم ثبت تردد -->
-  <div id="logView" style="display: flex; flex-direction: column; gap: 13px;">
+  <!-- ==================== تب ۱: ثبت تردد حضور و غیاب ==================== -->
+  <div class="tab-section active" id="secAttendance">
 
     <!-- نوع ثبت -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> نوع گزارش</div>
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> نوع تردد</div>
       </div>
-      <div class="segmented-control" id="actionTypeGrid">
-        <button class="segment-btn selected" onclick="setActionType('both')">🔄 بازه کامل</button>
-        <button class="segment-btn" onclick="setActionType('in')">🟢 فقط ورود</button>
-        <button class="segment-btn" onclick="setActionType('out')">🔴 فقط خروج</button>
+      <div class="segmented-pill-row">
+        <button class="pill-opt-btn selected" onclick="setAttendanceAction('both')">🔄 بازه کامل</button>
+        <button class="pill-opt-btn" onclick="setAttendanceAction('in')">🟢 فقط ورود</button>
+        <button class="pill-opt-btn" onclick="setAttendanceAction('out')">🔴 فقط خروج</button>
       </div>
     </div>
 
     <!-- شرکت / محل پروژه -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> شرکت یا کارگاه</div>
-        <button style="background:none; border:none; color:var(--primary); font-size:11.5px; cursor:pointer;" onclick="toggleEditLocations()">
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> محل پروژه یا کارگاه</div>
+        <button style="background:none; border:none; color:var(--gold); font-size:11px; cursor:pointer;" onclick="toggleEditLocations()">
           ⚙ مدیریت
         </button>
       </div>
-      <div class="grid-projects" id="projectsGrid"></div>
-      <button class="add-loc-btn" onclick="openAddModal()">➕ افزودن محل یا شرکت جدید</button>
+      <div class="company-chips-grid" id="attendanceProjectsGrid"></div>
+      <button class="add-comp-pill" onclick="openAddModal()">➕ افزودن شرکت / محل جدید</button>
     </div>
 
-    <!-- زمان: روز هفته و تاریخ یکپارچه -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> روز و تاریخ</div>
+    <!-- روز و تاریخ -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> روز و تاریخ</div>
       </div>
-
-      <!-- روز هفته -->
-      <div class="days-strip" id="daysRow"></div>
-
-      <!-- تاریخ -->
-      <div class="date-wrapper">
-        <div class="date-quick-bar">
-          <button class="date-quick-btn selected" onclick="setDateOffset(0)" id="chipToday">📅 امروز</button>
-          <button class="date-quick-btn" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
-          <button class="date-quick-btn" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
+      <div class="days-carousel" id="attendanceDaysRow"></div>
+      <div class="date-stepper-panel">
+        <div class="date-chips-quick">
+          <button class="date-q-btn selected" onclick="setDateOffset(0)" id="chipToday">امروز</button>
+          <button class="date-q-btn" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
+          <button class="date-q-btn" onclick="setDateOffset(-2)" id="chipDayBefore">پریروز</button>
         </div>
-        <div class="date-stepper-box">
-          <button class="stepper-arrow-btn" onclick="changeDateByDays(-1)">➖</button>
-          <span class="date-text-display" id="dateDisplay">--/--/----</span>
-          <button class="stepper-arrow-btn" onclick="changeDateByDays(1)">➕</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button class="date-q-btn" onclick="changeDateByDays(-1)">➖</button>
+          <span class="date-display-tag" id="dateDisplay">--/--/----</span>
+          <button class="date-q-btn" onclick="changeDateByDays(1)">➕</button>
         </div>
       </div>
     </div>
 
-    <!-- ساعت (ورود و خروج با دو مربع ۲ تایی و دو نقطه ثابت) -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> ساعت تردد</div>
+    <!-- ساعت دیجیتال OLED با ۲ مربع عددی و دونقطه ثابت -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> ساعت تردد</div>
       </div>
 
-      <div class="time-cards-container">
+      <div class="clock-pod-container">
         
-        <!-- ساعت ورود -->
-        <div class="time-row-card" id="inTimeRow">
-          <div class="time-label-group">
-            <span>🟢</span>
-            <span class="time-tag-badge">ساعت ورود:</span>
-            <button class="quick-now-tag" onclick="setSpecificNow('in')">⏱ الان</button>
+        <!-- سطر ورود -->
+        <div class="time-hud-row" id="inTimeRow">
+          <div class="time-row-meta">
+            <span style="font-size:14px;">🟢</span>
+            <span class="time-state-label">ساعت ورود:</span>
+            <button class="time-now-pill" onclick="setSpecificNow('in')">⏱ الان</button>
           </div>
-          <div class="time-inputs-cluster">
-            <input type="text" id="inHour" class="time-digit-square" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" oninput="handleDigitInput(this, 'inMin')" onblur="padZeroOnBlur(this)">
-            <span class="colon-separator">:</span>
-            <input type="text" id="inMin" class="time-digit-square" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
-          </div>
-        </div>
-
-        <!-- ساعت خروج -->
-        <div class="time-row-card" id="outTimeRow">
-          <div class="time-label-group">
-            <span>🔴</span>
-            <span class="time-tag-badge">ساعت خروج:</span>
-            <button class="quick-now-tag" onclick="setSpecificNow('out')">⏱ الان</button>
-          </div>
-          <div class="time-inputs-cluster">
-            <input type="text" id="outHour" class="time-digit-square" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" oninput="handleDigitInput(this, 'outMin')" onblur="padZeroOnBlur(this)">
-            <span class="colon-separator">:</span>
-            <input type="text" id="outMin" class="time-digit-square" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
+          <div class="digital-digits-wrapper">
+            <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" oninput="handleDigitInput(this, 'inMin')" onblur="padZeroOnBlur(this)">
+            <span class="digital-colon">:</span>
+            <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
           </div>
         </div>
 
-        <!-- اندیکاتور مدت زمان حضور -->
-        <div class="duration-indicator-pill" id="durationBar">
-          <span>⏱ مدت حضور:</span>
-          <span class="duration-number" id="durationText">۸ ساعت و ۰ دقیقه</span>
+        <!-- سطر خروج -->
+        <div class="time-hud-row" id="outTimeRow">
+          <div class="time-row-meta">
+            <span style="font-size:14px;">🔴</span>
+            <span class="time-state-label">ساعت خروج:</span>
+            <button class="time-now-pill" onclick="setSpecificNow('out')">⏱ الان</button>
+          </div>
+          <div class="digital-digits-wrapper">
+            <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" oninput="handleDigitInput(this, 'outMin')" onblur="padZeroOnBlur(this)">
+            <span class="digital-colon">:</span>
+            <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" oninput="handleDigitInput(this, null)" onblur="padZeroOnBlur(this)">
+          </div>
+        </div>
+
+        <!-- گیج هوشمند مدت کارکرد -->
+        <div class="duration-meter-card" id="durationBar">
+          <span>⚡ مجموع ساعت کارکرد:</span>
+          <span class="duration-badge-value" id="durationText">۸ ساعت و ۰ دقیقه</span>
         </div>
 
       </div>
 
-      <!-- تنظیمات تیک‌ها -->
-      <div class="toggles-cluster">
-        <label class="toggle-lbl">
+      <!-- گزینه‌های تکمیلی -->
+      <div class="toggles-shelf">
+        <label class="toggle-chip-item">
           <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> تاریخ و روز
         </label>
-        <label class="toggle-lbl">
-          <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> هشتگ پروژه (#)
+        <label class="toggle-chip-item">
+          <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> هشتگ (#)
         </label>
-        <label class="toggle-lbl">
+        <label class="toggle-chip-item">
           <input type="checkbox" id="includeDurationCheck" onchange="updatePreview()"> درج مدت کارکرد
         </label>
-        <label class="toggle-lbl">
-          <input type="checkbox" id="includeUserCheck" onchange="updatePreview()"> درج نام ثبت‌کننده
+        <label class="toggle-chip-item">
+          <input type="checkbox" id="includeUserCheck" onchange="updatePreview()"> نام پرسنل
         </label>
       </div>
     </div>
 
-    <!-- شرح فعالیت (اختیاری) -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> شرح کار یا فعالیت (اختیاری)</div>
+    <!-- پیش‌نمایش چت -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> پیش‌نمایش پیام واتساپ</div>
       </div>
-      <div class="activity-chips-wrap">
-        <div class="act-chip" onclick="toggleActivityTag(this, 'پسیو شبکه و رک')">پسیو شبکه و رک</div>
-        <div class="act-chip" onclick="toggleActivityTag(this, 'اکتیو و پیکربندی')">اکتیو و پیکربندی</div>
-        <div class="act-chip" onclick="toggleActivityTag(this, 'راه اندازی سرور')">راه اندازی سرور</div>
-        <div class="act-chip" onclick="toggleActivityTag(this, 'کابل کشی و داکت')">کابل کشی و داکت</div>
-        <div class="act-chip" onclick="toggleActivityTag(this, 'بازدید کارگاهی')">بازدید کارگاهی</div>
-        <div class="act-chip" onclick="toggleActivityTag(this, 'پشتیبانی')">پشتیبانی</div>
-      </div>
-      <input type="text" id="customActivityNote" class="act-text-input" placeholder="یا شرح کار را بنویسید..." oninput="updatePreview()">
+      <div class="preview-chat-shell" id="attendancePreview">در حال آماده‌سازی...</div>
     </div>
 
-    <!-- پیش‌نمایش پیام -->
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> پیش‌نمایش پیام</div>
+  </div>
+
+
+  <!-- ==================== تب ۲: گزارش کار و پشتیبانی فنی (گروه ساپورت) ==================== -->
+  <div class="tab-section" id="secSupport">
+
+    <!-- شرکت / مشتری -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> نام مشتری / شرکت پروژه</div>
       </div>
-      <div class="preview-bubble" id="messagePreview">در حال آماده‌سازی پیام...</div>
-      
-      <div class="action-buttons-wrap">
-        <button class="send-whatsapp-btn" onclick="sendToWhatsApp()">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.031 2C6.496 2 2 6.496 2 12.031c0 1.83.493 3.555 1.353 5.043L2 22l5.068-1.328a9.98 9.98 0 0 0 4.963 1.36h.004c5.534 0 10.03-4.496 10.03-10.031A10.007 10.007 0 0 0 12.031 2zm0 18.36a8.31 8.31 0 0 1-4.238-1.157l-.304-.18-3.148.825.84-3.07-.197-.314A8.32 8.32 0 0 1 3.71 12.03c0-4.587 3.733-8.32 8.324-8.32 2.223 0 4.314.866 5.885 2.438a8.272 8.272 0 0 1 2.437 5.884c0 4.59-3.734 8.328-8.325 8.328zm4.558-6.223c-.25-.125-1.478-.73-1.708-.813-.23-.083-.396-.125-.563.125-.166.25-.646.813-.792.98-.146.166-.292.187-.542.062-.25-.125-1.055-.389-2.01-1.24a7.514 7.514 0 0 1-1.39-1.727c-.146-.25-.015-.385.11-.51.112-.112.25-.292.375-.438.125-.146.166-.25.25-.417.083-.166.042-.312-.02-.437-.063-.125-.563-1.354-.772-1.854-.203-.487-.41-.421-.563-.429-.146-.008-.312-.01-.479-.01-.167 0-.438.063-.667.313-.23.25-.875.854-.875 2.083s.896 2.417 1.021 2.583c.125.167 1.763 2.693 4.272 3.776.597.258 1.064.412 1.428.528.6.19 1.146.163 1.578.099.48-.072 1.478-.604 1.687-1.188.208-.583.208-1.083.146-1.188-.063-.104-.23-.166-.479-.291z"/>
-          </svg>
-          ارسال مستقیم به گروه واتساپ
+      <div class="company-chips-grid" id="supportProjectsGrid"></div>
+    </div>
+
+    <!-- اقدامات متداول شبکه و IT -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> اقدامات انجام‌شده</div>
+      </div>
+      <div class="quick-tags-scroll">
+        <div class="tag-bubble" onclick="appendSupportTag('تعویض و کانفیگ سوییچ')">سوییچ شبکه</div>
+        <div class="tag-bubble" onclick="appendSupportTag('کانفیگ سانترال و تلفن UCM')">سانترال UCM</div>
+        <div class="tag-bubble" onclick="appendSupportTag('سرکشی هفتگی و بکاپ‌گیری')">بکاپ‌گیری</div>
+        <div class="tag-bubble" onclick="appendSupportTag('رفع ایراد کاربر و اینترنت')">رفع ایراد اینترنت</div>
+        <div class="tag-bubble" onclick="appendSupportTag('نصب نود شبکه، ترانک و پریز')">ترانک و پسیو</div>
+        <div class="tag-bubble" onclick="appendSupportTag('حذف و نصب مجدد آنتی‌ویروس')">آنتی‌ویروس</div>
+      </div>
+      <textarea id="supportActionsText" class="cyber-input" style="min-height:75px; resize:vertical;" placeholder="شرح کارهای انجام شده..." oninput="updateSupportPreview()"></textarea>
+    </div>
+
+    <!-- کارهای باقی‌مانده -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> کارهای باقی‌مانده (اختیاری)</div>
+      </div>
+      <textarea id="supportPendingText" class="cyber-input" style="min-height:55px; resize:vertical;" placeholder="مثال: برش درب ترانک‌ها، کابل‌کشی ۴ کاربر..." oninput="updateSupportPreview()"></textarea>
+    </div>
+
+    <!-- مشخصات دسترسی / سرور / دستگاه -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> اطلاعات دسترسی یا مدل دستگاه (اختیاری)</div>
+      </div>
+      <input type="text" id="supportTechInfo" class="cyber-input" placeholder="مثال: IP: 192.168.18.25 | سوییچ TL-SG1024D" oninput="updateSupportPreview()">
+    </div>
+
+    <!-- پیش‌نمایش گزارش ساپورت -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> پیش‌نمایش گزارش گروه ساپورت</div>
+      </div>
+      <div class="preview-chat-shell" id="supportPreview">در حال آماده‌سازی...</div>
+    </div>
+
+  </div>
+
+
+  <!-- ==================== تب ۳: آرشیو هوشمند و فیلتر هر شرکت ==================== -->
+  <div class="tab-section" id="secArchive">
+
+    <!-- کارت‌های آمار کل -->
+    <div class="stats-hud-grid">
+      <div class="hud-stat-box">
+        <span class="stat-caption">مجموع ساعت کارکرد:</span>
+        <span class="stat-number" id="archiveTotalHours">0 ساعت</span>
+      </div>
+      <div class="hud-stat-box">
+        <span class="stat-caption">تعداد رکوردهای ثبت‌شده:</span>
+        <span class="stat-number" id="archiveTotalCount">0 مورد</span>
+      </div>
+    </div>
+
+    <!-- فیلتر اختصاصی بر اساس هر شرکت -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
+        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" onclick="exportFilteredExcel()">
+          📥 دانلود اکسل
         </button>
-        <button class="copy-text-btn" onclick="copyMessage()">📋 کپی متن پیام</button>
+      </div>
+
+      <div class="filter-pills-row" id="archiveCompanyFilters">
+        <!-- چیپ‌های فیلتر: همه، صدف، مایسا و... -->
+      </div>
+
+      <div class="record-stream" id="archiveStream">
+        <!-- لاگ‌ها -->
       </div>
     </div>
 
-  </div>
-
-  <!-- تب دوم: آرشیو و آمار -->
-  <div class="archive-view" id="archiveView">
-    <div class="metrics-grid">
-      <div class="metric-card">
-        <span class="metric-label">مجموع ساعات ثبت‌شده:</span>
-        <span class="metric-value" id="totalHoursStat">0 ساعت</span>
-      </div>
-      <div class="metric-card">
-        <span class="metric-label">تعداد کل گزارش‌ها:</span>
-        <span class="metric-value" id="totalRecordsStat">0 مورد</span>
-      </div>
-    </div>
-
-    <div class="glass-card">
-      <div class="section-title">
-        <div class="section-title-left"><span class="gold-dot"></span> تاریخچه ترددها</div>
-        <div style="display:flex; gap:10px;">
-          <span style="cursor: pointer; color: var(--primary); font-size:12px; font-weight:700;" onclick="exportHistoryCSV()">📥 اکسل</span>
-          <span style="cursor: pointer; color: var(--danger); font-size:12px;" onclick="clearHistory()">حذف</span>
-        </div>
-      </div>
-      <div class="records-list" id="historyList"></div>
-    </div>
   </div>
 
 </div>
 
-<!-- مودال افزودن محل جدید -->
-<div class="modal-backdrop" id="addModal">
-  <div class="modal-panel">
-    <div class="modal-title">➕ افزودن شرکت یا محل جدید</div>
-    <input type="text" id="modalProjectInput" class="modal-field" placeholder="مثال: کارگاه ونک، پتروشیمی، ...">
-    <div class="modal-btns-row">
-      <button class="modal-confirm-btn" onclick="saveNewProjectFromModal()">افزودن</button>
-      <button class="modal-cancel-btn" onclick="closeAddModal()">انصراف</button>
+
+<!-- شناور کنترل نهایی پایین صفحه (Floating Dock) -->
+<div class="floating-action-dock" id="floatingDock">
+  <button class="whatsapp-action-btn" onclick="executeSendWhatsApp()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12.031 2C6.496 2 2 6.496 2 12.031c0 1.83.493 3.555 1.353 5.043L2 22l5.068-1.328a9.98 9.98 0 0 0 4.963 1.36h.004c5.534 0 10.03-4.496 10.03-10.031A10.007 10.007 0 0 0 12.031 2zm0 18.36a8.31 8.31 0 0 1-4.238-1.157l-.304-.18-3.148.825.84-3.07-.197-.314A8.32 8.32 0 0 1 3.71 12.03c0-4.587 3.733-8.32 8.324-8.32 2.223 0 4.314.866 5.885 2.438a8.272 8.272 0 0 1 2.437 5.884c0 4.59-3.734 8.328-8.325 8.328zm4.558-6.223c-.25-.125-1.478-.73-1.708-.813-.23-.083-.396-.125-.563.125-.166.25-.646.813-.792.98-.146.166-.292.187-.542.062-.25-.125-1.055-.389-2.01-1.24a7.514 7.514 0 0 1-1.39-1.727c-.146-.25-.015-.385.11-.51.112-.112.25-.292.375-.438.125-.146.166-.25.25-.417.083-.166.042-.312-.02-.437-.063-.125-.563-1.354-.772-1.854-.203-.487-.41-.421-.563-.429-.146-.008-.312-.01-.479-.01-.167 0-.438.063-.667.313-.23.25-.875.854-.875 2.083s.896 2.417 1.021 2.583c.125.167 1.763 2.693 4.272 3.776.597.258 1.064.412 1.428.528.6.19 1.146.163 1.578.099.48-.072 1.478-.604 1.687-1.188.208-.583.208-1.083.146-1.188-.063-.104-.23-.166-.479-.291z"/>
+    </svg>
+    <span id="sendBtnLabel">ارسال به گروه واتساپ</span>
+  </button>
+  <button class="dock-copy-btn" onclick="executeCopyText()">📋 کپی</button>
+</div>
+
+<!-- Glass Modal: افزودن شرکت -->
+<div class="glass-modal-bg" id="addModal">
+  <div class="glass-modal-box">
+    <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن شرکت یا محل جدید</div>
+    <input type="text" id="modalProjectInput" class="cyber-input" placeholder="مثال: شرکت صدف، برایند، ونک...">
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:11px;" onclick="saveNewProjectFromModal()">افزودن</button>
+      <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="closeAddModal()">انصراف</button>
     </div>
   </div>
 </div>
 
-<!-- مودال تنظیم نام کاربر -->
-<div class="modal-backdrop" id="userModal">
-  <div class="modal-panel">
-    <div class="modal-title">👤 نام ثبت‌کننده</div>
-    <input type="text" id="userNameInput" class="modal-field" placeholder="مثال: علی محبی">
-    <div class="modal-btns-row">
-      <button class="modal-confirm-btn" onclick="saveUserName()">ذخیره</button>
-      <button class="modal-cancel-btn" onclick="closeUserModal()">انصراف</button>
+<!-- Glass Modal: نام پرسنل -->
+<div class="glass-modal-bg" id="userModal">
+  <div class="glass-modal-box">
+    <div style="font-size:15px; font-weight:800; color:#fff;">👤 نام شما (ثبت‌کننده)</div>
+    <input type="text" id="userNameInput" class="cyber-input" placeholder="مثلاً: علی محبی">
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:11px;" onclick="saveUserName()">ذخیره</button>
+      <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="closeUserModal()">انصراف</button>
     </div>
   </div>
 </div>
 
-<div class="toast-msg" id="toast">پیام کپی شد!</div>
+<div class="cyber-toast" id="toast">پیام کپی شد!</div>
 
 <script>
   if ('serviceWorker' in navigator) {
@@ -1030,100 +1070,67 @@
     });
   }
 
-  function triggerHaptic() {
-    if (navigator.vibrate) {
-      navigator.vibrate(10);
-    }
+  // صداسازی مکانیکی ظریف (Micro-interaction Click Sound)
+  function playTactileFeedback() {
+    if (navigator.vibrate) navigator.vibrate(10);
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(120, audioCtx.currentTime + 0.03);
+      gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.03);
+    } catch(e) {}
   }
 
-  let deferredPrompt;
-  const installBanner = document.getElementById('installBanner');
-  const installAppBtn = document.getElementById('installAppBtn');
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    installBanner.classList.add('show');
-  });
-
-  installAppBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        installBanner.classList.remove('show');
-      }
-      deferredPrompt = null;
-    } else {
-      showToast('برای نصب، گزینه Add to Home Screen مرورگر را بزنید');
-    }
-  });
-
+  // پروژه‌ها و شرکت‌ها بر اساس چت‌های ارسالی هر دو گروه
+  const DEFAULT_COMPANIES = [
+    "گئومات", "مایسا", "صدف", "برایند", 
+    "سرشار", "راستاد", "راه آینده مستقیم", "پایش", "راگا", "کرانه", "آرکا"
+  ];
   const WEEK_DAYS = ["شنبه", "یکشنبه", "دوشنبه", "سه‌شنبه", "چهارشنبه", "پنجشنبه", "جمعه"];
 
-  const DEFAULT_PROJECTS = [
-    "گئومات", "مایسا", "پایش", "راگا", 
-    "کرانه", "آرکا", "روانمهر ، کالاتیک"
-  ];
-
-  let selectedProject = "گئومات";
-  let actionType = "both";
+  let systemMode = 'attendance'; // 'attendance', 'support', 'archive'
+  let attendanceAction = 'both';
+  let selectedCompany = "مایسا";
   let selectedDay = "";
   let currentDateObj = new Date();
   let isEditMode = false;
-  let selectedActivityTags = [];
+  let archiveCompanyFilter = 'all';
 
-  function switchMainTab(tab) {
-    triggerHaptic();
-    const logView = document.getElementById('logView');
-    const archiveView = document.getElementById('archiveView');
-    const tabLogBtn = document.getElementById('tabLogBtn');
-    const tabArchiveBtn = document.getElementById('tabArchiveBtn');
-
-    if (tab === 'log') {
-      logView.style.display = 'flex';
-      archiveView.style.display = 'none';
-      tabLogBtn.classList.add('active');
-      tabArchiveBtn.classList.remove('active');
-    } else {
-      logView.style.display = 'none';
-      archiveView.style.display = 'flex';
-      tabLogBtn.classList.remove('active');
-      tabArchiveBtn.classList.add('active');
-      renderHistory();
-    }
+  function getCompanies() {
+    const saved = localStorage.getItem('geomat_companies_v2');
+    return saved ? JSON.parse(saved) : DEFAULT_COMPANIES;
   }
-
-  function getProjects() {
-    const saved = localStorage.getItem('geomat_attendance_projects');
-    return saved ? JSON.parse(saved) : DEFAULT_PROJECTS;
-  }
-
-  function saveProjects(list) {
-    localStorage.setItem('geomat_attendance_projects', JSON.stringify(list));
+  function saveCompanies(list) {
+    localStorage.setItem('geomat_companies_v2', JSON.stringify(list));
   }
 
   function getUserName() {
-    return localStorage.getItem('geomat_user_name') || 'ثبت‌کننده';
+    return localStorage.getItem('geomat_user_name') || 'علی محبی';
   }
-
   function saveUserName() {
     const val = document.getElementById('userNameInput').value.trim();
     if (val) {
       localStorage.setItem('geomat_user_name', val);
       document.getElementById('userNameHeader').textContent = val;
       updatePreview();
+      updateSupportPreview();
       showToast('نام شما ذخیره شد');
     }
     closeUserModal();
   }
-
   function openUserModal() {
-    triggerHaptic();
-    document.getElementById('userNameInput').value = getUserName() === 'ثبت‌کننده' ? '' : getUserName();
+    playTactileFeedback();
+    document.getElementById('userNameInput').value = getUserName();
     document.getElementById('userModal').classList.add('open');
   }
-
   function closeUserModal() {
     document.getElementById('userModal').classList.remove('open');
   }
@@ -1137,7 +1144,6 @@
     const formatterDay = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
       weekday: 'long'
     });
-
     const parts = formatterDate.formatToParts(date);
     let year = '', month = '', day = '';
     parts.forEach(p => {
@@ -1145,7 +1151,6 @@
       if (p.type === 'month') month = p.value;
       if (p.type === 'day') day = p.value;
     });
-
     const dayName = formatterDay.format(date);
     const dateStr = `${year}/${month}/${day}`;
     return { dateStr, dayName };
@@ -1154,12 +1159,13 @@
   function init() {
     document.getElementById('userNameHeader').textContent = getUserName();
     renderDays();
-    renderProjects();
+    renderCompanies();
     setDateOffset(0);
     setCurrentTimeToInputs(false);
     calculateDuration();
-    renderHistory();
     updatePreview();
+    updateSupportPreview();
+    renderArchive();
 
     setInterval(() => {
       const d = new Date();
@@ -1168,22 +1174,39 @@
     }, 1000);
   }
 
-  function handleDigitInput(input, nextInputId) {
-    triggerHaptic();
-    input.value = input.value.replace(/[^0-9]/g, '');
+  function switchSystemMode(mode) {
+    playTactileFeedback();
+    systemMode = mode;
+    document.getElementById('tabAttendanceBtn').classList.toggle('active', mode === 'attendance');
+    document.getElementById('tabSupportBtn').classList.toggle('active', mode === 'support');
+    document.getElementById('tabArchiveBtn').classList.toggle('active', mode === 'archive');
 
-    if (input.id.includes('Hour')) {
-      if (parseInt(input.value) > 23) input.value = '23';
-    } else if (input.id.includes('Min')) {
-      if (parseInt(input.value) > 59) input.value = '59';
+    document.getElementById('secAttendance').classList.toggle('active', mode === 'attendance');
+    document.getElementById('secSupport').classList.toggle('active', mode === 'support');
+    document.getElementById('secArchive').classList.toggle('active', mode === 'archive');
+
+    const dock = document.getElementById('floatingDock');
+    const sendLabel = document.getElementById('sendBtnLabel');
+
+    if (mode === 'archive') {
+      dock.style.display = 'none';
+      renderArchive();
+    } else {
+      dock.style.display = 'flex';
+      sendLabel.textContent = mode === 'attendance' ? 'ارسال به گروه تردد واتساپ' : 'ارسال به گروه ساپورت واتساپ';
     }
+  }
 
-    if (input.value.length >= 2 && nextInputId) {
-      const next = document.getElementById(nextInputId);
-      if (next) {
-        next.focus();
-        next.select();
-      }
+  // دیجیت پد هوشمند
+  function handleDigitInput(input, nextId) {
+    playTactileFeedback();
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if (input.id.includes('Hour') && parseInt(input.value) > 23) input.value = '23';
+    if (input.id.includes('Min') && parseInt(input.value) > 59) input.value = '59';
+
+    if (input.value.length >= 2 && nextId) {
+      const n = document.getElementById(nextId);
+      if (n) { n.focus(); n.select(); }
     }
     calculateDuration();
     updatePreview();
@@ -1191,64 +1214,37 @@
 
   function padZeroOnBlur(input) {
     let val = input.value.trim();
-    if (val.length === 1) {
-      input.value = '0' + val;
-    } else if (val.length === 0) {
-      input.value = '00';
-    }
+    if (val.length === 1) input.value = '0' + val;
+    else if (val.length === 0) input.value = '00';
     calculateDuration();
     updatePreview();
   }
 
   function setSpecificNow(type) {
-    triggerHaptic();
+    playTactileFeedback();
     const d = new Date();
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
-
     if (type === 'in') {
       document.getElementById('inHour').value = hh;
       document.getElementById('inMin').value = mm;
-      showToast(`ساعت ورود: ${hh}:${mm}`);
-    } else {
-      document.getElementById('outHour').value = hh;
-      document.getElementById('outMin').value = mm;
-      showToast(`ساعت خروج: ${hh}:${mm}`);
-    }
-    calculateDuration();
-    updatePreview();
-  }
-
-  function setCurrentTimeToInputs(showToastMsg = true) {
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mm = String(d.getMinutes()).padStart(2, '0');
-
-    if (actionType === 'in') {
-      document.getElementById('inHour').value = hh;
-      document.getElementById('inMin').value = mm;
-    } else if (actionType === 'out') {
-      document.getElementById('outHour').value = hh;
-      document.getElementById('outMin').value = mm;
     } else {
       document.getElementById('outHour').value = hh;
       document.getElementById('outMin').value = mm;
     }
     calculateDuration();
     updatePreview();
-    if (showToastMsg) showToast(`ساعت به ${hh}:${mm} تنظیم شد`);
+    showToast(`ساعت ${hh}:${mm} تنظیم شد`);
   }
 
-  function getTimeString(type) {
-    if (type === 'in') {
-      const h = (document.getElementById('inHour').value || '09').padStart(2, '0');
-      const m = (document.getElementById('inMin').value || '00').padStart(2, '0');
-      return `${h}:${m}`;
-    } else {
-      const h = (document.getElementById('outHour').value || '17').padStart(2, '0');
-      const m = (document.getElementById('outMin').value || '00').padStart(2, '0');
-      return `${h}:${m}`;
-    }
+  function setCurrentTimeToInputs(notify = true) {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    document.getElementById('outHour').value = hh;
+    document.getElementById('outMin').value = mm;
+    calculateDuration();
+    if (notify) showToast(`ساعت ${hh}:${mm} تنظیم شد`);
   }
 
   function calculateDuration() {
@@ -1257,260 +1253,249 @@
     const outH = parseInt(document.getElementById('outHour').value) || 0;
     const outM = parseInt(document.getElementById('outMin').value) || 0;
 
-    let inMinutes = inH * 60 + inM;
-    let outMinutes = outH * 60 + outM;
+    let inTotal = inH * 60 + inM;
+    let outTotal = outH * 60 + outM;
+    if (outTotal < inTotal) outTotal += 24 * 60;
 
-    if (outMinutes < inMinutes) {
-      outMinutes += 24 * 60;
-    }
+    const diff = outTotal - inTotal;
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
 
-    const diff = outMinutes - inMinutes;
-    const diffH = Math.floor(diff / 60);
-    const diffM = diff % 60;
-
-    const el = document.getElementById('durationText');
-    if (el) {
-      el.textContent = `${diffH} ساعت و ${diffM} دقیقه`;
-    }
-    return { diffH, diffM, diffMinutes: diff };
+    document.getElementById('durationText').textContent = `${h} ساعت و ${m} دقیقه`;
+    return { h, m, totalMins: diff };
   }
 
-  function toggleActivityTag(el, tag) {
-    triggerHaptic();
-    if (selectedActivityTags.includes(tag)) {
-      selectedActivityTags = selectedActivityTags.filter(t => t !== tag);
-      el.classList.remove('selected');
-    } else {
-      selectedActivityTags.push(tag);
-      el.classList.add('selected');
-    }
-    updatePreview();
-  }
-
-  function renderDays() {
-    const container = document.getElementById('daysRow');
-    container.innerHTML = '';
-    const { dayName } = getPersianDateParts(currentDateObj);
-    if (!selectedDay) selectedDay = dayName;
-
-    WEEK_DAYS.forEach(day => {
-      const chip = document.createElement('div');
-      chip.className = `day-pill ${selectedDay === day ? 'selected' : ''}`;
-      chip.textContent = day;
-      chip.onclick = () => {
-        triggerHaptic();
-        selectedDay = day;
-        renderDays();
-        updatePreview();
-      };
-      container.appendChild(chip);
-    });
-  }
-
-  function renderProjects() {
-    const container = document.getElementById('projectsGrid');
-    container.className = `grid-projects ${isEditMode ? 'edit-mode' : ''}`;
-    container.innerHTML = '';
-    const projects = getProjects();
-
-    projects.forEach(proj => {
-      const btn = document.createElement('button');
-      btn.className = `proj-chip ${selectedProject === proj ? 'selected' : ''}`;
-      btn.textContent = proj;
-      btn.onclick = () => {
-        triggerHaptic();
-        selectedProject = proj;
-        renderProjects();
-        updatePreview();
-      };
-
-      if (isEditMode && proj !== "گئومات") {
-        const del = document.createElement('span');
-        del.className = 'delete-loc-icon';
-        del.innerHTML = '✕';
-        del.onclick = (e) => {
-          e.stopPropagation();
-          deleteProject(proj);
+  function renderCompanies() {
+    const comps = getCompanies();
+    const renderTo = (containerId) => {
+      const el = document.getElementById(containerId);
+      if (!el) return;
+      el.className = `company-chips-grid ${isEditMode ? 'edit-mode' : ''}`;
+      el.innerHTML = '';
+      comps.forEach(c => {
+        const btn = document.createElement('div');
+        btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
+        btn.textContent = c;
+        btn.onclick = () => {
+          playTactileFeedback();
+          selectedCompany = c;
+          renderCompanies();
+          updatePreview();
+          updateSupportPreview();
         };
-        btn.appendChild(del);
-      }
-
-      container.appendChild(btn);
-    });
+        if (isEditMode && c !== "گئومات") {
+          const del = document.createElement('span');
+          del.className = 'del-badge';
+          del.textContent = '✕';
+          del.onclick = (e) => {
+            e.stopPropagation();
+            deleteCompany(c);
+          };
+          btn.appendChild(del);
+        }
+        el.appendChild(btn);
+      });
+    };
+    renderTo('attendanceProjectsGrid');
+    renderTo('supportProjectsGrid');
   }
 
   function toggleEditLocations() {
-    triggerHaptic();
+    playTactileFeedback();
     isEditMode = !isEditMode;
-    renderProjects();
+    renderCompanies();
     showToast(isEditMode ? 'حالت ویرایش فعال شد (✕ برای حذف)' : 'حالت ویرایش غیرفعال شد');
   }
 
-  function deleteProject(name) {
-    let list = getProjects();
-    list = list.filter(p => p !== name);
-    saveProjects(list);
-    if (selectedProject === name) selectedProject = list[0] || "گئومات";
-    renderProjects();
+  function deleteCompany(name) {
+    let list = getCompanies().filter(c => c !== name);
+    saveCompanies(list);
+    if (selectedCompany === name) selectedCompany = list[0] || "گئومات";
+    renderCompanies();
     updatePreview();
+    updateSupportPreview();
     showToast(`محل «${name}» حذف شد`);
   }
 
   function openAddModal() {
-    triggerHaptic();
+    playTactileFeedback();
     document.getElementById('modalProjectInput').value = '';
     document.getElementById('addModal').classList.add('open');
     setTimeout(() => document.getElementById('modalProjectInput').focus(), 100);
   }
-
   function closeAddModal() {
     document.getElementById('addModal').classList.remove('open');
   }
-
   function saveNewProjectFromModal() {
     const val = document.getElementById('modalProjectInput').value.trim();
     if (!val) return;
-    const list = getProjects();
+    const list = getCompanies();
     if (!list.includes(val)) {
       list.push(val);
-      saveProjects(list);
-      selectedProject = val;
-      renderProjects();
+      saveCompanies(list);
+      selectedCompany = val;
+      renderCompanies();
       updatePreview();
-      showToast(`محل جدید «${val}» اضافه شد`);
+      updateSupportPreview();
+      showToast(`«${val}» اضافه شد`);
     }
     closeAddModal();
   }
 
+  function renderDays() {
+    const container = document.getElementById('attendanceDaysRow');
+    container.innerHTML = '';
+    const { dayName } = getPersianDateParts(currentDateObj);
+    if (!selectedDay) selectedDay = dayName;
+
+    WEEK_DAYS.forEach(d => {
+      const pill = document.createElement('div');
+      pill.className = `day-item-pill ${selectedDay === d ? 'selected' : ''}`;
+      pill.textContent = d;
+      pill.onclick = () => {
+        playTactileFeedback();
+        selectedDay = d;
+        renderDays();
+        updatePreview();
+        updateSupportPreview();
+      };
+      container.appendChild(pill);
+    });
+  }
+
   function setDateOffset(offset) {
-    triggerHaptic();
+    playTactileFeedback();
     currentDateObj = new Date();
     currentDateObj.setDate(currentDateObj.getDate() + offset);
-
     document.getElementById('chipToday').classList.toggle('selected', offset === 0);
     document.getElementById('chipYesterday').classList.toggle('selected', offset === -1);
     document.getElementById('chipDayBefore').classList.toggle('selected', offset === -2);
-
-    updateDateUI();
+    updateDateDisplay();
   }
 
   function changeDateByDays(delta) {
-    triggerHaptic();
+    playTactileFeedback();
     currentDateObj.setDate(currentDateObj.getDate() + delta);
     document.getElementById('chipToday').classList.remove('selected');
     document.getElementById('chipYesterday').classList.remove('selected');
     document.getElementById('chipDayBefore').classList.remove('selected');
-    updateDateUI();
+    updateDateDisplay();
   }
 
-  function updateDateUI() {
+  function updateDateDisplay() {
     const { dateStr, dayName } = getPersianDateParts(currentDateObj);
     document.getElementById('dateDisplay').textContent = dateStr;
     selectedDay = dayName;
     renderDays();
     updatePreview();
+    updateSupportPreview();
   }
 
-  function setActionType(type) {
-    triggerHaptic();
-    actionType = type;
-    const buttons = document.querySelectorAll('#actionTypeGrid .segment-btn');
+  function setAttendanceAction(type) {
+    playTactileFeedback();
+    attendanceAction = type;
+    const buttons = document.querySelectorAll('#secAttendance .segmented-pill-row .pill-opt-btn');
     buttons[0].classList.toggle('selected', type === 'both');
     buttons[1].classList.toggle('selected', type === 'in');
     buttons[2].classList.toggle('selected', type === 'out');
 
-    const inRow = document.getElementById('inTimeRow');
-    const outRow = document.getElementById('outTimeRow');
-    const durationBar = document.getElementById('durationBar');
+    document.getElementById('inTimeRow').style.display = type === 'out' ? 'none' : 'flex';
+    document.getElementById('outTimeRow').style.display = type === 'in' ? 'none' : 'flex';
+    document.getElementById('durationBar').style.display = type === 'both' ? 'flex' : 'none';
 
-    if (type === 'in') {
-      inRow.style.display = 'flex';
-      outRow.style.display = 'none';
-      durationBar.style.display = 'none';
-    } else if (type === 'out') {
-      inRow.style.display = 'none';
-      outRow.style.display = 'flex';
-      durationBar.style.display = 'none';
-    } else {
-      inRow.style.display = 'flex';
-      outRow.style.display = 'flex';
-      durationBar.style.display = 'flex';
-    }
-    calculateDuration();
     updatePreview();
   }
 
-  function generateMessageText() {
+  // تولید پیام تردد
+  function generateAttendanceText() {
     const { dateStr } = getPersianDateParts(currentDateObj);
+    const inH = (document.getElementById('inHour').value || '09').padStart(2, '0');
+    const inM = (document.getElementById('inMin').value || '00').padStart(2, '0');
+    const outH = (document.getElementById('outHour').value || '17').padStart(2, '0');
+    const outM = (document.getElementById('outMin').value || '00').padStart(2, '0');
+
     const includeDate = document.getElementById('includeDateCheck').checked;
     const useHashtag = document.getElementById('hashtagCheck').checked;
     const includeDuration = document.getElementById('includeDurationCheck').checked;
     const includeUser = document.getElementById('includeUserCheck').checked;
     const userName = getUserName();
 
-    let projTag = selectedProject;
-    if (useHashtag) {
-      const cleanName = selectedProject.replace(/\s+/g, '_');
-      projTag = `#${cleanName}`;
-    }
+    let tag = selectedCompany;
+    if (useHashtag) tag = `#${selectedCompany.replace(/\s+/g, '_')}`;
 
     let lines = [];
-
-    if (includeUser && userName && userName !== 'ثبت‌کننده') {
-      lines.push(`👤 ${userName}`);
-    }
-
+    if (includeUser && userName) lines.push(`👤 ${userName}`);
     if (includeDate) {
       lines.push(dateStr);
       lines.push(selectedDay);
     }
+    lines.push(tag);
 
-    lines.push(projTag);
-
-    const timeIn = getTimeString('in');
-    const timeOut = getTimeString('out');
-
-    if (actionType === 'both') {
-      lines.push(`ورود ${timeIn}`);
-      lines.push(`خروج ${timeOut}`);
+    if (attendanceAction === 'both') {
+      lines.push(`ورود ${inH}:${inM}`);
+      lines.push(`خروج ${outH}:${outM}`);
       if (includeDuration) {
         const dur = calculateDuration();
-        lines.push(`مدت کارکرد: ${dur.diffH}:${String(dur.diffM).padStart(2,'0')}`);
+        lines.push(`مدت کارکرد: ${dur.h}:${String(dur.m).padStart(2,'0')}`);
       }
-    } else if (actionType === 'in') {
-      lines.push(`ورود ${timeIn}`);
-    } else if (actionType === 'out') {
-      lines.push(`خروج ${timeOut}`);
-    }
-
-    const customNote = document.getElementById('customActivityNote').value.trim();
-    let activities = [...selectedActivityTags];
-    if (customNote) activities.push(customNote);
-
-    if (activities.length > 0) {
-      lines.push(`فعالیت: ${activities.join('، ')}`);
+    } else if (attendanceAction === 'in') {
+      lines.push(`ورود ${inH}:${inM}`);
+    } else {
+      lines.push(`خروج ${outH}:${outM}`);
     }
 
     return lines.join('\n');
   }
 
   function updatePreview() {
-    const previewEl = document.getElementById('messagePreview');
-    previewEl.textContent = generateMessageText();
+    document.getElementById('attendancePreview').textContent = generateAttendanceText();
   }
 
-  function sendToWhatsApp() {
-    triggerHaptic();
-    const text = generateMessageText();
-    saveToHistory(text, selectedProject);
+  // پشتیبانی فنی
+  function appendSupportTag(text) {
+    playTactileFeedback();
+    const box = document.getElementById('supportActionsText');
+    if (box.value.trim().length > 0) {
+      box.value += `\n${text}`;
+    } else {
+      box.value = text;
+    }
+    updateSupportPreview();
+  }
+
+  function generateSupportText() {
+    const { dateStr } = getPersianDateParts(currentDateObj);
+    const tag = `#${selectedCompany.replace(/\s+/g, '_')}`;
+    const actions = document.getElementById('supportActionsText').value.trim();
+    const pending = document.getElementById('supportPendingText').value.trim();
+    const techInfo = document.getElementById('supportTechInfo').value.trim();
+
+    let lines = [];
+    lines.push(dateStr);
+    lines.push(selectedDay);
+    lines.push(tag);
+
+    if (techInfo) lines.push(techInfo);
+    if (actions) lines.push(actions);
+    if (pending) {
+      lines.push(`\nکار های باقی مانده:\n${pending}`);
+    }
+    return lines.join('\n');
+  }
+
+  function updateSupportPreview() {
+    document.getElementById('supportPreview').textContent = generateSupportText();
+  }
+
+  // ارسال نهایی به واتساپ
+  function executeSendWhatsApp() {
+    playTactileFeedback();
+    const isAtt = systemMode === 'attendance';
+    const text = isAtt ? generateAttendanceText() : generateSupportText();
+    saveToSystemLog(isAtt ? 'attendance' : 'support', text);
 
     if (navigator.share) {
-      navigator.share({
-        title: 'گزارش تردد گئومات',
-        text: text
-      }).catch(err => {
-        openWhatsAppDirect(text);
-      });
+      navigator.share({ text: text }).catch(() => openWhatsAppDirect(text));
     } else {
       openWhatsAppDirect(text);
     }
@@ -1518,108 +1503,137 @@
 
   function openWhatsAppDirect(text) {
     const encoded = encodeURIComponent(text);
-    const whatsappUrl = `whatsapp://send?text=${encoded}`;
-    const webFallbackUrl = `https://api.whatsapp.com/send?text=${encoded}`;
-
-    window.location.href = whatsappUrl;
-
+    window.location.href = `whatsapp://send?text=${encoded}`;
     setTimeout(() => {
-      window.open(webFallbackUrl, '_blank');
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
     }, 600);
   }
 
-  function copyMessage() {
-    triggerHaptic();
-    const text = generateMessageText();
+  function executeCopyText() {
+    playTactileFeedback();
+    const text = systemMode === 'attendance' ? generateAttendanceText() : generateSupportText();
     navigator.clipboard.writeText(text).then(() => {
-      showToast('متن پیام با موفقیت کپی شد! ✅');
-      saveToHistory(text, selectedProject);
-    }).catch(() => {
-      showToast('خطا در کپی متن');
+      showToast('پیام کپی شد! ✅');
+      saveToSystemLog(systemMode === 'attendance' ? 'attendance' : 'support', text);
     });
   }
 
-  function saveToHistory(text, proj) {
-    let history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
+  // ثبت در آرشیو
+  function saveToSystemLog(type, text) {
+    let logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
     const { dateStr } = getPersianDateParts(currentDateObj);
     const dur = calculateDuration();
 
-    history.unshift({
+    logs.unshift({
+      id: Date.now(),
+      type: type, // 'attendance' or 'support'
+      company: selectedCompany,
       date: dateStr,
       day: selectedDay,
-      project: proj,
-      in: getTimeString('in'),
-      out: getTimeString('out'),
-      durationMins: actionType === 'both' ? dur.diffMinutes : 0,
-      durationText: actionType === 'both' ? `${dur.diffH}:${String(dur.diffM).padStart(2,'0')}` : '-',
-      action: actionType,
-      text: text
+      durationMins: type === 'attendance' && attendanceAction === 'both' ? dur.totalMins : 0,
+      durationText: type === 'attendance' && attendanceAction === 'both' ? `${dur.h}:${String(dur.m).padStart(2,'0')}` : '-',
+      text: text,
+      actions: document.getElementById('supportActionsText')?.value || '',
+      pending: document.getElementById('supportPendingText')?.value || '',
+      tech: document.getElementById('supportTechInfo')?.value || ''
     });
-    if (history.length > 50) history.pop();
-    localStorage.setItem('geomat_attendance_history', JSON.stringify(history));
-    renderHistory();
+    if (logs.length > 150) logs.pop();
+    localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
   }
 
-  function renderHistory() {
-    const list = document.getElementById('historyList');
-    const history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
-    
-    let totalMins = 0;
-    history.forEach(item => totalMins += (item.durationMins || 0));
-    const totalH = Math.floor(totalMins / 60);
-    const totalM = totalMins % 60;
-    document.getElementById('totalHoursStat').textContent = `${totalH}ساعت و ${totalM}دقیقه`;
-    document.getElementById('totalRecordsStat').textContent = `${history.length} مورد`;
+  // آرشیو و فیلتر هر شرکت
+  function renderArchive() {
+    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    const comps = getCompanies();
 
-    if (history.length === 0) {
-      list.innerHTML = '<div style="color:var(--text-muted); font-size:12px; text-align:center; padding: 14px;">هنوز گزارشی در آرشیو ثبت نشده است.</div>';
+    // فیلتر بار
+    const filterBar = document.getElementById('archiveCompanyFilters');
+    filterBar.innerHTML = '';
+    
+    const allChip = document.createElement('div');
+    allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
+    allChip.textContent = 'همه شرکت‌ها';
+    allChip.onclick = () => { archiveCompanyFilter = 'all'; renderArchive(); };
+    filterBar.appendChild(allChip);
+
+    comps.forEach(c => {
+      const chip = document.createElement('div');
+      chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
+      chip.textContent = c;
+      chip.onclick = () => { archiveCompanyFilter = c; renderArchive(); };
+      filterBar.appendChild(chip);
+    });
+
+    const filtered = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+
+    // آمار
+    let totalMins = 0;
+    filtered.forEach(item => totalMins += (item.durationMins || 0));
+    const h = Math.floor(totalMins / 60);
+    const m = totalMins % 60;
+    document.getElementById('archiveTotalHours').textContent = `${h}h ${m}m`;
+    document.getElementById('archiveTotalCount').textContent = `${filtered.length} گزارش`;
+
+    // لیست لاگ‌ها
+    const stream = document.getElementById('archiveStream');
+    if (filtered.length === 0) {
+      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:18px;">هیچ رکوردی برای این شرکت ثبت نشده است.</div>';
       return;
     }
-    list.innerHTML = history.slice(0, 15).map(item => `
-      <div class="record-item-card">
+
+    stream.innerHTML = filtered.slice(0, 20).map(item => `
+      <div class="record-card-item">
         <div>
-          <div class="record-project-badge">${item.project}</div>
-          <div class="record-time-text">${item.action === 'in' ? 'ورود ' + item.in : item.action === 'out' ? 'خروج ' + item.out : item.in + ' تا ' + item.out + ' (' + item.durationText + ')'}</div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-weight:800; color:var(--gold); font-size:13px;">${item.company}</span>
+            <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
+            ${item.type === 'attendance' ? 'مدت: ' + item.durationText : (item.actions ? item.actions.slice(0, 30) + '...' : 'گزارش ساپورت')}
+          </div>
         </div>
-        <div class="record-date-text">${item.date}</div>
+        <div style="font-size:11px; color:var(--text-dim); text-align:left;">${item.date}</div>
       </div>
     `).join('');
   }
 
-  function exportHistoryCSV() {
-    triggerHaptic();
-    const history = JSON.parse(localStorage.getItem('geomat_attendance_history') || '[]');
-    if (history.length === 0) {
-      showToast('تاریخچه‌ای برای دانلود وجود ندارد');
+  // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
+  function exportFilteredExcel() {
+    playTactileFeedback();
+    const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
+    const targetComp = archiveCompanyFilter;
+    const filtered = targetComp === 'all' ? logs : logs.filter(l => l.company === targetComp);
+
+    if (filtered.length === 0) {
+      showToast('گزارشی برای این شرکت موجود نیست');
       return;
     }
-    let csvContent = "\uFEFFتاریخ,روز,پروژه,ورود,خروج,مدت کارکرد,نوع ثبت\n";
-    history.forEach(row => {
-      csvContent += `"${row.date}","${row.day}","${row.project}","${row.in || '-'}","${row.out || '-'}","${row.durationText || '-'}","${row.action}"\n`;
+
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP\n";
+    filtered.forEach((r, idx) => {
+      const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
+      const cleanActions = (r.actions || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
+      const cleanPending = (r.pending || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
+      const cleanTech = (r.tech || '').replace(/[\n\r]+/g, ' - ').replace(/"/g, '""');
+
+      csv += `${idx + 1},"${r.date}","${r.day}","${r.company}","${typeStr}","${r.durationText || '-'}","${cleanActions}","${cleanPending}","${cleanTech}"\n`;
     });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `گزارش_تردد_گئومات_${new Date().toISOString().slice(0,10)}.csv`;
+    const filename = targetComp === 'all' ? `گزارش_جامع_تردد_گئومات.csv` : `گزارش_اختصاصی_شرکت_${targetComp}.csv`;
+    a.download = filename;
     a.click();
-    showToast('فایل اکسل/CSV دانلود شد 📊');
-  }
-
-  function clearHistory() {
-    triggerHaptic();
-    if (confirm('آیا از پاک کردن کامل تاریخچه مطمئن هستید؟')) {
-      localStorage.removeItem('geomat_attendance_history');
-      renderHistory();
-      showToast('تاریخچه پاک شد');
-    }
+    showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
   }
 
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+    setTimeout(() => t.classList.remove('show'), 2100);
   }
 
   window.onload = init;

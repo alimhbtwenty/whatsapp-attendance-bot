@@ -43,8 +43,8 @@ jobs:
           name: geomat-attendance-apk
           path: geomat-attendance.apk
 
-      - name: Attach APK to GitHub Release v1.0.1
+      - name: Attach APK to GitHub Release v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release upload v1.0.1 geomat-attendance.apk --clobber || true
+          gh release upload v1.0.2 geomat-attendance.apk --clobber || true
