@@ -1,4 +1,4 @@
-const CACHE_NAME = 'geomat-attendance-v10';
+const CACHE_NAME = 'geomat-attendance-v11';
 const ASSETS = [
   './',
   './index.html',
