@@ -1352,7 +1352,7 @@
         <div class="title-tag"><span class="gold-marker"></span> روز و تاریخ</div>
       </div>
       <div class="days-carousel" id="attendanceDaysRow"></div>
-      <div class="date-stepper-panel">
+      <div class="date-stepper-panel" style="flex-wrap:wrap; gap:6px;">
         <div class="date-chips-quick">
           <button class="date-q-btn selected" onclick="setDateOffset(0)" id="chipToday">امروز</button>
           <button class="date-q-btn" onclick="setDateOffset(-1)" id="chipYesterday">دیروز</button>
@@ -1360,7 +1360,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
           <button class="date-q-btn" onclick="changeDateByDays(-1)" title="روز قبل">◀ روز قبل</button>
-          <span class="date-display-tag" id="dateDisplay">--/--/----</span>
+          <button class="date-pick-btn" onclick="openAttendanceCalendar()" title="انتخاب از تقویم">📅 <span class="date-display-tag" id="dateDisplay">--/--/----</span></button>
           <button class="date-q-btn" onclick="changeDateByDays(1)" title="روز بعد">روز بعد ▶</button>
         </div>
       </div>
@@ -1912,6 +1912,13 @@
       html += `<button class="${cls.join(' ')}" onclick="pickCalendarDate(${jy}, ${jm}, ${d})">${toPersianDigits(d)}</button>`;
     }
     document.getElementById('jcalGrid').innerHTML = html;
+  }
+
+  function openAttendanceCalendar() {
+    openCalendar(currentDateObj, (date) => {
+      currentDateObj = date;
+      updateDateDisplay();
+    });
   }
 
   // تاریخ گزارش ساپورت مستقل از تب تردد است و ساعت ندارد
