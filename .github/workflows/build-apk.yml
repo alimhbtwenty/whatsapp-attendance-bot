@@ -29,10 +29,37 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      # کلید امضای ثابت (GitHub Secrets). ریلیز رسمی main بدون آن ساخته نمی‌شود، چون APK با
+      # کلید تصادفی روی نسخه نصب‌شده نصب نمی‌شود؛ برنچ‌ها/PRها در نبودش با کلید debug ساخته می‌شوند.
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/geomat-release.jks"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/geomat-release.jks" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          elif [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            echo "::error::KEYSTORE_BASE64 / KEYSTORE_PASSWORD secrets are missing; refusing to publish a randomly signed release."
+            exit 1
+          else
+            echo "::warning::Signing secrets missing: this build is debug-signed and will not install over the released app."
+          fi
+
       - name: Build Android APK
         working-directory: android
         run: |
           gradle assembleRelease --stacktrace
+
+      - name: Verify APK signature
+        if: env.KEYSTORE_FILE != ''
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          KEY=$(keytool -list -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias geomat | grep -o 'SHA-256): .*' | cut -d' ' -f2 | tr -d ':')
+          APKSIG=$(keytool -printcert -jarfile "$APK" | grep -m1 'SHA256:' | awk '{print $2}' | tr -d ':')
+          echo "key $KEY / apk $APKSIG"
+          [ -n "$KEY" ] && [ "$KEY" = "$APKSIG" ] || { echo "::error::APK is not signed with the release key"; exit 1; }
 
       - name: Prepare APK File
         run: |
