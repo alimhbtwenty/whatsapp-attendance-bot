@@ -525,6 +525,35 @@
       line-height: 1;
     }
 
+    .time-state-label,
+    .time-now-pill {
+      white-space: nowrap;
+    }
+    @media (max-width: 380px) {
+      .time-hud-row {
+        padding: 10px;
+      }
+      .oled-square-digit {
+        width: 46px;
+        height: 46px;
+        font-size: 21px;
+      }
+    }
+    @media (max-width: 340px) {
+      .time-hud-row {
+        padding: 8px;
+      }
+      .time-row-meta,
+      .digital-digits-wrapper {
+        gap: 4px;
+      }
+      .oled-square-digit {
+        width: 40px;
+        height: 42px;
+        font-size: 19px;
+      }
+    }
+
     /* Duration Meter Gauge */
     .duration-meter-card {
       background: linear-gradient(90deg, rgba(243, 203, 3, 0.09) 0%, rgba(56, 189, 248, 0.03) 100%);
@@ -2381,8 +2410,20 @@
     checkExitReminder();
     setInterval(checkExitReminder, 30000);
 
+    let todayISO = toISODate(new Date());
     const tickClock = () => {
       const d = new Date();
+      // اپ بعد از نیمه‌شب باز مانده: تاریخی که روی «امروز» بود به روز جدید برود،
+      // و دکمه‌های امروز/دیروز/پریروز برای تاریخ‌های انتخاب‌شده دوباره حساب شوند
+      const nowISO = toISODate(d);
+      if (nowISO !== todayISO) {
+        if (toISODate(currentDateObj) === todayISO) currentDateObj = new Date();
+        if (toISODate(supportDateObj) === todayISO) supportDateObj = new Date();
+        todayISO = nowISO;
+        updateDateDisplay();
+        updateSupportDateDisplay();
+        renderOpenEntryBanner();
+      }
       document.getElementById('liveClock').textContent =
         `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
     };
