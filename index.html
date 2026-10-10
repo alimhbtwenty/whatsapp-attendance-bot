@@ -848,7 +848,6 @@
       line-height: 1.6;
       position: relative;
       word-break: break-word;
-      white-space: pre-wrap;
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
       cursor: pointer;
       user-select: text;
@@ -869,6 +868,129 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px 16px 16px 3px;
       color: #f1f5f9;
+    }
+    /* گروه‌بندی پیام‌های پشت‌سرهم یک فرستنده (دم حباب فقط روی آخرین پیام) */
+    .tg-bubble-row.cont {
+      margin-top: -6px;
+    }
+    .tg-bubble-row.mine.has-next .tg-msg-bubble { border-bottom-right-radius: 6px; }
+    .tg-bubble-row.mine.cont .tg-msg-bubble { border-top-right-radius: 6px; }
+    .tg-bubble-row.other.has-next .tg-msg-bubble { border-bottom-left-radius: 6px; }
+    .tg-bubble-row.other.cont .tg-msg-bubble { border-top-left-radius: 6px; }
+    .tg-day-sep {
+      align-self: center;
+      background: rgba(15, 23, 36, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 12px;
+      margin: 4px 0;
+      user-select: none;
+    }
+    .tg-hashtag {
+      color: #38bdf8;
+      font-weight: 800;
+    }
+    .tg-chan-tag {
+      background: rgba(255, 255, 255, 0.07);
+      padding: 0 6px;
+      border-radius: 8px;
+      direction: rtl;
+    }
+    .tg-empty-state {
+      margin: auto;
+      color: var(--text-dim);
+      font-size: 12px;
+      text-align: center;
+      padding: 35px 15px;
+      line-height: 1.9;
+    }
+    .tg-stream-wrap {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .tg-scroll-down {
+      position: absolute;
+      left: 12px;
+      bottom: 10px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(24, 37, 51, 0.95);
+      color: #cbd5e1;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .tg-scroll-down.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    /* منوی عملیات پیام (لمس روی حباب) */
+    .tg-sheet-bg {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: none;
+      align-items: flex-end;
+      z-index: 20;
+    }
+    .tg-sheet-bg.open {
+      display: flex;
+    }
+    .tg-sheet {
+      width: 100%;
+      background: #131b26;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px 18px 0 0;
+      padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      animation: tgSheetUp 0.16s ease-out;
+    }
+    @keyframes tgSheetUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .tg-sheet-preview {
+      font-size: 12px;
+      color: var(--text-muted);
+      padding: 4px 6px 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 72px;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 2px;
+    }
+    .tg-sheet-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+      padding: 11px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    .tg-sheet-btn:active {
+      background: rgba(255, 255, 255, 0.09);
+    }
+    .tg-sheet-btn.danger {
+      color: var(--danger);
     }
     .tg-msg-author {
       font-size: 11.5px;
@@ -891,6 +1013,7 @@
       line-height: 1.65;
       color: #f8fafc;
       word-break: break-word;
+      white-space: pre-wrap;
     }
     .tg-bubble-meta {
       display: flex;
@@ -938,7 +1061,7 @@
     .tg-input-row {
       display: flex;
       gap: 8px;
-      align-items: center;
+      align-items: flex-end;
     }
     .tg-chat-input {
       flex: 1;
@@ -948,7 +1071,13 @@
       color: #fff;
       padding: 9px 15px;
       font-size: 13px;
+      line-height: 1.6;
       outline: none;
+      resize: none;
+      height: 40px;
+      max-height: 124px;
+      overflow-y: auto;
+      scrollbar-width: none;
       transition: border-color 0.2s;
     }
     .tg-chat-input:focus {
@@ -971,6 +1100,13 @@
     }
     .tg-send-btn:active {
       transform: scale(0.9);
+    }
+    .tg-send-btn:disabled {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+      box-shadow: none;
+      cursor: default;
+      transform: none;
     }
 
     /* Modal Glass */
@@ -1299,7 +1435,7 @@
               <span style="font-size:13px; font-weight:800; color:#fff;">گروه فنی گئومات</span>
               <span style="font-size:10px; background:rgba(56,189,248,0.18); color:#38bdf8; padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
             </div>
-            <div style="font-size:10.5px; color:#94a3b8;" id="tgNetStatus"><span style="color:#22c55e;">●</span> آنلاین • حافظه لوکال</div>
+            <div style="font-size:10.5px; color:#94a3b8;" id="tgNetStatus"><span style="color:#22c55e;">●</span> ذخیره فقط روی همین دستگاه</div>
           </div>
         </div>
         <button style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" onclick="clearChatHistory()">
@@ -1316,8 +1452,11 @@
       </div>
 
       <!-- استریم چت پیام‌ها -->
-      <div class="tg-chat-stream" id="tgChatStream">
-        <!-- پیام‌ها به صورت تلگرامی رندر می‌شوند -->
+      <div class="tg-stream-wrap">
+        <div class="tg-chat-stream" id="tgChatStream">
+          <!-- پیام‌ها به صورت تلگرامی رندر می‌شوند -->
+        </div>
+        <button class="tg-scroll-down" id="tgScrollDownBtn" onclick="scrollChatToBottom(true)" title="رفتن به آخرین پیام">⌄</button>
       </div>
 
       <!-- اینپوت بار تلگرامی -->
@@ -1327,12 +1466,22 @@
           <div class="tg-attach-pill" onclick="attachCurrentReportToChat('support')">🛠 الصاق گزارش ساپورت</div>
         </div>
         <div class="tg-input-row">
-          <input type="text" id="tgMessageInput" class="tg-chat-input" placeholder="نوشتن پیام تیمی..." onkeydown="if(event.key==='Enter') sendChatMessage()">
-          <button class="tg-send-btn" onclick="sendChatMessage()" title="ارسال پیام">
+          <textarea id="tgMessageInput" class="tg-chat-input" rows="1" maxlength="4000" placeholder="پیام در کانال عمومی..."></textarea>
+          <button class="tg-send-btn" id="tgSendBtn" onclick="sendChatMessage()" title="ارسال پیام" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
           </button>
+        </div>
+      </div>
+
+      <!-- منوی عملیات پیام -->
+      <div class="tg-sheet-bg" id="tgActionSheet" onclick="if (event.target === this) closeChatActions()">
+        <div class="tg-sheet">
+          <div class="tg-sheet-preview" id="tgSheetPreview"></div>
+          <button class="tg-sheet-btn" onclick="chatActionCopy()">📋 کپی متن</button>
+          <button class="tg-sheet-btn" onclick="chatActionWhatsApp()">🟢 ارسال به واتساپ</button>
+          <button class="tg-sheet-btn danger" onclick="chatActionDelete()">🗑 حذف پیام</button>
         </div>
       </div>
 
@@ -1517,19 +1666,15 @@
 
     document.body.classList.toggle('mode-messenger', mode === 'messenger');
 
+    if (mode !== 'messenger') closeChatActions();
+
     const dock = document.getElementById('floatingDock');
     const sendLabel = document.getElementById('sendBtnLabel');
 
     if (mode === 'archive' || mode === 'messenger') {
       dock.style.display = 'none';
       if (mode === 'archive') renderArchive();
-      if (mode === 'messenger') {
-        renderChatMessages();
-        setTimeout(() => {
-          const stream = document.getElementById('tgChatStream');
-          if (stream) stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
-        }, 60);
-      }
+      if (mode === 'messenger') renderChatMessages({ forceBottom: true });
     } else {
       dock.style.display = 'flex';
       sendLabel.textContent = mode === 'attendance' ? 'ارسال به گروه تردد واتساپ' : 'ارسال به گروه ساپورت واتساپ';
@@ -2091,35 +2236,45 @@
   }
 
   // ==================== پیام‌رسان اختصاصی تیم گئومات (BETA) ====================
-  const DEFAULT_CHAT_MESSAGES = [
-    {
-      id: 1,
-      sender: "عباس رحیمی",
-      isMine: false,
-      channel: "support",
-      time: "10:15",
-      date: "امروز",
-      text: "📌 تنظیمات UCM شرکت راه آینده با موفقیت انجام شد. دسترسی ترانک داخلی‌ها برقرار است."
-    },
-    {
-      id: 2,
-      sender: "علی محبی",
-      isMine: true,
-      channel: "attendance",
-      time: "09:00",
-      date: "امروز",
-      text: "۱۴۰۵/۰۷/۱۸\nشنبه\n#صدف\nورود 09:00"
-    },
-    {
-      id: 3,
-      sender: "مدیریت مهندسی گئومات",
-      isMine: false,
-      channel: "general",
-      time: "08:30",
-      date: "امروز",
-      text: "سلام به همگی همکاران عزیز، لطفاً گزارش کارگاه‌ها و سوئیچ‌های تعویضی را پس از اتمام ثبت بفرمایید."
-    }
-  ];
+  // این پیام‌رسان فعلاً سرور ندارد؛ پیام‌ها فقط در localStorage همین دستگاه ذخیره می‌شوند.
+  const CHAT_STORAGE_KEY = 'geomat_chat_messages_v1';
+  const CHAT_MAX_MESSAGES = 100;
+  const CHAT_GROUP_WINDOW_MS = 5 * 60 * 1000;
+  const CHAT_CHANNELS = {
+    attendance: { icon: '🕒', label: 'ترددها' },
+    support: { icon: '🛠', label: 'ساپورت فنی' },
+    general: { icon: '📢', label: 'عمومی' }
+  };
+
+  function buildDefaultChatMessages() {
+    const now = Date.now();
+    return [
+      {
+        id: 'seed-1',
+        sender: "مدیریت مهندسی گئومات",
+        isMine: false,
+        channel: "general",
+        ts: now - 95 * 60000,
+        text: "سلام به همگی همکاران عزیز، لطفاً گزارش کارگاه‌ها و سوئیچ‌های تعویضی را پس از اتمام ثبت بفرمایید."
+      },
+      {
+        id: 'seed-2',
+        sender: "علی محبی",
+        isMine: true,
+        channel: "attendance",
+        ts: now - 70 * 60000,
+        text: "۱۴۰۵/۰۷/۱۸\nشنبه\n#صدف\nورود 09:00"
+      },
+      {
+        id: 'seed-3',
+        sender: "عباس رحیمی",
+        isMine: false,
+        channel: "support",
+        ts: now - 20 * 60000,
+        text: "📌 تنظیمات UCM شرکت راه آینده با موفقیت انجام شد. دسترسی ترانک داخلی‌ها برقرار است."
+      }
+    ];
+  }
 
   // ابزار ضد نفوذ و فرار کاراکترهای خطرناک (XSS Hardening)
   function escapeHtml(text) {
@@ -2132,11 +2287,14 @@
       .replace(/'/g, '&#039;');
   }
 
+  // هشتگ‌ها روی متن خام پیدا می‌شوند و هر تکه جداگانه escape می‌شود
+  // (اجرای regex روی متن escape‌شده، موجودیت‌هایی مثل &#039; را می‌شکست)
   function formatChatMessage(text) {
     if (!text) return '';
-    const safe = escapeHtml(text);
-    // برجسته‌سازی هشتگ‌های تلگرامی
-    return safe.replace(/(#[a-zA-Z0-9_\u0600-\u06FF]+)/g, '<span style="color:#38bdf8; font-weight:800;">$1</span>');
+    return String(text)
+      .split(/(#[\p{L}\p{M}\p{N}_‌]+)/u)
+      .map((part, i) => i % 2 ? `<span class="tg-hashtag">${escapeHtml(part)}</span>` : escapeHtml(part))
+      .join('');
   }
 
   // رنگ‌های تلگرامی داینامیک بر اساس نام فرستنده در گروه
@@ -2149,33 +2307,98 @@
   }
 
   let chatChannelFilter = 'all';
+  let chatActiveMessageId = null;
+
+  // یکدست‌سازی پیام‌های ذخیره‌شده (شامل پیام‌های نسخه‌های قبل که فقط رشته ساعت داشتند)
+  function normalizeChatMessage(m) {
+    if (!m || typeof m.text !== 'string' || !m.text.trim()) return null;
+    let ts = Number(m.ts);
+    if (!Number.isFinite(ts) || ts <= 0) {
+      const idNum = Number(m.id);
+      ts = Number.isFinite(idNum) && idNum > 1e12 ? idNum : null;
+    }
+    return {
+      id: m.id != null ? String(m.id) : '',
+      sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار گئومات',
+      isMine: m.isMine === true,
+      channel: CHAT_CHANNELS[m.channel] ? m.channel : 'general',
+      ts: ts,
+      time: typeof m.time === 'string' ? m.time : '',
+      text: m.text
+    };
+  }
 
   function getChatMessages() {
+    let raw = null;
+    try { raw = localStorage.getItem(CHAT_STORAGE_KEY); } catch(e) {}
+    // فقط در اولین اجرا پیام‌های نمونه نمایش داده می‌شوند؛ تاریخچه پاک‌شده دوباره پر نمی‌شود
+    if (raw === null) {
+      const seed = buildDefaultChatMessages();
+      saveChatMessages(seed);
+      return seed;
+    }
     try {
-      const saved = localStorage.getItem('geomat_chat_messages_v1');
-      if (!saved) return DEFAULT_CHAT_MESSAGES;
-      const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed) || parsed.length === 0) return DEFAULT_CHAT_MESSAGES;
-      // پالایش قطعی از پیام‌های بدون متن و نامعتبر
-      const valid = parsed.filter(m => m && typeof m.text === 'string' && m.text.trim().length > 0);
-      return valid.length > 0 ? valid : DEFAULT_CHAT_MESSAGES;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      const seen = new Set();
+      return parsed.map(normalizeChatMessage).filter(Boolean).map((m, i) => {
+        if (!m.id || seen.has(m.id)) m.id = `legacy-${i}`;
+        seen.add(m.id);
+        return m;
+      });
     } catch(e) {
-      return DEFAULT_CHAT_MESSAGES;
+      return [];
     }
   }
 
   function saveChatMessages(msgs) {
     try {
-      if (msgs.length > 100) {
-        msgs = msgs.slice(msgs.length - 100);
-      }
-      localStorage.setItem('geomat_chat_messages_v1', JSON.stringify(msgs));
+      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-CHAT_MAX_MESSAGES)));
+      return true;
     } catch(e) {
       try {
-        msgs = msgs.slice(-30);
-        localStorage.setItem('geomat_chat_messages_v1', JSON.stringify(msgs));
-      } catch(err) {}
+        localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-30)));
+        showToast('حافظه پر است؛ فقط ۳۰ پیام آخر نگه داشته شد');
+        return true;
+      } catch(err) {
+        showToast('ذخیره پیام ممکن نشد ⚠️');
+        return false;
+      }
     }
+  }
+
+  const chatDayFormatter = (() => {
+    try {
+      return new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday: 'long', day: 'numeric', month: 'long' });
+    } catch(e) {
+      return null;
+    }
+  })();
+
+  function chatDayKey(ts) {
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  }
+
+  function chatDayLabel(ts) {
+    const now = new Date();
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const key = chatDayKey(ts);
+    if (key === chatDayKey(now.getTime())) return 'امروز';
+    if (key === chatDayKey(yesterday.getTime())) return 'دیروز';
+    return chatDayFormatter ? chatDayFormatter.format(new Date(ts)) : new Date(ts).toLocaleDateString();
+  }
+
+  function chatTimeLabel(m) {
+    if (!m.ts) return m.time;
+    const d = new Date(m.ts);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  // آیا پیام b ادامه پیام a از همان فرستنده است؟ (برای گروه‌بندی حباب‌ها)
+  function chatContinues(a, b) {
+    return !!(a && b && a.sender === b.sender && a.isMine === b.isMine && a.ts && b.ts &&
+      b.ts - a.ts < CHAT_GROUP_WINDOW_MS && chatDayKey(a.ts) === chatDayKey(b.ts));
   }
 
   function filterChatRoom(ch) {
@@ -2185,60 +2408,145 @@
     document.getElementById('tgFilterAtt').classList.toggle('active', ch === 'attendance');
     document.getElementById('tgFilterSup').classList.toggle('active', ch === 'support');
     document.getElementById('tgFilterGen').classList.toggle('active', ch === 'general');
-    renderChatMessages();
+    renderChatMessages({ forceBottom: true });
   }
 
-  function renderChatMessages() {
-    const msgs = getChatMessages();
+  function isChatNearBottom(stream) {
+    return stream.scrollHeight - stream.scrollTop - stream.clientHeight < 80;
+  }
+
+  function scrollChatToBottom(smooth) {
     const stream = document.getElementById('tgChatStream');
     if (!stream) return;
+    stream.scrollTo({ top: stream.scrollHeight, behavior: smooth ? 'smooth' : 'auto' });
+  }
 
-    // غربالگری پیام‌های معتبر
-    const validMsgs = msgs.filter(m => m && typeof m.text === 'string' && m.text.trim().length > 0);
+  function updateChatScrollButton() {
+    const stream = document.getElementById('tgChatStream');
+    const btn = document.getElementById('tgScrollDownBtn');
+    if (stream && btn) btn.classList.toggle('show', !isChatNearBottom(stream));
+  }
 
-    const filtered = chatChannelFilter === 'all' 
-      ? validMsgs 
-      : validMsgs.filter(m => m.channel === chatChannelFilter);
+  function currentChatTargetChannel() {
+    return chatChannelFilter === 'all' ? 'general' : chatChannelFilter;
+  }
+
+  // forceBottom: پرش به آخرین پیام؛ در غیر این صورت اگر کاربر بالاتر را می‌خواند، اسکرول دست نمی‌خورد
+  function renderChatMessages(opts) {
+    opts = opts || {};
+    const stream = document.getElementById('tgChatStream');
+    if (!stream) return;
+    const wasNearBottom = isChatNearBottom(stream);
+
+    const msgs = getChatMessages();
+    const filtered = chatChannelFilter === 'all'
+      ? msgs
+      : msgs.filter(m => m.channel === chatChannelFilter);
 
     const countBadge = document.getElementById('tgMsgCount');
-    if (countBadge) countBadge.textContent = `${validMsgs.length} پیام`;
+    if (countBadge) countBadge.textContent = `${msgs.length} پیام`;
+
+    const input = document.getElementById('tgMessageInput');
+    if (input) input.placeholder = `پیام در کانال ${CHAT_CHANNELS[currentChatTargetChannel()].label}...`;
 
     if (filtered.length === 0) {
-      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:35px 15px;">هیچ پیامی در این کانال وجود ندارد. اولین پیام را ارسال کنید! 💬</div>';
+      stream.innerHTML = '<div class="tg-empty-state">هیچ پیامی در این کانال وجود ندارد.<br>اولین پیام را بنویسید 💬</div>';
+      updateChatScrollButton();
       return;
     }
 
     const myName = getUserName();
+    let lastDay = null;
 
-    stream.innerHTML = filtered.map(m => {
-      const senderName = m.sender || 'همکار گئومات';
-      const isMine = m.isMine === true || (senderName === myName);
-      const authorColor = getAuthorColor(senderName);
-      const safeText = formatChatMessage(m.text);
-      const escapedText = encodeURIComponent(m.text);
+    stream.innerHTML = filtered.map((m, i) => {
+      let sep = '';
+      if (m.ts) {
+        const day = chatDayKey(m.ts);
+        if (day !== lastDay) {
+          sep = `<div class="tg-day-sep">${escapeHtml(chatDayLabel(m.ts))}</div>`;
+          lastDay = day;
+        }
+      }
+      const isMine = m.isMine || m.sender === myName;
+      const cont = !sep && chatContinues(filtered[i - 1], m);
+      const hasNext = chatContinues(m, filtered[i + 1]);
+      const authorColor = getAuthorColor(m.sender);
+      const ch = CHAT_CHANNELS[m.channel];
 
-      return `
-        <div class="tg-bubble-row ${isMine ? 'mine' : 'other'}">
-          <div class="tg-msg-bubble" onclick="copyChatMessageText(decodeURIComponent('${escapedText}'))" title="برای کپی متن لمس کنید">
-            ${!isMine ? `
+      return `${sep}
+        <div class="tg-bubble-row ${isMine ? 'mine' : 'other'}${cont ? ' cont' : ''}${hasNext ? ' has-next' : ''}">
+          <div class="tg-msg-bubble" data-msg-id="${escapeHtml(m.id)}">
+            ${!isMine && !cont ? `
               <div class="tg-msg-author" style="color: ${authorColor};">
                 <span class="tg-author-avatar-dot" style="background:${authorColor};"></span>
-                <span>${escapeHtml(senderName)}</span>
+                <span>${escapeHtml(m.sender)}</span>
               </div>
             ` : ''}
-            <div class="tg-msg-text-content">${safeText}</div>
+            <div class="tg-msg-text-content">${formatChatMessage(m.text)}</div>
             <div class="tg-bubble-meta">
-              <span>${m.time || '10:00'}</span>
-              ${isMine ? '<span style="color:#38bdf8; font-weight:800;">✓✓</span>' : ''}
+              ${chatChannelFilter === 'all' ? `<span class="tg-chan-tag">${ch.icon} ${ch.label}</span>` : ''}
+              <span>${escapeHtml(chatTimeLabel(m))}</span>
+              ${isMine ? '<span style="color:#38bdf8; font-weight:800;" title="ذخیره شد">✓</span>' : ''}
             </div>
           </div>
         </div>
       `;
     }).join('');
 
-    setTimeout(() => {
-      stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
-    }, 40);
+    if (opts.forceBottom || wasNearBottom) {
+      scrollChatToBottom(!!opts.smooth);
+    }
+    updateChatScrollButton();
+  }
+
+  // لمس حباب ← منوی عملیات (به‌جای onclick درون‌خطی که با متن پیام ساخته می‌شد و قابل تزریق بود)
+  function onChatStreamClick(e) {
+    const bubble = e.target.closest('.tg-msg-bubble');
+    if (!bubble) return;
+    const sel = window.getSelection ? String(window.getSelection()) : '';
+    if (sel.length > 0) return; // کاربر در حال انتخاب بخشی از متن است
+    openChatActions(bubble.dataset.msgId);
+  }
+
+  function findChatMessage(id) {
+    return getChatMessages().find(m => m.id === id) || null;
+  }
+
+  function openChatActions(id) {
+    const msg = findChatMessage(id);
+    if (!msg) return;
+    playTactileFeedback();
+    chatActiveMessageId = id;
+    document.getElementById('tgSheetPreview').textContent = msg.text;
+    document.getElementById('tgActionSheet').classList.add('open');
+  }
+
+  function closeChatActions() {
+    chatActiveMessageId = null;
+    const sheet = document.getElementById('tgActionSheet');
+    if (sheet) sheet.classList.remove('open');
+  }
+
+  function chatActionCopy() {
+    const msg = findChatMessage(chatActiveMessageId);
+    closeChatActions();
+    if (msg) copyChatMessageText(msg.text);
+  }
+
+  function chatActionWhatsApp() {
+    const msg = findChatMessage(chatActiveMessageId);
+    closeChatActions();
+    if (msg) openWhatsAppDirect(msg.text);
+  }
+
+  function chatActionDelete() {
+    const id = chatActiveMessageId;
+    closeChatActions();
+    if (!id || !confirm('این پیام از روی این دستگاه حذف شود؟')) return;
+    playTactileFeedback();
+    saveChatMessages(getChatMessages().filter(m => m.id !== id));
+    renderChatMessages();
+    showToast('پیام حذف شد');
   }
 
   // کپی سریع متن پیام به سبک تلگرام
@@ -2268,36 +2576,49 @@
     showToast('متن پیام کپی شد 📋');
   }
 
+  // روی دستگاه‌های دارای کیبورد فیزیکی Enter ارسال می‌کند و Shift+Enter خط جدید؛
+  // روی موبایل Enter خط جدید است و ارسال با دکمه انجام می‌شود (مثل تلگرام)
+  const chatEnterSends = !!(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+
+  function onChatInputKeydown(e) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && chatEnterSends) {
+      e.preventDefault();
+      sendChatMessage();
+    }
+  }
+
+  function syncChatComposer() {
+    const input = document.getElementById('tgMessageInput');
+    const btn = document.getElementById('tgSendBtn');
+    if (!input) return;
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight + 2, 124) + 'px';
+    if (btn) btn.disabled = !input.value.trim();
+  }
+
   function sendChatMessage() {
     const input = document.getElementById('tgMessageInput');
     const text = input.value.trim();
-    if (!text) {
-      showToast('لطفاً متن پیام را وارد کنید');
-      return;
-    }
+    if (!text) return;
     playTactileFeedback();
 
-    const d = new Date();
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-
+    const now = Date.now();
     const msgs = getChatMessages();
     msgs.push({
-      id: Date.now(),
+      id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
       sender: getUserName(),
       isMine: true,
-      channel: chatChannelFilter === 'all' ? 'general' : chatChannelFilter,
-      time: `${hh}:${mm}`,
-      date: 'امروز',
+      channel: currentChatTargetChannel(),
+      ts: now,
       text: text
     });
 
-    saveChatMessages(msgs);
+    if (!saveChatMessages(msgs)) return;
     input.value = '';
-    renderChatMessages();
-    showToast('پیام در پیام‌رسان ثبت شد 💬');
+    syncChatComposer();
+    renderChatMessages({ forceBottom: true, smooth: true });
 
-    if (window.innerWidth > 600) {
+    if (chatEnterSends) {
       input.focus();
     }
   }
@@ -2307,16 +2628,20 @@
     const text = type === 'attendance' ? generateAttendanceText() : generateSupportText();
     const input = document.getElementById('tgMessageInput');
     input.value = text;
+    syncChatComposer();
     input.focus();
     showToast(type === 'attendance' ? '⚡ تردد جاری الصاق شد' : '🛠 گزارش ساپورت الصاق شد');
   }
 
   function clearChatHistory() {
-    if (!confirm('آیا از پاکسازی تاریخچه پیام‌های چت اطمینان دارید؟')) return;
+    const scoped = chatChannelFilter !== 'all';
+    const label = scoped ? `کانال «${CHAT_CHANNELS[chatChannelFilter].label}»` : 'همه کانال‌ها';
+    if (!confirm(`پیام‌های ${label} از روی این دستگاه پاک شوند؟`)) return;
     playTactileFeedback();
-    saveChatMessages([]);
+    const remaining = scoped ? getChatMessages().filter(m => m.channel !== chatChannelFilter) : [];
+    saveChatMessages(remaining);
     renderChatMessages();
-    showToast('تاریخچه چت پاکسازی شد');
+    showToast(scoped ? `پیام‌های ${label} پاک شد` : 'تاریخچه چت پاکسازی شد');
   }
 
   // نشانگر وضعیت اتصال اینترنت / آفلاین (Network Status Hardening)
@@ -2324,9 +2649,9 @@
     const el = document.getElementById('tgNetStatus');
     if (!el) return;
     if (navigator.onLine) {
-      el.innerHTML = '<span style="color:#22c55e;">●</span> آنلاین • حافظه همگام';
+      el.innerHTML = '<span style="color:#22c55e;">●</span> آنلاین • ذخیره فقط روی همین دستگاه';
     } else {
-      el.innerHTML = '<span style="color:#f59e0b;">●</span> آفلاین • ذخیره محلی فعال';
+      el.innerHTML = '<span style="color:#f59e0b;">●</span> آفلاین • ذخیره فقط روی همین دستگاه';
     }
   }
   window.addEventListener('online', updateNetworkStatus);
@@ -2361,30 +2686,33 @@
   });
 
   // مدیریت پیشرفته کیبورد مجازی در موبایل (Interactive Keyboard & Viewport Sync)
+  // با باز شدن کیبورد، فقط وقتی کاربر در حال تایپ است به آخرین پیام برو
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
-      if (systemMode === 'messenger') {
-        const stream = document.getElementById('tgChatStream');
-        if (stream) {
-          setTimeout(() => {
-            stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
-          }, 80);
-        }
+      if (systemMode === 'messenger' && document.activeElement === document.getElementById('tgMessageInput')) {
+        setTimeout(() => scrollChatToBottom(true), 80);
       }
     });
   }
 
-  // اسکرول نرم هنگام فوکوس روی فیلد چت
+  // اتصال رویدادهای پیام‌رسان
   window.addEventListener('load', () => {
     const chatInp = document.getElementById('tgMessageInput');
     if (chatInp) {
+      chatInp.addEventListener('keydown', onChatInputKeydown);
+      chatInp.addEventListener('input', syncChatComposer);
       chatInp.addEventListener('focus', () => {
-        setTimeout(() => {
-          const stream = document.getElementById('tgChatStream');
-          if (stream) stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
-        }, 280);
+        setTimeout(() => scrollChatToBottom(true), 280);
       });
     }
+    const stream = document.getElementById('tgChatStream');
+    if (stream) {
+      stream.addEventListener('click', onChatStreamClick);
+      stream.addEventListener('scroll', updateChatScrollButton, { passive: true });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeChatActions();
+    });
   });
 
   window.onload = init;
