@@ -52,6 +52,17 @@ const now = new Date().toISOString();
   await forgedBackup([{ at: new Date(Date.now() + 5000).toISOString(), by: { id: 'x', name: 'x' }, action: 'edit', data: { title: 'برگشته' }, secrets: {} }]);
   ok('a technician\'s backup cannot bring back an item the admin deleted', await p.evaluate(() => getInventory().items[0].deleted === true));
 
+  // آیتمی که فقط در پشتیبان هست هم از همان صافی می‌گذرد
+  await p.evaluate(() => {
+    const inv = getInventory();
+    inv.items.push({ id: 'n9', company: 'کرانه', section: 'access', data: { title: 'آینده' }, secrets: {}, history: [{ at: '9999-01-01T00:00:00.000Z', by: { id: 'x', name: 'x' }, action: 'create', data: { title: 'آینده' }, secrets: {} }] },
+      { id: 'n8', company: 'کرانه', section: 'access', data: { title: 'تازه' }, secrets: {}, history: [{ at: new Date().toISOString(), by: { id: 'x', name: 'x' }, action: 'create', data: { title: 'تازه' }, secrets: {} }, { at: new Date(Date.now() + 1000).toISOString(), by: { id: 'adm', name: 'مدیر' }, action: 'delete', data: { title: 'تازه' }, secrets: {} }] });
+    const merged = JSON.parse(mergeInventoryData(localStorage.getItem('geomat_inventory_v1'), JSON.stringify(inv), { admin: false }));
+    window.__m = { future: merged.items.some(i => i.id === 'n9'), n8: merged.items.find(i => i.id === 'n8') };
+  });
+  ok('a backup-only item with only a future-dated version is not added', await p.evaluate(() => !window.__m.future));
+  ok('a backup-only item keeps its normal versions but not a technician-file delete', await p.evaluate(() => window.__m.n8 && !window.__m.n8.deleted && window.__m.n8.history.length === 1));
+
   // ---------- فایل تیمِ تکنسین ----------
   const importAs = async (users) => {
     const json = JSON.stringify({ app: 'geomat-attendance', kind: 'team', format: 1, team: { schema: 1, users, log: [] } });

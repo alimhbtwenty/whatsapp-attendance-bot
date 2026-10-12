@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HctJRnKZoX9CgRFvFtbdc/ApOgkZxq3DAO116v7pdxE='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mSFugPhuAwokb23sex+y52KaQXhr5l0sK1ZsAiZWJso='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -4411,7 +4411,7 @@
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
     if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
     // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
-    const open = getOpenEntry();
+    const open = readOpenEntry(); // ورود بازِ این رکورد، مال هر حسابی که باشد
     if (open && open.logId === id) {
       setOpenEntry(null);
       lastPrefillKey = '';
@@ -6245,7 +6245,16 @@
     const items = new Map(a.items.map(i => [i.id, i]));
     for (const it of b.items) {
       const mine = items.get(it.id);
-      if (!mine) { items.set(it.id, it); continue; }
+      if (!mine) {
+        // آیتمی که فقط در پشتیبان هست هم از همان صافی می‌گذرد (وگرنه نسخه آینده‌دار بعداً «آخرین» می‌شد)
+        if (!it.history.length) { items.set(it.id, it); continue; } // آیتم قدیمیِ بی‌تاریخچه همان‌طور می‌آید
+        const history = it.history.filter(trusted).sort(byTime);
+        if (!history.length) continue;
+        const last = history[history.length - 1];
+        items.set(it.id, { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
+          updatedAt: last.at, updatedBy: last.by });
+        continue;
+      }
       // آیتمی که مدیر حذف کرده با پشتیبانِ غیرمدیر برنمی‌گردد (برگرداندن فقط کار مدیر است)
       if (mine.deleted && !opts.admin) continue;
       const seen = new Set(mine.history.map(vkey));

@@ -494,7 +494,7 @@
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
     if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
     // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
-    const open = getOpenEntry();
+    const open = readOpenEntry(); // ورود بازِ این رکورد، مال هر حسابی که باشد
     if (open && open.logId === id) {
       setOpenEntry(null);
       lastPrefillKey = '';

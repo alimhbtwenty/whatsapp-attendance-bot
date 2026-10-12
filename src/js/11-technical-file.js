@@ -123,7 +123,16 @@
     const items = new Map(a.items.map(i => [i.id, i]));
     for (const it of b.items) {
       const mine = items.get(it.id);
-      if (!mine) { items.set(it.id, it); continue; }
+      if (!mine) {
+        // آیتمی که فقط در پشتیبان هست هم از همان صافی می‌گذرد (وگرنه نسخه آینده‌دار بعداً «آخرین» می‌شد)
+        if (!it.history.length) { items.set(it.id, it); continue; } // آیتم قدیمیِ بی‌تاریخچه همان‌طور می‌آید
+        const history = it.history.filter(trusted).sort(byTime);
+        if (!history.length) continue;
+        const last = history[history.length - 1];
+        items.set(it.id, { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
+          updatedAt: last.at, updatedBy: last.by });
+        continue;
+      }
       // آیتمی که مدیر حذف کرده با پشتیبانِ غیرمدیر برنمی‌گردد (برگرداندن فقط کار مدیر است)
       if (mine.deleted && !opts.admin) continue;
       const seen = new Set(mine.history.map(vkey));

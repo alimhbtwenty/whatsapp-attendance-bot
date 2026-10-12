@@ -42,7 +42,14 @@ const T2 = { name: 'تکنسین دو', phone: '09120000003', pw: 'tech-pass-33'
   await p.evaluate(() => window.handleNotificationAction('exit')); await p.waitForTimeout(200);
   ok('the reminder button tells technician 2 it belongs to someone else', (await p.textContent('#toast')).includes('حساب دیگری'));
 
+  // نفر دوم رکورد ورودِ نفر اول را از آرشیو حذف می‌کند: ورود باز و یادآوری او هم باید پاک شود
+  const t1Before = await p.evaluate(() => JSON.parse(localStorage.getItem('geomat_open_entry_v1')));
+  await p.evaluate((id) => { deleteLogItem(id); }, t1Before.logId);
+  await p.click('#confirmOkBtn'); await p.waitForTimeout(300);
+  ok('deleting someone else\'s open-entry record also clears their open entry', await p.evaluate(() => localStorage.getItem('geomat_open_entry_v1') === null));
+
   await p.evaluate(() => lockApp(true)); await login(p, T1);
+  await record('in', '08', '00');
   await record('out', '16', '00');
   const mine = await p.evaluate(() => getLogs().find(l => l.by && l.by.name === 'تکنسین یک'));
   ok('technician 1\'s own exit still completes their record', mine.inTime === '08:00' && mine.outTime === '16:00' && mine.durationMins === 480);
