@@ -109,7 +109,6 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   // ---------- بازبینی دور ۸: بازگردانی با «حافظه پر» ----------
   // نوشته آخر آرشیو گم شده و بازگردانی‌اش با حافظه پر شکست می‌خورد → داده تازه‌ترِ نسخه دوم نباید رونویسی شود
   await rawSet();
-  const goodLogs = await p.evaluate(() => localStorage.getItem('geomat_logs_v2'));
   await p.evaluate(() => {
     const s = Number(localStorage.getItem('geomat_mirror_seq'));
     window.__rawSet.call(localStorage, 'geomat_logs_v2', '[]');                 // WebView نوشته آخر را گم کرده
@@ -124,12 +123,15 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   });
   await p.reload(); await p.waitForTimeout(800);
   ok('a restore that hits full storage tells the user', await p.evaluate(() => mirrorRestoreFailed === true && document.getElementById('toast').textContent.includes('حافظه')));
-  await login(p);
-  await p.evaluate(() => { localStorage.setItem('geomat_user_name', 'x'); });
-  ok('...and does not overwrite the newer mirrored data afterwards', await p.evaluate(() => JSON.parse(AndroidBridge.storeSnapshot()).data.geomat_logs_v2) === goodLogs);
+  ok('...and leaves the data exactly as the user sees it (no half-restore)', await p.evaluate(() => localStorage.getItem('geomat_logs_v2')) === '[]');
+  ok('...and rebuilds the mirror from that view', await p.evaluate(() => { const s = JSON.parse(AndroidBridge.storeSnapshot()); return s.complete === true && s.data.geomat_logs_v2 === '[]'; }));
+  // بازبینی دور ۹: کاری که بعد از آن انجام می‌شود، در شروع بعدی پاک نمی‌شود
   await p.evaluate(() => Storage.prototype.setItem.call(sessionStorage, 'quota_key', ''));
+  await login(p);
+  await rec('in', 'in', '10', '00');
+  const work = await p.evaluate(() => localStorage.getItem('geomat_logs_v2'));
   await p.reload(); await p.waitForTimeout(800);
-  ok('the next start (with space) restores the newer data', await p.evaluate(() => mirrorRestored === true && localStorage.getItem('geomat_logs_v2')) === goodLogs);
+  ok('work done after a failed restore survives the next start', await p.evaluate(() => localStorage.getItem('geomat_logs_v2')) === work && await p.evaluate(() => !mirrorRestored));
 
   // حذفی که وسطش برنامه کشته شد: هم داده و هم نشانه حذف → حذف برنده است
   await p.evaluate(() => {

@@ -11,7 +11,7 @@
   const nativeRemoveItem = Storage.prototype.removeItem;
   let mirrorPaused = false;
   let mirrorRestored = false;
-  let mirrorRestoreFailed = false; // بازگردانی با «حافظه پر» شکست خورد: این بار نسخه دوم دست نمی‌خورد تا شروع بعدی دوباره تلاش کند
+  let mirrorRestoreFailed = false; // بازگردانی با «حافظه پر» شکست خورد و همه چیز به وضع قبل برگشت
   const mirrored = (store, key) => store === localStorage && !mirrorPaused && MIRROR_KEY_RE.test(key) && key !== MIRROR_SEQ_KEY;
   function noteMirrorSeq(seq) {
     const n = Number(seq);
@@ -31,6 +31,14 @@
     };
   })();
 
+  // نسخه دوم را از داده فعلی localStorage می‌سازد (کلیدهای اضافه‌اش نشانه حذف می‌گیرند) و اگر همه بی‌خطا بود «کامل» می‌شود
+  function rebuildMirror(br, local, mirrorKeys) {
+    let allOk = true;
+    for (const k of local) { const v = localStorage.getItem(k); const seq = Number(br.storeSet(k, v)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
+    for (const k of mirrorKeys) if (!local.includes(k)) { const seq = Number(br.storeRemove(k)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
+    if (allOk && typeof br.storeMarkComplete === 'function') br.storeMarkComplete();
+  }
+
   // اول init، پیش از مهاجرت و هر خواندن داده.
   // نسخه دوم فقط وقتی «کامل» است (همه داده یک بار بی‌خطا نوشته شده و از آن به بعد هیچ نوشتنی شکست نخورده) مرجع است؛
   // و بازگردانی فقط کلیدهایی را پاک می‌کند که نسخه دوم صریحاً «حذف‌شده» ثبت کرده، نه هر کلیدی که در آن نیست.
@@ -44,46 +52,49 @@
     const removed = Array.isArray(snap.removed) ? snap.removed.filter(k => typeof k === 'string' && valid(k)) : [];
     // اگر هم داده و هم نشانه حذف هست، حذفی نیمه‌کاره ماند (storeSet اول نشانه را پاک می‌کند): حذف برنده است
     const keys = Object.keys(snap.data).filter(k => valid(k) && typeof snap.data[k] === 'string' && !removed.includes(k));
-    const local = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && valid(k)) local.push(k);
-    }
-    if (snap.complete !== true) {
-      // نسخه دوم ناقص یا خالی (اولین اجرا بعد از آپدیت، یا یک نوشتنِ ناموفق): از داده فعلی دوباره ساخته می‌شود؛
-      // هیچ چیزی در localStorage عوض نمی‌شود
-      let allOk = true;
-      for (const k of local) { const v = localStorage.getItem(k); const seq = Number(br.storeSet(k, v)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
-      for (const k of keys) if (!local.includes(k)) { const seq = Number(br.storeRemove(k)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
-      if (allOk && typeof br.storeMarkComplete === 'function') br.storeMarkComplete();
-      return;
-    }
+    const localKeys = () => {
+      const out = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && valid(k)) out.push(k); }
+      return out;
+    };
+    // نسخه دوم ناقص یا خالی (اولین اجرا بعد از آپدیت، یا یک نوشتنِ ناموفق): از داده فعلی دوباره ساخته می‌شود؛
+    // هیچ چیزی در localStorage عوض نمی‌شود
+    if (snap.complete !== true) { rebuildMirror(br, localKeys(), keys); return; }
     const localSeq = Number(localStorage.getItem(MIRROR_SEQ_KEY)) || 0;
     if (!(Number(snap.seq) > localSeq)) return;
-    // localStorage از نسخه دوم عقب است: نوشته‌های آخر گم شده‌اند؛ همان وضع نسخه دوم برمی‌گردد
-    const apply = (skip, seq) => {
+    // localStorage از نسخه دوم عقب است: نوشته‌های آخر گم شده‌اند؛ همان وضع نسخه دوم برمی‌گردد (همه یا هیچ)
+    const touched = [...new Set([...removed, ...keys, PRE_UPDATE_BACKUP_KEY])];
+    const before = {};
+    touched.forEach(k => { before[k] = localStorage.getItem(k); });
+    const apply = (skip) => {
       removed.forEach(k => nativeRemoveItem.call(localStorage, k));
       keys.filter(k => k !== skip).forEach(k => nativeSetItem.call(localStorage, k, snap.data[k]));
-      nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(seq));
-      mirrorRestored = true;
     };
     mirrorPaused = true;
     try {
-      apply(null, Number(snap.seq));
-    } catch(e) {
-      // حافظه پر: کپی پیش از به‌روزرسانی (نسخه دوم همه داده) کنار می‌رود و یک بار دیگر تلاش می‌شود
       try {
-        if (localStorage.getItem(PRE_UPDATE_BACKUP_KEY) === null && !keys.includes(PRE_UPDATE_BACKUP_KEY)) throw e;
+        apply(null);
+      } catch(e) {
+        // حافظه پر: کپی پیش از به‌روزرسانی (نسخه دوم همه داده) کنار می‌رود و یک بار دیگر تلاش می‌شود
+        if (before[PRE_UPDATE_BACKUP_KEY] === null && !keys.includes(PRE_UPDATE_BACKUP_KEY)) throw e;
         nativeRemoveItem.call(localStorage, PRE_UPDATE_BACKUP_KEY);
-        const seq = Number(br.storeRemove(PRE_UPDATE_BACKUP_KEY));
-        apply(PRE_UPDATE_BACKUP_KEY, Math.max(Number(snap.seq), seq || 0));
-      } catch(e2) {
-        // باز جا نیست: این بار نسخه دوم (که داده تازه‌تر را دارد) دیگر نوشته نمی‌شود و seq محلی بالا نمی‌رود،
-        // تا شروع بعدی دوباره بازگرداند؛ به کاربر هم گفته می‌شود
-        mirrorRestoreFailed = true;
+        br.storeRemove(PRE_UPDATE_BACKUP_KEY);
+        apply(PRE_UPDATE_BACKUP_KEY);
       }
+      nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(Number(snap.seq)));
+      mirrorRestored = true;
+    } catch(e) {
+      // باز جا نیست: همه چیز به همان وضعی برمی‌گردد که کاربر می‌بیند، و نسخه دوم از همین وضع دوباره ساخته می‌شود.
+      // تغییرهای گم‌شده برنمی‌گردند (به کاربر گفته می‌شود)، ولی هیچ کاری که از این به بعد انجام شود از دست نمی‌رود.
+      for (const k of touched) {
+        try {
+          if (before[k] === null) nativeRemoveItem.call(localStorage, k);
+          else if (localStorage.getItem(k) !== before[k]) nativeSetItem.call(localStorage, k, before[k]);
+        } catch(e2) {}
+      }
+      mirrorRestoreFailed = true;
     } finally {
-      // بعد از شکست، نوشتن در نسخه دوم برای همین اجرا خاموش می‌ماند
-      mirrorPaused = mirrorRestoreFailed;
+      mirrorPaused = false;
     }
+    if (mirrorRestoreFailed) rebuildMirror(br, localKeys(), Object.keys(snap.data).filter(valid));
   }
