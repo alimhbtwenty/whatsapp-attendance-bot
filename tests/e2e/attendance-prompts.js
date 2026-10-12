@@ -87,6 +87,23 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   await p.click('#flowModal .lock-link'); await p.waitForTimeout(700);
   ok('skipping still records the entry without a reason', (await logs())[0].inTime === '17:00' && !(await logs())[0].gap);
 
+  // ---------- بازبینی دور ۱۳: لمس دوباره «کپی»/«ارسال» وقتی برنامه منتظر لوکیشن است → فقط یک رکورد ----------
+  await p.evaluate(() => {
+    writeLogs([]); lastCommit = null; setOpenEntry(null);
+    saveSites({ 'کرانه': { lat: 35.7, lng: 51.4, radius: 200, acc: 10 } });
+    navigator.geolocation.getCurrentPosition = () => {}; // GPS جواب نمی‌دهد (برنامه تا چند ثانیه صبر می‌کند)
+    navigator.geolocation.watchPosition = () => 0;
+    entryGeo = { status: 'idle' };
+  });
+  await p.click('#tabAttendanceBtn');
+  await p.evaluate(() => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction('in'); });
+  await p.click('#inTimeRow .time-now-pill'); await p.waitForTimeout(300);
+  await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(300);
+  await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(300);
+  await p.click('#floatingDock .whatsapp-action-btn').catch(() => {});
+  await p.waitForTimeout(7000);
+  ok('tapping copy/send again while waiting for location records the entry once', (await logs()).length === 1, String((await logs()).length));
+
   // ---------- آزمایش اعلان ----------
   await p.click('#tabArchiveBtn'); await p.waitForTimeout(200);
   ok('the notification test row shows in the Android app', await p.locator('#notifTestRow').isVisible());

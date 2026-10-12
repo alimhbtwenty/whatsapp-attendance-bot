@@ -231,7 +231,25 @@
   }
 
   // ارسال نهایی به واتساپ
+  // یک گزارش در هر لحظه: لمس دوباره «ارسال» یا «کپی» وقتی برنامه منتظر لوکیشن یا پاسخ پاپ‌آپ است،
+  // همان ورود را دو بار ثبت می‌کرد (بازبینی نهایی دور ۱۳)
+  let reportInFlight = false;
+  function reportBusy() {
+    if (!reportInFlight) return false;
+    showToast('⏳ گزارش قبلی هنوز در حال آماده شدن است');
+    return true;
+  }
+
   async function executeSendWhatsApp() {
+    if (reportBusy()) return;
+    reportInFlight = true;
+    try {
+      await sendWhatsAppNow();
+    } finally {
+      reportInFlight = false;
+    }
+  }
+  async function sendWhatsAppNow() {
     playTactileFeedback();
     const type = systemMode === 'attendance' ? 'attendance' : 'support';
     const report = await prepareReport(type);
@@ -272,16 +290,25 @@
   }
 
   async function executeCopyText() {
+    if (reportBusy()) return;
+    reportInFlight = true;
+    try {
+      await copyTextNow();
+    } finally {
+      reportInFlight = false;
+    }
+  }
+  async function copyTextNow() {
     playTactileFeedback();
     const type = systemMode === 'attendance' ? 'attendance' : 'support';
     const report = await prepareReport(type);
     if (!report) return;
     const text = report.text;
-    const copied = () => {
-      showToast('پیام کپی شد! ✅');
-      if (!report.repeat) commitReport(type, text);
-    };
-    const fallback = () => {
+    let ok = false;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try { await navigator.clipboard.writeText(text); ok = true; } catch (e) {}
+    }
+    if (!ok) {
       try {
         const ta = document.createElement('textarea');
         ta.value = text;
@@ -290,19 +317,15 @@
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        const ok = document.execCommand('copy');
+        ok = document.execCommand('copy');
         document.body.removeChild(ta);
-        if (ok) copied();
-        else showToast('خطا در کپی متن');
       } catch (err) {
-        showToast('خطا در کپی متن');
+        ok = false;
       }
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(copied).catch(fallback);
-    } else {
-      fallback();
     }
+    if (!ok) { showToast('خطا در کپی متن'); return; }
+    showToast('پیام کپی شد! ✅');
+    if (!report.repeat) commitReport(type, text);
   }
 
   // ثبت در آرشیو (هر رکورد حدود نیم کیلوبایت؛ ۵۰۰۰ رکورد چند سال کار و زیر سقف حافظه مرورگر است)
