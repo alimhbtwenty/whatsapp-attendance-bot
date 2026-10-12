@@ -99,7 +99,7 @@ public class ExitReminder extends BroadcastReceiver {
         NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL)
                 .setSmallIcon(R.drawable.ic_stat_geoteam)
                 .setLargeIcon(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.ic_notification_large))
-                .setColor(0xFFF5A623)
+                .setColor(0xFFF3CB03)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(body))

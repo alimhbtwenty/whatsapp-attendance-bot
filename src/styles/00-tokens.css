@@ -18,10 +18,11 @@
       --text-muted: #9aa6b8;
       --text-dim: #8592a6;
 
-      --accent: #f5a623;           /* Geo Team amber */
-      --accent-ink: #1a1100;       /* متن روی accent */
-      --accent-2: #ffbe4d;
-      --accent-fg: #f5a623;        /* متن کهربایی روی سطح (در تم روشن تیره‌تر برای کنتراست) */
+      --accent: #f3cb03;           /* زرد ژئومات (از لوگوی شرکت) */
+      --accent-ink: #1a1400;       /* متن روی accent */
+      --accent-2: #ffd84a;
+      --accent-fg: #f3cb03;        /* متن زرد روی سطح (در تم روشن تیره‌تر برای کنتراست) */
+      --brand-tile: transparent;   /* پشت نشانه؛ در تم روشن کاشی تیره تا زرد خوانا بماند */
       --whatsapp-ink: #05240f;     /* متن روی دکمه سبز واتساپ */
       /* رنگ نام فرستنده‌ها در پیام‌رسان */
       --author-1: #3db7e4; --author-2: #34d399; --author-3: #ffbe4d; --author-4: #f472b6; --author-5: #a78bfa; --author-6: #fb923c; --author-7: #22d3ee;
@@ -70,11 +71,12 @@
       --text: #1b2433;
       --text-muted: #546178;
       --text-dim: #5d697e;
-      --accent: #e8950c;
-      --accent-fg: #8f5600;
+      --accent: #e5bf00;
+      --accent-fg: #6f5800;
+      --brand-tile: #0b1018;
       --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
       --accent-ink: #1a1100;
-      --accent-2: #c77700;
+      --accent-2: #a68a00;
       --info: #06709c;
       --success: #0c7542;
       --whatsapp: #1fa855;
@@ -92,7 +94,7 @@
         --border: #dde3ec; --border-strong: #c5cfdc; --fg-mix: #0f172a; --shadow: #64748b;
         --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #5d697e;
         --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
-        --accent: #e8950c; --accent-fg: #8f5600; --accent-2: #c77700; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
+        --accent: #e5bf00; --accent-fg: #6f5800; --accent-2: #a68a00; --brand-tile: #0b1018; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
         --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
       }
     }
