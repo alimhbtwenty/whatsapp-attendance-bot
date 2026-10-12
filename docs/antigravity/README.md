@@ -9,7 +9,15 @@ Antigravity کارهای سنگین (تست و باگ‌یابی از چند ج�
 
 ## ۱. آماده‌سازی (یک بار، روی لپ‌تاپ)
 1. **نصب:** Git، Node.js 22 و Python 3. برای ایجنت اندروید، اگر خواستید APK هم بسازد: Android Studio.
-2. **گرفتن ریپو در ترمینال:**
+2. **ویندوز (پیش از هر چیز):**
+   - PowerShell عادی باز کنید، نه Administrator.
+   - یک بار اجرای اسکریپت را برای کاربر خودتان آزاد کنید. وگرنه خطای `npm.ps1 cannot be loaded because running scripts is disabled` می‌آید:
+     ```
+     Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+     ```
+     (راه دیگر: به‌جای `npm` و `npx` بنویسید `npm.cmd` و `npx.cmd`.)
+   - ریپو را در پوشه خودتان بگیرید (`cd $HOME`، بعد `mkdir Projects` و `cd Projects`)، نه در `C:\Windows\System32`؛ پنجره Administrator به‌طور پیش‌فرض آن‌جا باز می‌شود.
+3. **گرفتن ریپو در ترمینال:**
    ```bash
    git clone https://github.com/alimhbtwenty/whatsapp-attendance-bot.git
    cd whatsapp-attendance-bot
@@ -19,7 +27,7 @@ Antigravity کارهای سنگین (تست و باگ‌یابی از چند ج�
    npm test
    ```
    آخرِ `npm test` باید بنویسد `all N test files passed`. اگر ننوشت، همان خروجی را برای Claude بفرستید.
-3. **باز کردن در Antigravity:** File ← Open Folder ← همین پوشه. یک بار هم Settings ← Customizations ← Rules را باز کنید؛ باید `geo-team` آن‌جا باشد.
+4. **باز کردن در Antigravity:** File ← Open Folder ← همین پوشه. یک بار هم Settings ← Customizations ← Rules را باز کنید؛ باید `geo-team` آن‌جا باشد.
 
 ## ۲. اجرای ایجنت‌ها (Agent Manager)
 در Agent Manager برای هر نقش یک ایجنت تازه بسازید (New Agent، روی همین workspace). متن زیر را بفرستید و فقط اسم workflow را عوض کنید. پنج نقش هست؛ می‌توانید همه را با هم اجرا کنید:
@@ -60,6 +68,6 @@ antigravity/security-...
 Claude هر یافته را با تست خودش دوباره بازتولید می‌کند. یافته‌های واقعی را رفع می‌کند و به برنچ اصلی می‌آورد. یافته‌های اشتباه را با دلیل رد می‌کند.
 
 ## ۴. سؤال‌های رایج
-- **«npm test» روی ویندوز خطا می‌دهد:** در PowerShell همان دستورها کار می‌کنند. اگر خطای مسیر یا Python دیدید، از Git Bash یا WSL استفاده کنید.
+- **«npm test» روی ویندوز خطا می‌دهد:** اول بند «ویندوز» در بخش ۱ را ببینید. ابزار اسکرین‌شات (`tools/screens.mjs`) سرور `python -m http.server 8765` می‌خواهد؛ روی ویندوز به‌جای `python3` بنویسید `python` یا `py`.
 - **ایجنت چیزی پیدا نکرد:** در گزارشش می‌نویسد `no findings` و فهرست چیزهایی که بررسی کرده. این هم مفید است.
 - **ایجنت تست را عوض کرد تا سبز شود:** طبق `AGENTS.md` ممنوع است. Claude در بررسی آن را رد می‌کند.
