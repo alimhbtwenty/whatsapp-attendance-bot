@@ -16,4 +16,5 @@ Use the skills in `.claude/skills` for every task. Start with `using-agent-skill
 - Stored dates (`date`) use Persian digits; compare with `dateISO` or the `jy/jm/jd` fields, not the display string.
 - Test in a mobile-sized Chromium (Playwright) before pushing: reproduce the bug first, then show it fixed.
 - Each stay is one archive record: entry creates it, exit completes it (`mergeExitIntoEntry`); never add a second record for an exit.
-- The support technical file (`geomat_inventory_v1`) never goes into WhatsApp, the messenger, Excel or reports. Passwords are only stored encrypted under the one master password (`encryptWith`/`vaultKey`); never store or log them in plain text.
+- The support technical file (`geomat_inventory_v1`) never goes into WhatsApp, the messenger, Excel or reports. Passwords are only stored encrypted with the team key (`encryptWith(session.key, …)`); never store or log them, or any account password, in plain text.
+- Technical-file history is append-only: every change goes through `pushVersion()`; never overwrite or drop a version. Delete is admin-only and soft. Technicians may view, add and edit (ADR-0002).

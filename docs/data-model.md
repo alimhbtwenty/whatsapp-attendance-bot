@@ -22,26 +22,40 @@
 
 ## پرونده فنی شرکت‌ها — `geomat_inventory_v1`
 ```json
-{ "schema": 1, "items": [ {
-  "id": "uuid-v4",
-  "company": "کرانه",
-  "section": "network | access | remotes | hosts | servers | apps | users",
-  "data": { "...": "متن ساده، فیلدها طبق بخش" },
-  "secrets": { "password": { "v": 1, "iv": "base64", "ct": "base64" } },
-  "createdAt": "ISO", "updatedAt": "ISO", "updatedBy": "نام کاربر",
-  "deleted": true
-} ] }
+{ "schema": 2,
+  "companies": [ { "id": "uuid", "name": "مشتری دور", "deleted": false, "createdAt": "ISO",
+                   "createdBy": { "id": "...", "name": "..." },
+                   "history": [ { "at": "ISO", "by": { "id": "...", "name": "..." }, "action": "create|restore", "name": "..." } ] } ],
+  "items": [ {
+    "id": "uuid-v4",
+    "company": "کرانه",
+    "section": "network | access | remotes | hosts | servers | apps | users",
+    "data": { "...": "متن ساده، فیلدها طبق بخش" },
+    "secrets": { "password": { "v": 1, "iv": "base64", "ct": "base64" } },
+    "createdAt": "ISO", "updatedAt": "ISO", "updatedBy": { "id": "...", "name": "..." },
+    "deleted": false,
+    "history": [ { "at": "ISO", "by": { "id": "...", "name": "..." }, "action": "create|edit|delete|restore",
+                   "data": { }, "secrets": { } } ]
+  } ] }
 ```
+- `companies` فقط پرونده‌هایی است که در خود پرونده فنی ساخته شده‌اند. محل‌های تردد (`geomat_companies_v2`) هم خودکار پرونده دارند.
 - فیلدهای هر بخش در `INV_SECTIONS` داخل `index.html` تعریف شده‌اند. فیلدهای `ref` (میزبانِ سرور، سرورِ برنامه) `id` آیتم دیگر را نگه می‌دارند.
-- **حذف نرم:** آیتم حذف‌شده `deleted: true` و `data`/`secrets` خالی می‌گیرد تا همگام‌سازی بداند چه چیزی حذف شده؛ بعد از ۹۰ روز پاک می‌شود.
-- **ادغام در همگام‌سازی آینده:** بر اساس `id`؛ نسخه با `updatedAt` جدیدتر برنده است.
+- **`history` فقط-افزودنی است:** هر تغییر با `pushVersion()` یک نسخه کامل اضافه می‌کند و آخرین نسخه همان وضع فعلی است. حذف نرم است (`deleted: true` به‌اضافه نسخه «delete»).
+- **همگام‌سازی آینده:** ادغام بر اساس `id` آیتم و اجتماع نسخه‌های `history` (کلید: `at` + `by.id`) انجام می‌شود. سرور هیچ نسخه‌ای را پاک نمی‌کند.
 - فیلترها از داده ساخته می‌شوند: دامین/ورک‌گروپ از `network.kind`، ESXi از `hosts.hypervisor`.
 
-## گاوصندوق — `geomat_vault_meta_v1`
+## حساب‌ها — `geomat_team_v1`
 ```json
-{ "v": 1, "kdf": "PBKDF2-SHA256", "iter": 310000, "salt": "base64(16B)", "check": { "v": 1, "iv": "...", "ct": "..." } }
+{ "schema": 1,
+  "users": [ { "id": "uuid", "name": "رضا", "role": "admin | tech", "active": true,
+               "salt": "base64(16B)", "iter": 310000, "wrapped": { "v": 1, "iv": "...", "ct": "..." },
+               "createdAt": "ISO", "createdBy": { "id": "...", "name": "..." } } ],
+  "log": [ { "at": "ISO", "by": { }, "action": "team-create|user-add|user-enable|user-disable|password|team-import", "detail": "..." } ] }
 ```
-- کلید AES-GCM-256 از رمز اصلی با PBKDF2 ساخته می‌شود و فقط در حافظه است (`extractable: false`). رمز اصلی و کلید هیچ‌جا ذخیره نمی‌شوند.
-- `check` متن ثابت رمزشده است برای تشخیص رمز درست.
-- هر پسورد IV تصادفی ۱۲ بایتی خودش را دارد.
-- `geomat_vault_fail_v1`: شمارنده رمز اشتباه (بعد از ۵ بار، ۳۰ ثانیه قفل).
+- `wrapped` همان «کلید تیم» (۳۲ بایت تصادفی، AES-GCM-256) است که با کلیدِ ساخته‌شده از رمز همان نفر (PBKDF2-SHA256) رمز شده. همه `secrets` با کلید تیم رمز می‌شوند.
+- «فایل تیم» (`{app, kind:"team", team}`) همین `users` است، بدون `log` و بدون هیچ رمزی.
+- `geomat_vault_fail_v1`: شمارنده رمز اشتباه (بعد از ۵ بار، ۳۰ ثانیه صبر).
+- `geomat_vault_meta_v1`: فقط در پیش‌نمایش اول 1.4 بود (یک رمز اصلی). با اولین ورود مدیر منتقل و پاک می‌شود.
+
+## تنظیمات — `geomat_settings_v1`
+`{ reminderTime, workStart: "09:00", workEnd: "17:00", thuEnd: "14:00", holidays: ["YYYY-MM-DD", ...] }`. گزارش ماهانه اضافه‌کار و کسر کار را از همین‌ها حساب می‌کند (ADR-0001 بند ۱۰).

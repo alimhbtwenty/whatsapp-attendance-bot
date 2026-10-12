@@ -1595,6 +1595,25 @@
     .holiday-chip { background: var(--surface-hover); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 3px 8px; font-size: 11px; color: var(--text); display: inline-flex; gap: 6px; align-items: center; }
     .holiday-chip button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 11px; padding: 0; }
     /* پرونده فنی شرکت‌ها (ساپورت) */
+    /* تأیید و رمز همیشه روی پنل‌های دیگر باز شوند */
+    #confirmModal, #vaultModal { z-index: 1200; }
+    .inv-auth-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .inv-auth-row select, .inv-auth-row input { flex: 1; min-width: 120px; }
+    .inv-who { font-size: 12.5px; font-weight: 800; color: var(--text); }
+    .inv-role { font-size: 10.5px; color: #000; background: var(--gold); border-radius: 7px; padding: 1px 7px; margin-inline-start: 6px; }
+    .inv-role.tech { background: var(--blue); }
+    .inv-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+    .inv-meta { font-size: 10.5px; color: var(--text-dim); }
+    .inv-panel-body { display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-muted); }
+    .inv-ver { background: rgba(10, 13, 18, 0.6); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 4px; }
+    .inv-ver-head { display: flex; justify-content: space-between; gap: 6px; color: var(--text); font-weight: 700; flex-wrap: wrap; }
+    .inv-diff { line-height: 1.8; overflow-wrap: anywhere; }
+    .inv-diff del { color: var(--danger); }
+    .inv-diff ins { color: var(--whatsapp); text-decoration: none; }
+    .inv-ver button, .inv-panel-body .inv-small-btn {
+      background: var(--surface-hover); border: 1px solid var(--border-subtle); color: var(--text-muted);
+      border-radius: 9px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit; align-self: flex-start;
+    }
     #supportReportView, #supportInventoryView { display: flex; flex-direction: column; gap: 14px; }
     .inv-filter-row { flex-wrap: wrap; }
     .inv-vault-btn, .inv-link-btn {
@@ -1919,19 +1938,22 @@
 
     <!-- پرونده فنی شرکت‌ها: هیچ بخشی از آن وارد واتساپ، پیام‌رسان یا اکسل نمی‌شود -->
     <div id="supportInventoryView" style="display:none;">
-      <div class="frost-card">
-        <div class="card-header-bar">
-          <div class="title-tag"><span class="gold-marker"></span> شرکت</div>
-          <button class="inv-vault-btn" id="vaultStatusBtn" onclick="toggleVaultLock()">🔒 گاوصندوق قفل</button>
+      <!-- ورود با حساب هر نفر؛ بدون ورود هیچ بخشی از پرونده نمایش داده نمی‌شود -->
+      <div class="frost-card" id="invAuthCard"></div>
+      <div id="invMain" style="display:none; flex-direction:column; gap:14px;">
+        <div class="frost-card">
+          <div class="card-header-bar">
+            <div class="title-tag"><span class="gold-marker"></span> شرکت</div>
+            <button class="inv-vault-btn" onclick="createInvCompany()">➕ پرونده فنی جدید</button>
+          </div>
+          <div class="date-chips-quick inv-filter-row" id="invFilterRow"></div>
+          <div class="company-chips-grid" id="invCompaniesGrid"></div>
+          <input type="search" id="invSearchInput" class="cyber-input" maxlength="80" placeholder="🔍 جستجو در پرونده (نام، IP، یوزر...)" oninput="renderInventory()">
         </div>
-        <div class="date-chips-quick inv-filter-row" id="invFilterRow"></div>
-        <div class="company-chips-grid" id="invCompaniesGrid"></div>
-        <input type="search" id="invSearchInput" class="cyber-input" maxlength="80" placeholder="🔍 جستجو در پرونده (نام، IP، یوزر...)" oninput="renderInventory()">
+        <div id="invSections"></div>
       </div>
-      <div id="invSections"></div>
       <div class="inv-footnote">
-        🔐 پسوردها با رمز اصلی گاوصندوق رمزنگاری می‌شوند و بدون آن قابل خواندن نیستند (حتی در فایل پشتیبان).
-        <button class="inv-link-btn" onclick="changeVaultPassword()">تغییر رمز اصلی</button>
+        🔐 پسوردها با کلید تیم رمزنگاری می‌شوند و فقط با ورود یکی از اعضا خوانده می‌شوند (حتی در فایل پشتیبان). هیچ تغییری پاک نمی‌شود: همه نسخه‌های قبلی با نام و تاریخ برای مدیر نگه داشته می‌شود.
       </div>
     </div>
 
@@ -2197,7 +2219,16 @@
   </div>
 </div>
 
-<!-- Glass Modal: رمز اصلی گاوصندوق -->
+<!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
+<div class="glass-modal-bg" id="invPanelModal" onclick="if(event.target === this) closeInvPanel()">
+  <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
+    <div style="font-size:15px; font-weight:800; color:#fff;" id="invPanelTitle"></div>
+    <div class="inv-panel-body" id="invPanelBody"></div>
+    <button class="dock-copy-btn" style="padding:10px;" onclick="closeInvPanel()">بستن</button>
+  </div>
+</div>
+
+<!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
 <div class="glass-modal-bg" id="vaultModal" onclick="if(event.target === this) resolveVaultModal(null)">
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:#fff;" id="vaultModalTitle"></div>
@@ -2550,7 +2581,6 @@
 
   function init() {
     mergeLegacySplitStays();
-    purgeInventoryTombstones();
     document.getElementById('userNameHeader').textContent = getUserName();
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
@@ -5060,83 +5090,229 @@
   }
   window.handleBack = handleBack;
 
-  // ==================== گاوصندوق پسوردها (یک رمز اصلی برای همه) ====================
-  // کلید با PBKDF2 از رمز اصلی ساخته می‌شود و فقط در حافظه می‌ماند؛ هر پسورد با AES-GCM و IV تازه رمز می‌شود.
-  // رمز اصلی و کلید هیچ‌جا ذخیره نمی‌شوند؛ فایل پشتیبان و (در آینده) سرور فقط متن رمزشده را می‌بینند.
-  const VAULT_META_KEY = 'geomat_vault_meta_v1';
+  // ==================== پرونده فنی: حساب‌ها، کلید تیم و تاریخچه ====================
+  // هر نفر نام و رمز خودش را دارد. یک «کلید تیم» تصادفی (AES-GCM-256) همه پسوردها را رمز می‌کند و
+  // برای هر حساب با کلیدی که از رمز همان نفر ساخته می‌شود (PBKDF2) قفل و ذخیره می‌شود.
+  // هیچ رمزی و هیچ کلیدی ساده ذخیره نمی‌شود؛ کلید تیم فقط بعد از ورود در حافظه است.
+  // هیچ تغییری پاک نمی‌شود: هر افزودن/ویرایش/حذف یک نسخه کامل به تاریخچه اضافه می‌کند و مدیر همه را می‌بیند.
+  const TEAM_KEY = 'geomat_team_v1';
+  const INVENTORY_KEY = 'geomat_inventory_v1';
+  const LEGACY_VAULT_KEY = 'geomat_vault_meta_v1'; // پیش‌نمایش 1.4: یک رمز اصلی برای همه
   const VAULT_FAIL_KEY = 'geomat_vault_fail_v1';
-  const VAULT_ITERATIONS = 310000;
-  const VAULT_CHECK_TEXT = 'geomat-vault-ok';
-  const VAULT_IDLE_MS = 5 * 60 * 1000;
-  const VAULT_MIN_LEN = 8;
-  let vaultKey = null;
-  let vaultIdleTimer = null;
+  const KDF_ITERATIONS = 310000;
+  const SESSION_IDLE_MS = 5 * 60 * 1000;
+  const PASSWORD_MIN_LEN = 8;
+  const ROLE_LABELS = { admin: 'مدیر', tech: 'تکنسین' };
 
   const b64 = {
     enc: (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))),
     dec: (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0))
   };
-  function vaultSupported() {
+  function cryptoSupported() {
     return !!(window.crypto && crypto.subtle && window.isSecureContext !== false);
   }
-  function getVaultMeta() {
-    try {
-      const m = JSON.parse(localStorage.getItem(VAULT_META_KEY) || 'null');
-      return m && m.v === 1 && m.salt && m.check ? m : null;
-    } catch(e) {
-      return null;
-    }
-  }
-  async function deriveVaultKey(password, saltB64, iterations) {
+  async function derivePasswordKey(password, saltB64, iterations) {
     const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
     return crypto.subtle.deriveKey(
       { name: 'PBKDF2', hash: 'SHA-256', salt: b64.dec(saltB64), iterations },
       base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
   }
-  async function encryptWith(key, text) {
+  async function encryptBytes(key, bytes) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, bytes);
     return { v: 1, iv: b64.enc(iv), ct: b64.enc(ct) };
   }
-  async function decryptWith(key, blob) {
-    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64.dec(blob.iv) }, key, b64.dec(blob.ct));
-    return new TextDecoder().decode(pt);
+  async function decryptBytes(key, blob) {
+    return new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64.dec(blob.iv) }, key, b64.dec(blob.ct)));
+  }
+  const encryptWith = async (key, text) => encryptBytes(key, new TextEncoder().encode(text));
+  const decryptWith = async (key, blob) => new TextDecoder().decode(await decryptBytes(key, blob));
+  const importTeamKey = (raw) => crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+
+  function newId() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
   }
 
-  function getVaultFails() {
+  // ---------- حساب‌ها ----------
+  function validTeam(t) {
+    return t && t.schema === 1 && Array.isArray(t.users) && t.users.every(u =>
+      u && typeof u.id === 'string' && typeof u.name === 'string' && (u.role === 'admin' || u.role === 'tech') &&
+      typeof u.salt === 'string' && Number.isInteger(u.iter) && u.iter >= 100000 && u.iter <= 5000000 && u.wrapped && typeof u.wrapped.iv === 'string' && typeof u.wrapped.ct === 'string');
+  }
+  function getTeam() {
+    try {
+      const t = JSON.parse(localStorage.getItem(TEAM_KEY) || 'null');
+      if (validTeam(t)) {
+        if (!Array.isArray(t.log)) t.log = [];
+        return t;
+      }
+    } catch(e) {}
+    return null;
+  }
+  function saveTeam(t) {
+    try {
+      localStorage.setItem(TEAM_KEY, JSON.stringify(t));
+      return true;
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ ذخیره نشد');
+      return false;
+    }
+  }
+  async function makeAccount(name, role, password, rawKey, by) {
+    const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16)));
+    const pk = await derivePasswordKey(password, salt, KDF_ITERATIONS);
+    return { id: newId(), name, role, active: true, salt, iter: KDF_ITERATIONS, wrapped: await encryptBytes(pk, rawKey), createdAt: new Date().toISOString(), createdBy: by };
+  }
+  function teamLog(team, action, detail) {
+    team.log.push({ at: new Date().toISOString(), by: sessionWho(), action, detail });
+  }
+
+  // ---------- نشست (فقط در حافظه) ----------
+  let session = null; // { user, key, raw }
+  let sessionIdleTimer = null;
+  const isAdmin = () => !!session && session.user.role === 'admin';
+  const sessionWho = () => session ? { id: session.user.id, name: session.user.name } : { id: null, name: getUserName() };
+
+  function endSession(silent) {
+    if (session && session.raw) session.raw.fill(0);
+    session = null;
+    clearTimeout(sessionIdleTimer);
+    closeInvItemModal();
+    closeInvPanel();
+    if (systemMode === 'support' && supportView === 'inventory') renderInventory();
+    if (!silent) showToast('🔒 از پرونده فنی خارج شدید');
+  }
+  function touchSession() {
+    if (!session) return;
+    clearTimeout(sessionIdleTimer);
+    sessionIdleTimer = setTimeout(() => endSession(false), SESSION_IDLE_MS);
+  }
+  // برنامه به پس‌زمینه رفت: خروج
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && session) endSession(true);
+  });
+
+  function getFails() {
     try { return JSON.parse(localStorage.getItem(VAULT_FAIL_KEY) || 'null') || { n: 0, until: 0 }; } catch(e) { return { n: 0, until: 0 }; }
   }
-  function setVaultFails(f) {
+  function setFails(f) {
     try { localStorage.setItem(VAULT_FAIL_KEY, JSON.stringify(f)); } catch(e) {}
   }
 
-  function lockVault(silent) {
-    vaultKey = null;
-    clearTimeout(vaultIdleTimer);
-    renderVaultStatus();
-    if (systemMode === 'support' && supportView === 'inventory') renderInventory();
-    if (!silent) showToast('🔒 گاوصندوق قفل شد');
+  async function loginInventory() {
+    const team = getTeam();
+    const uid = document.getElementById('invLoginUser').value;
+    const pw = document.getElementById('invLoginPw').value;
+    const err = document.getElementById('invLoginErr');
+    const user = team && team.users.find(u => u.id === uid);
+    if (!user || !pw) { err.textContent = 'نام و رمز را وارد کنید'; return; }
+    if (!user.active) { err.textContent = 'این حساب غیرفعال شده است'; return; }
+    const fails = getFails();
+    if (fails.until > Date.now()) {
+      err.textContent = `چند بار اشتباه وارد شد؛ ${toPersianDigits(Math.ceil((fails.until - Date.now()) / 1000))} ثانیه صبر کنید`;
+      return;
+    }
+    const btn = document.getElementById('invLoginBtn');
+    btn.disabled = true;
+    try {
+      const pk = await derivePasswordKey(pw, user.salt, user.iter);
+      const raw = await decryptBytes(pk, user.wrapped);
+      setFails({ n: 0, until: 0 });
+      session = { user: { id: user.id, name: user.name, role: user.role }, key: await importTeamKey(raw), raw };
+      touchSession();
+      await migrateLegacyVault();
+      renderInventory();
+    } catch(e) {
+      const n = fails.n + 1;
+      setFails({ n: n >= 5 ? 0 : n, until: n >= 5 ? Date.now() + 30000 : 0 });
+      err.textContent = n >= 5 ? 'رمز اشتباه است؛ ۳۰ ثانیه صبر کنید' : 'رمز اشتباه است';
+    } finally {
+      btn.disabled = false;
+      const pwInput = document.getElementById('invLoginPw'); // بعد از ورود موفق، کارت دوباره ساخته شده است
+      if (pwInput) pwInput.value = '';
+    }
   }
-  function touchVault() {
-    if (!vaultKey) return;
-    clearTimeout(vaultIdleTimer);
-    vaultIdleTimer = setTimeout(() => lockVault(false), VAULT_IDLE_MS);
-  }
-  function renderVaultStatus() {
-    const btn = document.getElementById('vaultStatusBtn');
-    if (!btn) return;
-    btn.classList.toggle('unlocked', !!vaultKey);
-    btn.textContent = vaultKey ? '🔓 گاوصندوق باز (قفل کن)' : (getVaultMeta() ? '🔒 گاوصندوق قفل' : '🔐 ساخت گاوصندوق');
-  }
-  // برنامه به پس‌زمینه رفت: گاوصندوق قفل شود
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden && vaultKey) lockVault(true);
-  });
 
-  // پنجره رمز: { pw } یا null (انصراف)
+  // اولین بار: حساب مدیر و کلید تیم ساخته می‌شود
+  async function setupAdmin() {
+    if (!cryptoSupported()) { showToast('⚠️ این دستگاه از رمزنگاری امن پشتیبانی نمی‌کند'); return; }
+    const name = document.getElementById('invSetupName').value.replace(/\s+/g, ' ').trim();
+    const err = document.getElementById('invLoginErr');
+    if (!name) { err.textContent = 'نام مدیر را بنویسید'; return; }
+    const r = await askVaultPassword({
+      title: '🛡 رمز مدیر',
+      hint: 'رمز ورود مدیر به پرونده فنی. اگر فراموش شود و حساب مدیر دیگری نباشد، پسوردهای ذخیره‌شده قابل بازیابی نیستند؛ جایی امن یادداشتش کنید.',
+      confirm: true,
+      okLabel: 'ساخت'
+    });
+    if (!r) return;
+    const raw = crypto.getRandomValues(new Uint8Array(32));
+    const admin = await makeAccount(name, 'admin', r.pw, raw, null);
+    const team = { schema: 1, users: [admin], log: [] };
+    session = { user: { id: admin.id, name: admin.name, role: 'admin' }, key: await importTeamKey(raw), raw };
+    teamLog(team, 'team-create', `ساخت حساب مدیر «${name}»`);
+    if (!saveTeam(team)) { endSession(true); return; }
+    touchSession();
+    await migrateLegacyVault();
+    showToast('🛡 حساب مدیر ساخته شد');
+    renderInventory();
+  }
+
+  // پسوردهای پیش‌نمایش 1.4 (یک رمز اصلی) با کلید تیم دوباره رمز می‌شوند؛ فقط مدیر و فقط یک بار
+  async function migrateLegacyVault() {
+    let meta = null;
+    try { meta = JSON.parse(localStorage.getItem(LEGACY_VAULT_KEY) || 'null'); } catch(e) {}
+    if (!meta || meta.v !== 1 || !isAdmin()) return;
+    const inv = getInventory();
+    const blobs = [];
+    const collect = (secrets) => Object.keys(secrets || {}).forEach(k => blobs.push([secrets, k]));
+    inv.items.forEach(it => { collect(it.secrets); (it.history || []).forEach(h => collect(h.secrets)); });
+    if (!blobs.length) { localStorage.removeItem(LEGACY_VAULT_KEY); return; }
+    const r = await askVaultPassword({
+      title: '🔁 انتقال پسوردهای قبلی',
+      hint: 'پسوردهایی که با «رمز اصلی گاوصندوق» نسخه قبلی ذخیره شده‌اند به حساب‌های جدید منتقل می‌شوند. همان رمز اصلی قبلی را وارد کنید.',
+      okLabel: 'انتقال',
+      check: async (pw) => {
+        try {
+          const old = await derivePasswordKey(pw, meta.salt, meta.iter);
+          if (await decryptWith(old, meta.check) !== 'geomat-vault-ok') return 'رمز اشتباه است';
+          for (const [obj, k] of blobs) obj[k] = await encryptWith(session.key, await decryptWith(old, obj[k]));
+          return '';
+        } catch(e) {
+          return 'رمز اشتباه است';
+        }
+      }
+    });
+    if (!r) { showToast('پسوردهای قبلی منتقل نشدند؛ دفعه بعد دوباره پرسیده می‌شود'); return; }
+    if (saveInventory(inv)) {
+      localStorage.removeItem(LEGACY_VAULT_KEY);
+      showToast('🔁 پسوردهای قبلی منتقل شدند');
+    }
+  }
+
+  async function changeMyPassword() {
+    if (!session) return;
+    const r = await askVaultPassword({ title: '🔑 رمز جدید شما', hint: `رمز ورود «${session.user.name}» به پرونده فنی.`, confirm: true, okLabel: 'تغییر' });
+    if (!r || !session) return;
+    const team = getTeam();
+    const u = team.users.find(x => x.id === session.user.id);
+    if (!u) return;
+    const fresh = await makeAccount(u.name, u.role, r.pw, session.raw, null);
+    Object.assign(u, { salt: fresh.salt, iter: fresh.iter, wrapped: fresh.wrapped });
+    teamLog(team, 'password', `تغییر رمز «${u.name}» توسط خودش`);
+    if (saveTeam(team)) showToast('🔑 رمز شما عوض شد');
+  }
+
+  // ---------- پنجره رمز ----------
   let vaultModalResolver = null;
   let vaultModalOpts = null;
   function askVaultPassword(opts) {
+    if (vaultModalResolver) resolveVaultModal(null);
     vaultModalOpts = opts;
     document.getElementById('vaultModalTitle').textContent = opts.title;
     document.getElementById('vaultModalHint').textContent = opts.hint || '';
@@ -5144,7 +5320,7 @@
     const pw2 = document.getElementById('vaultPw2');
     pw1.value = '';
     pw2.value = '';
-    pw1.placeholder = opts.placeholder || 'رمز اصلی';
+    pw1.placeholder = 'رمز';
     pw2.placeholder = 'تکرار رمز';
     pw2.style.display = opts.confirm ? '' : 'none';
     document.getElementById('vaultModalError').textContent = '';
@@ -5165,7 +5341,7 @@
     const pw = document.getElementById('vaultPw1').value;
     const err = document.getElementById('vaultModalError');
     if (vaultModalOpts.confirm) {
-      if (pw.length < VAULT_MIN_LEN) { err.textContent = `رمز اصلی حداقل ${toPersianDigits(VAULT_MIN_LEN)} کاراکتر باشد`; return; }
+      if (pw.length < PASSWORD_MIN_LEN) { err.textContent = `رمز حداقل ${toPersianDigits(PASSWORD_MIN_LEN)} کاراکتر باشد`; return; }
       if (pw !== document.getElementById('vaultPw2').value) { err.textContent = 'تکرار رمز یکی نیست'; return; }
     } else if (!pw) {
       err.textContent = 'رمز را بنویسید';
@@ -5181,108 +5357,95 @@
     resolveVaultModal({ pw });
   }
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && document.getElementById('vaultModal').classList.contains('open')) {
-      e.preventDefault();
-      submitVaultModal();
-    }
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('vaultModal').classList.contains('open')) { e.preventDefault(); submitVaultModal(); }
+    else if (document.activeElement && document.activeElement.id === 'invLoginPw') { e.preventDefault(); loginInventory(); }
   });
 
-  // رمز را امتحان کن؛ پیام خطا یا '' (و کلید در vaultKey)
-  async function tryUnlock(pw) {
-    const meta = getVaultMeta();
-    const fails = getVaultFails();
-    if (fails.until > Date.now()) {
-      return `چند بار اشتباه وارد شد؛ ${toPersianDigits(Math.ceil((fails.until - Date.now()) / 1000))} ثانیه صبر کنید`;
-    }
-    try {
-      const key = await deriveVaultKey(pw, meta.salt, meta.iter);
-      if (await decryptWith(key, meta.check) !== VAULT_CHECK_TEXT) throw new Error('bad');
-      setVaultFails({ n: 0, until: 0 });
-      vaultKey = key;
-      return '';
-    } catch(e) {
-      const n = fails.n + 1;
-      setVaultFails({ n: n >= 5 ? 0 : n, until: n >= 5 ? Date.now() + 30000 : 0 });
-      return n >= 5 ? 'رمز اشتباه است؛ ۳۰ ثانیه صبر کنید' : 'رمز اشتباه است';
-    }
+  // ---------- مدیریت کاربران (مدیر) ----------
+  function openUsersPanel() {
+    if (!isAdmin()) return;
+    const team = getTeam();
+    openInvPanel('👥 کاربران پرونده فنی', `
+      ${team.users.map(u => `<div class="inv-ver">
+        <div class="inv-ver-head"><span>${escapeHtml(u.name)} <span class="inv-role ${u.role === 'tech' ? 'tech' : ''}">${ROLE_LABELS[u.role]}</span></span>
+          <span class="inv-meta">${u.active ? '✅ فعال' : '⛔ غیرفعال'}</span></div>
+        <div class="inv-tools">
+          <button data-user-pw="${escapeHtml(u.id)}">🔑 رمز جدید</button>
+          ${u.id === session.user.id ? '' : `<button data-user-toggle="${escapeHtml(u.id)}">${u.active ? '⛔ غیرفعال کن' : '✅ فعال کن'}</button>`}
+        </div></div>`).join('')}
+      <div class="inv-ver">
+        <div class="inv-ver-head"><span>➕ حساب جدید</span></div>
+        <input type="text" class="cyber-input" id="newUserName" maxlength="60" placeholder="نام">
+        <select class="cyber-input" id="newUserRole"><option value="tech">تکنسین (دیدن، افزودن، ویرایش)</option><option value="admin">مدیر (کنترل کامل)</option></select>
+        <button class="inv-small-btn" data-user-add="1">ساخت حساب و تعیین رمز</button>
+      </div>
+      <div class="inv-meta">برای گوشی تکنسین‌ها «📤 فایل تیم» بگیرید و در گوشی آن‌ها «📥 ورود فایل تیم» را بزنید. فایل تیم بدون رمزها قابل استفاده نیست.</div>`);
+  }
+  async function addTeamUser() {
+    const name = document.getElementById('newUserName').value.replace(/\s+/g, ' ').trim();
+    const role = document.getElementById('newUserRole').value === 'admin' ? 'admin' : 'tech';
+    if (!name) { showToast('نام را بنویسید'); return; }
+    if (getTeam().users.some(u => u.name === name)) { showToast('این نام از قبل هست'); return; }
+    const r = await askVaultPassword({ title: `🔑 رمز «${name}»`, hint: 'این رمز را خودتان به او بدهید؛ بعداً خودش می‌تواند عوضش کند.', confirm: true, okLabel: 'ساخت' });
+    if (!r || !isAdmin()) return;
+    const team = getTeam();
+    team.users.push(await makeAccount(name, role, r.pw, session.raw, sessionWho()));
+    teamLog(team, 'user-add', `ساخت حساب ${ROLE_LABELS[role]} «${name}»`);
+    if (saveTeam(team)) { showToast('✅ حساب ساخته شد'); openUsersPanel(); }
+  }
+  async function resetUserPassword(id) {
+    const team = getTeam();
+    const u = team.users.find(x => x.id === id);
+    if (!u) return;
+    const r = await askVaultPassword({ title: `🔑 رمز جدید «${u.name}»`, confirm: true, okLabel: 'تعیین' });
+    if (!r || !isAdmin()) return;
+    const t2 = getTeam();
+    const u2 = t2.users.find(x => x.id === id);
+    const fresh = await makeAccount(u2.name, u2.role, r.pw, session.raw, null);
+    Object.assign(u2, { salt: fresh.salt, iter: fresh.iter, wrapped: fresh.wrapped });
+    teamLog(t2, 'password', `تعیین رمز جدید برای «${u2.name}»`);
+    if (saveTeam(t2)) { showToast('🔑 رمز تعیین شد'); openUsersPanel(); }
+  }
+  function toggleUserActive(id) {
+    const team = getTeam();
+    const u = team.users.find(x => x.id === id);
+    if (!u || u.id === session.user.id) return;
+    if (u.active && u.role === 'admin' && team.users.filter(x => x.role === 'admin' && x.active).length <= 1) { showToast('حداقل یک مدیر فعال لازم است'); return; }
+    u.active = !u.active;
+    teamLog(team, u.active ? 'user-enable' : 'user-disable', `${u.active ? 'فعال' : 'غیرفعال'} کردن «${u.name}»`);
+    if (saveTeam(team)) openUsersPanel();
   }
 
-  // گاوصندوق را باز کن (یا اگر هنوز ساخته نشده، بساز)؛ true یعنی کلید آماده است
-  async function ensureVaultOpen() {
-    if (vaultKey) { touchVault(); return true; }
-    if (!vaultSupported()) {
-      showToast('⚠️ این دستگاه از رمزنگاری امن پشتیبانی نمی‌کند؛ پسورد ذخیره نمی‌شود');
-      return false;
-    }
-    if (!getVaultMeta()) {
-      const r = await askVaultPassword({
-        title: '🔐 ساخت گاوصندوق',
-        hint: 'یک رمز اصلی برای همه پسوردهای پرونده فنی. هر بار فقط همین یک رمز پرسیده می‌شود. اگر فراموش شود، پسوردهای ذخیره‌شده قابل بازیابی نیستند؛ جایی امن یادداشتش کنید.',
-        confirm: true,
-        okLabel: 'ساخت'
-      });
-      if (!r) return false;
-      const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16)));
-      const key = await deriveVaultKey(r.pw, salt, VAULT_ITERATIONS);
-      const meta = { v: 1, kdf: 'PBKDF2-SHA256', iter: VAULT_ITERATIONS, salt, check: await encryptWith(key, VAULT_CHECK_TEXT) };
-      try { localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta)); } catch(e) { showToast('⚠️ ذخیره ممکن نشد'); return false; }
-      vaultKey = key;
-      showToast('🔐 گاوصندوق ساخته شد');
-    } else {
-      const r = await askVaultPassword({ title: '🔒 باز کردن گاوصندوق', hint: 'رمز اصلی گاوصندوق را وارد کنید.', check: tryUnlock, okLabel: 'باز کن' });
-      if (!r || !vaultKey) return false;
-    }
-    renderVaultStatus();
-    touchVault();
-    return true;
+  // فایل تیم: حساب‌ها و کلیدهای قفل‌شده (بدون هیچ رمزی) برای گوشی تکنسین‌ها
+  function exportTeamFile() {
+    if (!isAdmin()) return;
+    const team = getTeam();
+    const payload = { app: BACKUP_APP_ID, kind: 'team', format: 1, exportedAt: new Date().toISOString(), team: { schema: 1, users: team.users, log: [] } };
+    if (downloadFile('geomat-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
   }
-
-  async function toggleVaultLock() {
-    playTactileFeedback();
-    if (vaultKey) { lockVault(false); return; }
-    if (await ensureVaultOpen()) renderInventory();
-  }
-
-  async function changeVaultPassword() {
-    if (!getVaultMeta()) { showToast('هنوز گاوصندوقی ساخته نشده'); return; }
-    vaultKey = null;
-    const cur = await askVaultPassword({ title: '🔑 تغییر رمز اصلی', hint: 'اول رمز فعلی را وارد کنید.', check: tryUnlock, okLabel: 'ادامه' });
-    if (!cur || !vaultKey) { renderVaultStatus(); return; }
-    const next = await askVaultPassword({ title: '🔑 رمز اصلی جدید', hint: 'همه پسوردها با رمز جدید دوباره رمزنگاری می‌شوند.', confirm: true, okLabel: 'تغییر' });
-    if (!next) { renderVaultStatus(); return; }
-    try {
-      const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16)));
-      const newKey = await deriveVaultKey(next.pw, salt, VAULT_ITERATIONS);
-      const inv = getInventory();
-      for (const item of inv.items) {
-        for (const f of Object.keys(item.secrets || {})) {
-          item.secrets[f] = await encryptWith(newKey, await decryptWith(vaultKey, item.secrets[f]));
-        }
+  function importTeamFile(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file || file.size > 512 * 1024) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      let obj = null;
+      try { obj = JSON.parse(String(reader.result || '')); } catch(e) {}
+      if (!obj || obj.app !== BACKUP_APP_ID || obj.kind !== 'team' || !validTeam(obj.team) || !obj.team.users.some(u => u.role === 'admin')) {
+        showToast('⚠️ این فایل تیم این برنامه نیست');
+        return;
       }
-      const meta = { v: 1, kdf: 'PBKDF2-SHA256', iter: VAULT_ITERATIONS, salt, check: await encryptWith(newKey, VAULT_CHECK_TEXT) };
-      // هر دو با هم: اگر پرونده ذخیره نشد، رمز قبلی دست نمی‌خورد
-      const oldInv = localStorage.getItem(INVENTORY_KEY);
-      if (!saveInventory(inv)) throw new Error('save');
-      try {
-        localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta));
-      } catch(e) {
-        if (oldInv !== null) localStorage.setItem(INVENTORY_KEY, oldInv);
-        throw e;
+      if (getTeam() && !await appConfirm('حساب‌های فعلی این گوشی با فایل تیم جایگزین شود؟ پسوردهایی که با تیم دیگری ذخیره شده‌اند دیگر باز نمی‌شوند.', 'جایگزینی')) return;
+      if (saveTeam({ schema: 1, users: obj.team.users, log: [{ at: new Date().toISOString(), by: { id: null, name: getUserName() }, action: 'team-import', detail: 'ورود فایل تیم' }] })) {
+        showToast('📥 فایل تیم وارد شد؛ با نام و رمز خودتان وارد شوید');
+        renderInventory();
       }
-      vaultKey = newKey;
-      showToast('🔑 رمز اصلی عوض شد');
-    } catch(e) {
-      showToast('⚠️ تغییر رمز انجام نشد');
-    }
-    renderVaultStatus();
-    touchVault();
-    renderInventory();
+    };
+    reader.readAsText(file);
   }
 
   // ==================== پرونده فنی شرکت‌ها ====================
-  // هر آیتم شناسه یکتا، زمان تغییر و حذفِ نرم دارد تا بعداً با پنل/سرور همگام شود (docs/data-model.md)
-  const INVENTORY_KEY = 'geomat_inventory_v1';
-  const INV_TOMBSTONE_DAYS = 90;
   const ACCESS_METHODS = ['RDP', 'SSH', 'وب (HTTP/HTTPS)', 'VNC', 'SMB / اشتراک فایل', 'Winbox', 'Telnet', 'FTP/SFTP', 'سایر'];
   const INV_SECTIONS = [
     { key: 'network', title: '🌐 شبکه و دامین', titleField: 'name', fields: [
@@ -5351,30 +5514,36 @@
     { key: 'workgroup', label: 'ورک‌گروپ' },
     { key: 'esxi', label: 'دارای ESXi' }
   ];
+  const ACTION_LABELS = { create: 'افزودن', edit: 'ویرایش', delete: 'حذف', restore: 'برگرداندن' };
   let supportView = 'report';
   let invFilter = 'all';
   let invEditing = null; // { section, id|null }
   const invRevealTimers = {};
-
-  function newId() {
-    if (crypto.randomUUID) return crypto.randomUUID();
-    const b = crypto.getRandomValues(new Uint8Array(16));
-    b[6] = (b[6] & 0x0f) | 0x40;
-    b[8] = (b[8] & 0x3f) | 0x80;
-    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
-    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
-  }
+  const sectionOf = (key) => INV_SECTIONS.find(s => s.key === key);
+  const fieldLabel = (f) => f.label.replace(/ \(.*\)/, '');
 
   function getInventory() {
     try {
       const o = JSON.parse(localStorage.getItem(INVENTORY_KEY) || 'null');
-      if (o && o.schema === 1 && Array.isArray(o.items)) {
+      if (o && (o.schema === 1 || o.schema === 2) && Array.isArray(o.items)) {
         o.items = o.items.filter(i => i && typeof i === 'object' && typeof i.id === 'string' && i.id && typeof i.company === 'string' &&
           INV_SECTIONS.some(sec => sec.key === i.section) && i.data && typeof i.data === 'object');
+        // پیش‌نمایش 1.4 تاریخچه نداشت: وضع فعلی اولین نسخه می‌شود
+        o.items.forEach(i => {
+          if (Array.isArray(i.history)) i.history = i.history.filter(h => h && typeof h === 'object' && h.data && typeof h.data === 'object');
+          if (!Array.isArray(i.history) || !i.history.length) {
+            const by = i.updatedBy && typeof i.updatedBy === 'object' ? i.updatedBy : { id: null, name: String(i.updatedBy || '') };
+            i.history = [{ at: i.updatedAt || i.createdAt || new Date().toISOString(), by, action: i.deleted ? 'delete' : 'create', data: { ...i.data }, secrets: { ...(i.secrets || {}) } }];
+          }
+          if (i.updatedBy && typeof i.updatedBy !== 'object') i.updatedBy = { id: null, name: String(i.updatedBy) };
+        });
+        o.companies = Array.isArray(o.companies) ? o.companies.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string') : [];
+        o.companies.forEach(c => { c.history = Array.isArray(c.history) ? c.history.filter(h => h && typeof h === 'object') : []; });
+        o.schema = 2;
         return o;
       }
     } catch(e) {}
-    return { schema: 1, items: [] };
+    return { schema: 2, companies: [], items: [] };
   }
   function saveInventory(inv) {
     try {
@@ -5385,12 +5554,19 @@
       return false;
     }
   }
-  // رکوردهای حذف‌شده فقط برای همگام‌سازی نگه داشته می‌شوند؛ بعد از ۹۰ روز پاک شوند
-  function purgeInventoryTombstones() {
-    const inv = getInventory();
-    const limit = Date.now() - INV_TOMBSTONE_DAYS * 86400000;
-    const kept = inv.items.filter(i => !i.deleted || new Date(i.updatedAt).getTime() > limit);
-    if (kept.length !== inv.items.length) saveInventory({ ...inv, items: kept });
+  // نسخه تازه؛ هیچ نسخه قبلی پاک یا بازنویسی نمی‌شود
+  function pushVersion(it, action) {
+    const now = new Date().toISOString();
+    it.history = it.history || [];
+    it.history.push({ at: now, by: sessionWho(), action, data: { ...it.data }, secrets: { ...(it.secrets || {}) } });
+    it.updatedAt = now;
+    it.updatedBy = sessionWho();
+  }
+
+  function invCompanyNames(inv) {
+    const names = [...getCompanies()];
+    inv.companies.filter(c => !c.deleted).forEach(c => { if (!names.includes(c.name)) names.push(c.name); });
+    return names;
   }
   function liveItems(inv, company, section) {
     return inv.items.filter(i => !i.deleted && i.company === company && (!section || i.section === section));
@@ -5419,15 +5595,63 @@
 
   function itemLabel(inv, id) {
     const it = inv.items.find(i => i.id === id && !i.deleted);
-    if (!it) return '';
-    const sec = INV_SECTIONS.find(s => s.key === it.section);
-    return it.data[sec.titleField] || '';
+    return it ? (it.data[sectionOf(it.section).titleField] || '') : '';
+  }
+  function whenLabel(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const j = dateToJalali(d);
+    return toPersianDigits(`${j.jy}/${pad2(j.jm)}/${pad2(j.jd)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`);
+  }
+
+  function renderAuthCard() {
+    const card = document.getElementById('invAuthCard');
+    const team = getTeam();
+    if (session) {
+      card.innerHTML = `<div class="card-header-bar">
+          <span class="inv-who">👤 ${escapeHtml(session.user.name)}<span class="inv-role ${isAdmin() ? '' : 'tech'}">${ROLE_LABELS[session.user.role]}</span></span>
+          <button class="inv-vault-btn" data-act="logout">🔒 خروج</button>
+        </div>
+        <div class="inv-tools">
+          <button class="inv-vault-btn" data-act="mypw">🔑 تغییر رمز من</button>
+          ${isAdmin() ? `<button class="inv-vault-btn" data-act="users">👥 کاربران</button>
+          <button class="inv-vault-btn" data-act="audit">📜 گزارش تغییرات</button>
+          <button class="inv-vault-btn" data-act="deleted">🗑 حذف‌شده‌ها</button>
+          <button class="inv-vault-btn" data-act="export-team">📤 فایل تیم</button>` : ''}
+        </div>`;
+      return;
+    }
+    const importBtn = `<button class="inv-link-btn" data-act="import-team">📥 ورود فایل تیم</button>
+      <input type="file" id="teamFileInput" accept=".json,application/json" style="display:none;" onchange="importTeamFile(this)">`;
+    if (!team) {
+      card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🛡 راه‌اندازی پرونده فنی</div></div>
+        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.9;">مدیر اینجا حساب خودش را می‌سازد و بعد برای هر تکنسین حساب جدا. تکنسین‌ها «فایل تیم» را از مدیر می‌گیرند.</div>
+        <div class="inv-auth-row"><input type="text" class="cyber-input" id="invSetupName" maxlength="60" placeholder="نام مدیر"><button class="install-btn" style="padding:10px 14px;" data-act="setup">ساخت حساب مدیر</button></div>
+        <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
+        <div>${importBtn}</div>`;
+      return;
+    }
+    const users = team.users.filter(u => u.active);
+    card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🔑 ورود به پرونده فنی</div></div>
+      <div class="inv-auth-row">
+        <select class="cyber-input" id="invLoginUser">${users.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)} (${ROLE_LABELS[u.role]})</option>`).join('')}</select>
+        <input type="password" class="cyber-input" id="invLoginPw" dir="ltr" maxlength="128" autocomplete="current-password" placeholder="رمز">
+      </div>
+      <button class="install-btn" style="padding:10px;" id="invLoginBtn" data-act="login">ورود</button>
+      <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
+      <div>${importBtn}</div>`;
   }
 
   function renderInventory() {
-    renderVaultStatus();
+    renderAuthCard();
+    const main = document.getElementById('invMain');
+    main.style.display = session ? 'flex' : 'none';
+    if (!session) {
+      document.getElementById('invSections').innerHTML = '';
+      return;
+    }
     const inv = getInventory();
-    const comps = getCompanies();
+    const comps = invCompanyNames(inv);
 
     document.getElementById('invFilterRow').innerHTML = INV_FILTERS.map(f =>
       `<button class="date-q-btn ${invFilter === f.key ? 'selected' : ''}" data-filter="${f.key}">${f.label}</button>`).join('');
@@ -5436,10 +5660,10 @@
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
       ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('')
-      : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : 'اول از تب تردد یک محل اضافه کنید'}</div>`;
+      : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');
-    if (!selectedCompany) { box.innerHTML = ''; return; }
+    if (!selectedCompany || !comps.includes(selectedCompany)) { box.innerHTML = ''; return; }
     const q = document.getElementById('invSearchInput').value.trim().toLowerCase();
     const openNow = new Set([...box.querySelectorAll('details[open]')].map(d => d.dataset.section));
     box.innerHTML = INV_SECTIONS.map(sec => {
@@ -5457,57 +5681,84 @@
   }
 
   function renderInvItem(inv, sec, it) {
+    const id = escapeHtml(it.id);
     const rows = sec.fields.filter(f => f.k !== sec.titleField && f.type !== 'secret').map(f => {
       let v = it.data[f.k];
       if (f.type === 'ref') v = itemLabel(inv, v);
       if (!v) return '';
-      return `<div class="inv-row"><b>${escapeHtml(f.label.replace(/ \(.*\)/, ''))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
+      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
     }).join('');
     const secrets = sec.fields.filter(f => f.type === 'secret' && it.secrets && it.secrets[f.k]).map(f =>
-      `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(f.label.replace(/ \(.*\)/, ''))}:</b>
-        <code data-secret-view="${escapeHtml(it.id)}|${f.k}">••••••</code>
-        <button data-reveal="${escapeHtml(it.id)}|${f.k}">👁 نمایش</button>
-        <button data-copy="${escapeHtml(it.id)}|${f.k}">📋 کپی</button></div>`).join('');
+      `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(fieldLabel(f))}:</b>
+        <code data-secret-view="${id}|${f.k}">••••••</code>
+        <button data-reveal="${id}|${f.k}">👁 نمایش</button>
+        <button data-copy="${id}|${f.k}">📋 کپی</button></div>`).join('');
+    const by = it.updatedBy && it.updatedBy.name ? `${escapeHtml(it.updatedBy.name)} · ` : '';
     return `<div class="inv-item">
       <div class="inv-item-head">
         <span class="inv-item-title">${escapeHtml(it.data[sec.titleField] || '—')}</span>
-        <span class="inv-item-actions"><button data-edit="${escapeHtml(it.id)}">✏️</button><button data-del="${escapeHtml(it.id)}">🗑</button></span>
-      </div>${rows}${secrets}</div>`;
+        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش">✏️</button>${isAdmin()
+          ? `<button data-history="${id}" title="تاریخچه">🕘</button><button data-del="${id}" title="حذف">🗑</button>` : ''}</span>
+      </div>${rows}${secrets}
+      <div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div></div>`;
   }
 
-  // همه کلیک‌های پرونده فنی از یک‌جا (بدون onclick داخل متن HTML)
+  // همه کلیک‌های پرونده فنی و پنل‌ها از یک‌جا (بدون onclick داخل متن HTML)
   document.addEventListener('click', (e) => {
     const view = document.getElementById('supportInventoryView');
-    if (!view || !view.contains(e.target)) return;
-    touchVault();
-    const t = e.target.closest('[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-reveal],[data-copy]');
+    const panel = document.getElementById('invPanelModal');
+    if (!view || (!view.contains(e.target) && !panel.contains(e.target))) return;
+    touchSession();
+    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who]');
     if (!t) return;
     const d = t.dataset;
+    const acts = {
+      login: loginInventory, setup: setupAdmin, logout: () => endSession(false), mypw: changeMyPassword,
+      users: openUsersPanel, audit: () => openAuditPanel(''), deleted: openDeletedPanel, 'export-team': exportTeamFile,
+      'import-team': () => document.getElementById('teamFileInput').click()
+    };
+    if (d.act) { if (acts[d.act]) acts[d.act](); return; }
     if (d.filter) { invFilter = d.filter; renderInventory(); }
     else if (d.company !== undefined) { selectedCompany = d.company; renderCompanies(); updatePreview(); updateSupportPreview(); renderInventory(); }
+    else if (!session) return;
     else if (d.add) openInvItemModal(d.add, null);
     else if (d.edit) { const it = getInventory().items.find(i => i.id === d.edit); if (it) openInvItemModal(it.section, it.id); }
     else if (d.del) deleteInvItem(d.del);
-    else if (d.reveal) revealSecret(d.reveal);
+    else if (d.history) openHistoryPanel(d.history);
+    else if (d.reveal) revealSecret(d.reveal, `[data-secret-view="${CSS.escape(d.reveal)}"]`);
     else if (d.copy) copySecret(d.copy);
+    else if (d.restore) restoreVersion(d.restore);
+    else if (d.undelete) restoreDeleted(d.undelete);
+    else if (d.verReveal) revealSecret(d.verReveal, `[data-ver-view="${CSS.escape(d.verReveal)}"]`);
+    else if (d.userPw) resetUserPassword(d.userPw);
+    else if (d.userToggle) toggleUserActive(d.userToggle);
+    else if (d.userAdd) addTeamUser();
+    else if (d.auditWho !== undefined) openAuditPanel(d.auditWho);
   });
 
+  // ref: «id|field» برای پسورد فعلی، یا «id|field|index» برای پسوردِ یک نسخه قدیمی (فقط مدیر)
   async function readSecret(ref) {
-    const [id, field] = ref.split('|');
+    if (!session) return null;
+    const [id, field, ver] = ref.split('|');
     const it = getInventory().items.find(i => i.id === id);
-    if (!it || !it.secrets || !it.secrets[field]) return null;
-    if (!await ensureVaultOpen()) return null;
+    if (!it) return null;
+    let src = it.secrets;
+    if (ver !== undefined) {
+      if (!isAdmin()) return null;
+      src = (it.history[Number(ver)] || {}).secrets;
+    }
+    if (!src || !src[field]) return null;
     try {
-      return await decryptWith(vaultKey, it.secrets[field]);
+      return await decryptWith(session.key, src[field]);
     } catch(e) {
-      showToast('⚠️ این پسورد با رمز اصلی فعلی باز نمی‌شود');
+      showToast('⚠️ این پسورد با کلید این تیم باز نمی‌شود');
       return null;
     }
   }
-  async function revealSecret(ref) {
+  async function revealSecret(ref, selector) {
     const pw = await readSecret(ref);
     if (pw === null) return;
-    const el = document.querySelector(`[data-secret-view="${CSS.escape(ref)}"]`);
+    const el = document.querySelector(selector);
     if (!el) return;
     el.textContent = pw;
     clearTimeout(invRevealTimers[ref]);
@@ -5531,13 +5782,50 @@
     }, 30000);
   }
 
+  async function createInvCompany() {
+    if (!session) return;
+    const r = await askText('➕ پرونده فنی جدید', 'نام شرکت یا مشتری');
+    if (!r || !session) return;
+    const inv = getInventory();
+    if (invCompanyNames(inv).includes(r)) { selectedCompany = r; renderInventory(); showToast('این شرکت از قبل هست'); return; }
+    const old = inv.companies.find(c => c.name === r && c.deleted);
+    const now = new Date().toISOString();
+    if (old) {
+      old.deleted = false;
+      old.history.push({ at: now, by: sessionWho(), action: 'restore', name: r });
+    } else {
+      inv.companies.push({ id: newId(), name: r, createdAt: now, createdBy: sessionWho(), history: [{ at: now, by: sessionWho(), action: 'create', name: r }] });
+    }
+    if (!saveInventory(inv)) return;
+    selectedCompany = r;
+    renderInventory();
+    showToast('✅ پرونده فنی ساخته شد');
+  }
+  // پرسش یک متن کوتاه (prompt در اپ اندروید کار نمی‌کند)
+  function askText(title, placeholder) {
+    return new Promise(resolve => {
+      openInvPanel(title, `<input type="text" class="cyber-input" id="invAskText" maxlength="80" placeholder="${escapeHtml(placeholder)}">
+        <button class="install-btn" style="padding:10px;" id="invAskOk">تأیید</button>`);
+      const input = document.getElementById('invAskText');
+      setTimeout(() => input.focus(), 100);
+      const done = (v) => { panelOnClose = null; closeInvPanel(); resolve(v); };
+      panelOnClose = () => resolve(null);
+      document.getElementById('invAskOk').onclick = () => {
+        const v = input.value.replace(/\s+/g, ' ').trim();
+        if (v) done(v);
+      };
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('invAskOk').click(); } };
+    });
+  }
+
   function openInvItemModal(sectionKey, id) {
+    if (!session) return;
     if (!selectedCompany) { showToast('اول شرکت را انتخاب کنید'); return; }
-    const sec = INV_SECTIONS.find(s => s.key === sectionKey);
+    const sec = sectionOf(sectionKey);
     const inv = getInventory();
     const it = id ? inv.items.find(i => i.id === id) : null;
     invEditing = { section: sectionKey, id };
-    document.getElementById('invItemTitle').textContent = `${it ? '✏️ ویرایش' : '➕ افزودن'} — ${sec.title.replace(/^\S+\s/, '')} (${selectedCompany})`;
+    document.getElementById('invItemTitle').textContent = `${it ? '✏️ ویرایش' : '➕ افزودن'} — ${sec.title.replace(/^\S+\s/, '')} (${it ? it.company : selectedCompany})`;
     const form = document.getElementById('invItemForm');
     form.innerHTML = sec.fields.map(f => {
       const v = it ? (it.data[f.k] || '') : '';
@@ -5547,7 +5835,7 @@
           `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select></label>`;
       }
       if (f.type === 'ref') {
-        const opts = inv.items.filter(i => !i.deleted && i.company === selectedCompany && f.ref.includes(i.section) && i.id !== id);
+        const opts = inv.items.filter(i => !i.deleted && i.company === (it ? it.company : selectedCompany) && f.ref.includes(i.section) && i.id !== id);
         return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${opts.map(o =>
           `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
       }
@@ -5556,8 +5844,8 @@
       }
       if (f.type === 'secret') {
         const has = it && it.secrets && it.secrets[f.k];
-        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="256" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
-          (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد ذخیره‌شده</label>` : '');
+        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
+          (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد (نسخه قبلی در تاریخچه می‌ماند)</label>` : '');
       }
       return `<label>${escapeHtml(f.label)}${f.required ? ' *' : ''}<input type="text" class="cyber-input" name="${name}" maxlength="200" ${f.ltr ? 'dir="ltr"' : ''} value="${escapeHtml(v)}"></label>`;
     }).join('');
@@ -5571,8 +5859,8 @@
 
   let invSaving = false;
   async function saveInvItem() {
-    if (!invEditing || invSaving) return;
-    const sec = INV_SECTIONS.find(s => s.key === invEditing.section);
+    if (!invEditing || invSaving || !session) return;
+    const sec = sectionOf(invEditing.section);
     const form = document.getElementById('invItemForm');
     const val = (k) => { const el = form.querySelector(`[name="inv_${k}"]`); return el ? el.value : ''; };
     const data = {};
@@ -5593,23 +5881,24 @@
     invSaving = true;
     try {
       const encrypted = {};
-      if (Object.keys(newSecrets).length) {
-        if (!await ensureVaultOpen()) return;
-        for (const k of Object.keys(newSecrets)) encrypted[k] = await encryptWith(vaultKey, newSecrets[k]);
-      }
+      for (const k of Object.keys(newSecrets)) encrypted[k] = await encryptWith(session.key, newSecrets[k]);
       const inv = getInventory();
-      const now = new Date().toISOString();
       let it = invEditing.id ? inv.items.find(i => i.id === invEditing.id) : null;
-      if (!it) {
-        it = { id: newId(), company: selectedCompany, section: sec.key, data: {}, secrets: {}, createdAt: now };
+      const isNew = !it;
+      if (isNew) {
+        it = { id: newId(), company: selectedCompany, section: sec.key, data: {}, secrets: {}, createdAt: new Date().toISOString(), history: [] };
         inv.items.push(it);
       }
+      const secrets = { ...(it.secrets || {}) };
+      clearSecrets.forEach(k => delete secrets[k]);
+      Object.assign(secrets, encrypted);
+      if (!isNew && JSON.stringify(it.data) === JSON.stringify(data) && !Object.keys(encrypted).length && !clearSecrets.length) {
+        closeInvItemModal();
+        return;
+      }
       it.data = data;
-      it.secrets = { ...(it.secrets || {}) };
-      clearSecrets.forEach(k => delete it.secrets[k]);
-      Object.assign(it.secrets, encrypted);
-      it.updatedAt = now;
-      it.updatedBy = getUserName();
+      it.secrets = secrets;
+      pushVersion(it, isNew ? 'create' : 'edit');
       if (!saveInventory(inv)) return;
       closeInvItemModal();
       renderInventory();
@@ -5621,19 +5910,139 @@
     }
   }
 
+  // فقط مدیر؛ حذف نرم: داده و تاریخچه می‌ماند و از «حذف‌شده‌ها» برمی‌گردد
   async function deleteInvItem(id) {
+    if (!isAdmin()) return;
     const inv = getInventory();
     const it = inv.items.find(i => i.id === id);
     if (!it) return;
-    const sec = INV_SECTIONS.find(s => s.key === it.section);
-    if (!await appConfirm(`«${it.data[sec.titleField] || ''}» از پرونده ${it.company} حذف شود؟`)) return;
-    // حذف نرم: محتوا و پسورد پاک می‌شود، فقط شناسه برای همگام‌سازی می‌ماند
+    if (!await appConfirm(`«${it.data[sectionOf(it.section).titleField] || ''}» از پرونده ${it.company} حذف شود؟ (در «حذف‌شده‌ها» قابل برگشت است)`)) return;
     it.deleted = true;
-    it.data = {};
-    it.secrets = {};
-    it.updatedAt = new Date().toISOString();
-    it.updatedBy = getUserName();
+    pushVersion(it, 'delete');
     if (saveInventory(inv)) renderInventory();
+  }
+
+  // ---------- پنل‌ها (مدیر) ----------
+  let panelOnClose = null;
+  function openInvPanel(title, html) {
+    document.getElementById('invPanelTitle').textContent = title;
+    document.getElementById('invPanelBody').innerHTML = html;
+    document.getElementById('invPanelModal').classList.add('open');
+  }
+  function closeInvPanel() {
+    document.getElementById('invPanelModal').classList.remove('open');
+    document.getElementById('invPanelBody').innerHTML = '';
+    const cb = panelOnClose;
+    panelOnClose = null;
+    if (cb) cb();
+  }
+
+  // فیلدهای عوض‌شده بین دو نسخه، به‌صورت «قبلی ← جدید»
+  function versionDiff(inv, sec, prev, cur, id, index) {
+    const out = [];
+    sec.fields.forEach(f => {
+      if (f.type === 'secret') {
+        const a = prev && prev.secrets && prev.secrets[f.k];
+        const b = cur.secrets && cur.secrets[f.k];
+        if (JSON.stringify(a || null) === JSON.stringify(b || null)) return;
+        const what = !a ? 'ثبت شد' : !b ? 'پاک شد' : 'عوض شد';
+        out.push(`<div><b>${escapeHtml(fieldLabel(f))}:</b> ${what}${b ? ` <code data-ver-view="${escapeHtml(id)}|${f.k}|${index}">••••••</code> <button data-ver-reveal="${escapeHtml(id)}|${f.k}|${index}">👁</button>` : ''}</div>`);
+        return;
+      }
+      const show = (v) => f.type === 'ref' ? (itemLabel(inv, v) || (v ? '(حذف‌شده)' : '')) : (v || '');
+      const a = prev ? (prev.data || {})[f.k] : undefined;
+      const b = (cur.data || {})[f.k];
+      if ((a || '') === (b || '')) return;
+      out.push(`<div><b>${escapeHtml(fieldLabel(f))}:</b> ${a ? `<del>${escapeHtml(show(a))}</del> ← ` : ''}${b ? `<ins>${escapeHtml(show(b))}</ins>` : '<del>(خالی شد)</del>'}</div>`);
+    });
+    return out.join('') || '<div>بدون تغییر در فیلدها</div>';
+  }
+
+  function openHistoryPanel(id) {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    if (!it) return;
+    const sec = sectionOf(it.section);
+    const last = it.history.length - 1;
+    const html = it.history.map((v, i) => ({ v, i })).reverse().map(({ v, i }) => `<div class="inv-ver">
+        <div class="inv-ver-head"><span>${escapeHtml(ACTION_LABELS[v.action] || v.action)} — ${escapeHtml((v.by && v.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(v.at)}</span></div>
+        <div class="inv-diff">${versionDiff(inv, sec, i > 0 ? it.history[i - 1] : null, v, it.id, i)}</div>
+        ${i < last && v.action !== 'delete' ? `<button data-restore="${escapeHtml(it.id)}|${i}">↩️ برگرداندن این نسخه</button>` : ''}
+      </div>`).join('');
+    openInvPanel(`🕘 تاریخچه «${it.data[sec.titleField] || ''}» (${it.company})`, html);
+  }
+
+  async function restoreVersion(ref) {
+    if (!isAdmin()) return;
+    const [id, idx] = ref.split('|');
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    const v = it && it.history[Number(idx)];
+    if (!v || !await appConfirm(`نسخه ${whenLabel(v.at)} برگردانده شود؟ (نسخه فعلی در تاریخچه می‌ماند)`, 'برگرداندن')) return;
+    it.data = { ...v.data };
+    it.secrets = { ...(v.secrets || {}) };
+    it.deleted = false;
+    pushVersion(it, 'restore');
+    if (!saveInventory(inv)) return;
+    showToast('↩️ برگردانده شد');
+    renderInventory();
+    openHistoryPanel(id);
+  }
+
+  function openDeletedPanel() {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const items = inv.items.filter(i => i.deleted).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    const comps = inv.companies.filter(c => c.deleted);
+    const html = [
+      ...comps.map(c => `<div class="inv-ver"><div class="inv-ver-head"><span>🏢 پرونده «${escapeHtml(c.name)}»</span></div><button data-undelete="company|${escapeHtml(c.id)}">↩️ برگرداندن</button></div>`),
+      ...items.map(it => {
+        const sec = sectionOf(it.section);
+        return `<div class="inv-ver"><div class="inv-ver-head"><span>${sec.title.split(' ')[0]} ${escapeHtml(it.data[sec.titleField] || '')} — ${escapeHtml(it.company)}</span>
+          <span class="inv-meta">${escapeHtml((it.updatedBy && it.updatedBy.name) || '')} · ${whenLabel(it.updatedAt)}</span></div>
+          <div class="inv-tools"><button data-undelete="item|${escapeHtml(it.id)}">↩️ برگرداندن</button><button data-history="${escapeHtml(it.id)}">🕘 تاریخچه</button></div></div>`;
+      })
+    ].join('') || '<div class="inv-empty">چیزی حذف نشده</div>';
+    openInvPanel('🗑 حذف‌شده‌ها', html);
+  }
+  function restoreDeleted(ref) {
+    if (!isAdmin()) return;
+    const [kind, id] = ref.split('|');
+    const inv = getInventory();
+    if (kind === 'company') {
+      const c = inv.companies.find(x => x.id === id);
+      if (!c) return;
+      c.deleted = false;
+      c.history.push({ at: new Date().toISOString(), by: sessionWho(), action: 'restore', name: c.name });
+    } else {
+      const it = inv.items.find(x => x.id === id);
+      if (!it) return;
+      it.deleted = false;
+      pushVersion(it, 'restore');
+    }
+    if (saveInventory(inv)) { showToast('↩️ برگردانده شد'); renderInventory(); openDeletedPanel(); }
+  }
+
+  // همه تغییرات همه شرکت‌ها و حساب‌ها، جدیدترین اول؛ با فیلتر شخص
+  function openAuditPanel(who) {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const team = getTeam();
+    const events = [];
+    inv.items.forEach(it => {
+      const sec = sectionOf(it.section);
+      it.history.forEach((v, i) => events.push({ at: v.at, by: v.by, text: `${ACTION_LABELS[v.action] || v.action} ${sec.title.split(' ')[0]} «${(v.data && v.data[sec.titleField]) || it.data[sec.titleField] || ''}» — ${it.company}`, id: it.id }));
+    });
+    inv.companies.forEach(c => (c.history || []).forEach(v => events.push({ at: v.at, by: v.by, text: `${ACTION_LABELS[v.action] || v.action} پرونده فنی «${c.name}»` })));
+    (team ? team.log : []).forEach(v => events.push({ at: v.at, by: v.by, text: `👥 ${v.detail}` }));
+    const people = [...new Set(events.map(e => (e.by && e.by.name) || 'نامشخص'))];
+    const shown = events.filter(e => !who || ((e.by && e.by.name) || 'نامشخص') === who).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 300);
+    openInvPanel('📜 گزارش تغییرات', `
+      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--gold);' : ''}">همه</button>${people.map(p =>
+        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--gold);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
+      ${shown.map(e => `<div class="inv-ver"><div class="inv-ver-head"><span>${escapeHtml((e.by && e.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(e.at)}</span></div>
+        <div>${escapeHtml(e.text)}</div>${e.id ? `<button data-history="${escapeHtml(e.id)}">🕘 جزئیات</button>` : ''}</div>`).join('') || '<div class="inv-empty">تغییری ثبت نشده</div>'}`);
   }
 
   window.onload = init;
