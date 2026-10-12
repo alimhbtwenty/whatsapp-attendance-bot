@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rIBldvgCpx9w6PvHUsWo9YziNpBG7BuRjXqaAxAi3p0='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EEa3rKa7pGslHsv7dKUWDEfx78q90icuFPBNdhD2lp8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -3097,6 +3097,12 @@
 
   function setAttendanceAction(type) {
     playTactileFeedback();
+    // «فقط خروج» برای امروز با ساعت همین لحظه شروع شود، نه ۱۷:۰۰ پیش‌فرض
+    if (type === 'out' && attendanceAction !== 'out' && dayOffsetFromToday(currentDateObj) === 0) {
+      const now = new Date();
+      document.getElementById('outHour').value = pad2(now.getHours());
+      document.getElementById('outMin').value = pad2(now.getMinutes());
+    }
     attendanceAction = type;
     const buttons = document.querySelectorAll('#secAttendance .segmented-pill-row .pill-opt-btn');
     buttons[0].classList.toggle('selected', type === 'both');
@@ -4343,9 +4349,15 @@
     playTactileFeedback();
     const item = getLogs().find(l => l.id === id);
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
-    let logs = getLogs();
-    logs = logs.filter(l => l.id !== id);
-    localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+    if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
+    // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
+    const open = getOpenEntry();
+    if (open && open.logId === id) {
+      setOpenEntry(null);
+      lastPrefillKey = '';
+      renderOpenEntryBanner();
+      updatePreview();
+    }
     renderArchive();
     showToast('رکورد حذف شد');
   }

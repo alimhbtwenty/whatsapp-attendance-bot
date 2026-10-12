@@ -481,9 +481,15 @@
     playTactileFeedback();
     const item = getLogs().find(l => l.id === id);
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
-    let logs = getLogs();
-    logs = logs.filter(l => l.id !== id);
-    localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+    if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
+    // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
+    const open = getOpenEntry();
+    if (open && open.logId === id) {
+      setOpenEntry(null);
+      lastPrefillKey = '';
+      renderOpenEntryBanner();
+      updatePreview();
+    }
     renderArchive();
     showToast('رکورد حذف شد');
   }

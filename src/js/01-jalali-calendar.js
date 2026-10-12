@@ -611,6 +611,12 @@
 
   function setAttendanceAction(type) {
     playTactileFeedback();
+    // «فقط خروج» برای امروز با ساعت همین لحظه شروع شود، نه ۱۷:۰۰ پیش‌فرض
+    if (type === 'out' && attendanceAction !== 'out' && dayOffsetFromToday(currentDateObj) === 0) {
+      const now = new Date();
+      document.getElementById('outHour').value = pad2(now.getHours());
+      document.getElementById('outMin').value = pad2(now.getMinutes());
+    }
     attendanceAction = type;
     const buttons = document.querySelectorAll('#secAttendance .segmented-pill-row .pill-opt-btn');
     buttons[0].classList.toggle('selected', type === 'both');
