@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mH37cfvYNsuPngqmx/HGbHYVM2/LuWKTrEmiJvayarE='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yxbq/tAWXAOQF8fUepRsw2XvMn6msVtSxZqiLHMPYHU='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -1657,7 +1657,7 @@
     .holiday-chip button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 11px; padding: 0; }
     /* پرونده فنی شرکت‌ها (ساپورت) */
     /* تأیید و رمز همیشه روی پنل‌های دیگر باز شوند */
-    #confirmModal, #vaultModal { z-index: 1200; }
+    #confirmModal, #vaultModal, #flowModal { z-index: 1200; }
     .inv-auth-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .inv-auth-row select, .inv-auth-row input { flex: 1; min-width: 120px; }
     .inv-who { font-size: 12.5px; font-weight: 800; color: var(--text); }
@@ -1783,6 +1783,22 @@
     .inv-copy-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 4px; margin-inline-start: auto; color: var(--text-dim); }
     .inv-pw-tools { display: flex; gap: 6px; margin-top: -4px; }
     .inv-pw-tools button { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-s); padding: 6px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
+
+    /* پرسش‌های پیش از ارسال تردد */
+    .flow-box { gap: 10px; }
+    .flow-title { font-size: 15px; font-weight: 800; color: var(--text-strong); }
+    .flow-hint { font-size: 12px; color: var(--text-muted); line-height: 1.9; }
+    .flow-time { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--text); }
+    .flow-time input { font-size: 18px; padding: 8px 10px; border-radius: var(--radius-m); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-strong); }
+    .flow-err { font-size: 11.5px; color: var(--danger); min-height: 14px; }
+    .flow-main, .flow-alt { padding: 11px; }
+    .flow-chips { display: flex; flex-direction: column; gap: 8px; }
+    .flow-chip { text-align: start; padding: 11px 12px; border-radius: var(--radius-m); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text); font-size: 13px; font-family: inherit; cursor: pointer; }
+    .flow-chip:active { background: var(--surface-3); }
+    .flow-custom { display: flex; gap: 8px; }
+    .flow-custom input { flex: 1; }
+    .archive-gap { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .notif-test-btns { display: flex; gap: 6px; }
   </style>
 </head>
 <body>
@@ -2178,6 +2194,13 @@
         <span>⏰ یادآوری ثبت خروج از ساعت</span>
         <input type="time" id="reminderTimeInput" data-change='["saveSettingField", "reminderTime", "$value"]'>
       </label>
+      <div class="settings-row" id="notifTestRow" style="display:none;">
+        <span>🔔 اعلان یادآوری</span>
+        <span class="notif-test-btns">
+          <button class="inv-small-btn" data-click='["testExitNotification"]'>آزمایش</button>
+          <button class="inv-small-btn" data-click='["openAppBatterySettings"]' title="اگر اعلان نیامد: باتری ← نامحدود">⚙️ باتری</button>
+        </span>
+      </div>
       <label class="settings-row">
         <span>🎨 ظاهر</span>
         <select id="themeInput" data-change='["saveSettingField","theme","$value"]'>
@@ -2380,6 +2403,10 @@
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveVaultModal", null]'>انصراف</button>
     </div>
   </div>
+</div>
+
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
+  <div class="glass-modal-box flow-box" id="flowModalBox"></div>
 </div>
 
 <div class="cyber-toast" id="toast" role="status" aria-live="polite"></div>
@@ -3748,6 +3775,8 @@
     const pre = document.getElementById('preUpdateRestoreBtn');
     if (pre) pre.style.display = localStorage.getItem(PRE_UPDATE_BACKUP_KEY) ? '' : 'none';
     renderStorageUsage();
+    const nt = document.getElementById('notifTestRow');
+    if (nt) nt.style.display = window.AndroidBridge && typeof window.AndroidBridge.testNotification === 'function' ? '' : 'none';
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length
@@ -4232,6 +4261,7 @@
       }
       return { text: generateSupportText(), repeat: false };
     }
+    if (!await attendancePromptsBeforeSend()) return null; // خروج بی‌ورود، فاصله بین دو حضور
     await ensureEntryGeoBeforeSend();
     if (!await ensureSiteForLiveEntry()) return null;
     return { text: generateAttendanceText(), repeat: false };
@@ -4396,8 +4426,11 @@
       actions: isSupport ? document.getElementById('supportActionsText').value : '',
       pending: isSupport ? document.getElementById('supportPendingText').value : '',
       tech: isSupport ? document.getElementById('supportTechInfo').value : '',
-      checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
+      checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null,
+      // «بین دو حضور کجا بودید؟» (فقط آرشیو و گزارش‌ها)
+      gap: !isSupport && pendingGap ? { ...pendingGap } : undefined
     });
+    pendingGap = null;
     // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
     writeLogs(logs);
     return id;
@@ -4479,6 +4512,7 @@
             ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
+          ${item.gap && item.gap.reason ? `<div class="archive-gap">🕓 ${escapeHtml(toPersianDigits(String(item.gap.from || '')))} تا ${escapeHtml(toPersianDigits(String(item.gap.to || '')))}: ${escapeHtml(String(item.gap.reason))}</div>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
@@ -4526,13 +4560,13 @@
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده,بین دو حضور\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
       const sup = r.type === 'support'; // رکوردهای تردد قدیمی گاهی متن فرم ساپورت را هم داشتند
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : ''].map(csvCell).join(',') + '\n';
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : '', r.gap && r.gap.reason ? `${r.gap.from || ''}-${r.gap.to || ''} ${r.gap.reason}` : ''].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
@@ -4543,6 +4577,131 @@
     }
   }
 
+  // ==================== پرسش‌های پیش از ارسال تردد (درخواست مالک) ====================
+  // ۱) «فقط خروج» بدون ورودِ ثبت‌شده: ساعت ورود پرسیده می‌شود تا پیام یک دوره کامل شود (یا «بدون ورود ارسال کن»)
+  // ۲) ورودِ تازه بعد از خروجِ همان روز: «بین این دو حضور کجا بودید؟»؛ فقط در آرشیو و گزارش‌ها می‌آید، نه در پیام
+  const GAP_REASONS = ['در راه / ایاب و ذهاب', 'در انتظار خبر / هماهنگی', 'خرید قطعه / کار اداری بیرون'];
+  let flowResolver = null;
+  let pendingGap = null; // { from, to, reason } برای رکورد تازه‌ای که همین الان ساخته می‌شود
+
+  function openFlowModal(html, focusSel) {
+    if (flowResolver) resolveFlowModal(null);
+    document.getElementById('flowModalBox').innerHTML = html;
+    document.getElementById('flowModal').classList.add('open');
+    setTimeout(() => { const el = focusSel && document.querySelector(focusSel); if (el) el.focus(); }, 80);
+    return new Promise(resolve => { flowResolver = resolve; });
+  }
+  function resolveFlowModal(value) {
+    document.getElementById('flowModal').classList.remove('open');
+    document.getElementById('flowModalBox').innerHTML = '';
+    const r = flowResolver;
+    flowResolver = null;
+    if (r) r(value);
+  }
+  function flowError(msg) {
+    const el = document.getElementById('flowErr');
+    if (el) el.textContent = msg;
+  }
+
+  // ---------- ۱) خروج بدون ورود ----------
+  function askMissingEntry(outTime) {
+    const start = /^\d{2}:\d{2}$/.test(getSettings().workStart) ? getSettings().workStart : '09:00';
+    return openFlowModal(`
+      <div class="flow-title">⚠️ ورود ثبت نشده</div>
+      <div class="flow-hint">برای «${escapeHtml(selectedCompany)}» امروز ورودی ثبت نشده است. ساعت ورود را بزنید تا پیام یک دوره کامل باشد (ورود تا خروج ${escapeHtml(toPersianDigits(outTime))}).</div>
+      <label class="flow-time"><span>🟢 ساعت ورود</span><input type="time" id="flowInTime" dir="ltr" value="${escapeHtml(start)}"></label>
+      <div class="flow-err" id="flowErr" role="alert"></div>
+      <button class="install-btn flow-main" ${uiAttr('click', 'submitMissingEntry')}>ثبت دوره کامل</button>
+      <button class="dock-copy-btn flow-alt" ${uiAttr('click', 'resolveFlowModal', 'skip')}>بدون ورود ارسال کن</button>
+      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', null)}>انصراف</button>`, '#flowInTime');
+  }
+  function submitMissingEntry() {
+    const v = (document.getElementById('flowInTime').value || '').trim();
+    if (!/^\d{2}:\d{2}$/.test(v)) { flowError('ساعت ورود را بزنید'); return; }
+    if (parseHM(v) >= parseHM(timeInputValue('out'))) { flowError(`ساعت ورود باید پیش از خروج (${toPersianDigits(timeInputValue('out'))}) باشد`); return; }
+    resolveFlowModal({ inTime: v });
+  }
+
+  // ---------- ۲) فاصله بین دو حضورِ یک روز ----------
+  // آخرین خروجِ همان روز (همان حساب) که پیش از این ورود است
+  function previousExitToday(inTime) {
+    const iso = toISODate(currentDateObj);
+    const inMins = parseHM(inTime);
+    let best = null;
+    for (const l of getLogs()) {
+      if (!l || l.type !== 'attendance' || l.dateISO !== iso || !l.outTime) continue;
+      if (l.by && otherPersons(l.by.id)) continue;
+      const out = parseHM(l.outTime);
+      if (out === null || out >= inMins) continue;
+      if (l.inTime && parseHM(l.inTime) > out) continue; // شیفت شب: خروجش مال فرداست
+      if (!best || out > parseHM(best.outTime)) best = l;
+    }
+    return best;
+  }
+  function askGapReason(from, to) {
+    const t = (x) => escapeHtml(toPersianDigits(x));
+    return openFlowModal(`
+      <div class="flow-title">🕓 بین دو حضور کجا بودید؟</div>
+      <div class="flow-hint">از خروج ${t(from)} تا این ورود ${t(to)}. فقط در آرشیو و گزارش‌ها ثبت می‌شود، نه در پیام واتساپ.</div>
+      <div class="flow-chips">${GAP_REASONS.map((r, i) => `<button class="flow-chip" ${uiAttr('click', 'pickGapReason', i)}>${escapeHtml(r)}</button>`).join('')}</div>
+      <div class="flow-custom">
+        <input type="text" class="cyber-input" id="flowGapText" maxlength="120" placeholder="یا خودتان بنویسید…" aria-label="کجا بودید؟ (متن دلخواه)">
+        <button class="dock-copy-btn" ${uiAttr('click', 'submitGapText')}>ثبت</button>
+      </div>
+      <div class="flow-err" id="flowErr" role="alert"></div>
+      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', 'skip')}>رد شدن</button>`);
+  }
+  function pickGapReason(i) {
+    if (GAP_REASONS[i]) resolveFlowModal({ reason: GAP_REASONS[i] });
+  }
+  function submitGapText() {
+    const v = document.getElementById('flowGapText').value.replace(/\s+/g, ' ').trim();
+    if (!v) { flowError('یکی از گزینه‌ها را بزنید یا چیزی بنویسید'); return; }
+    resolveFlowModal({ reason: v });
+  }
+
+  // در prepareReport، پیش از ساختن متن تردد. null یعنی ارسال لغو شد.
+  async function attendancePromptsBeforeSend() {
+    pendingGap = null;
+    if (attendanceAction === 'out' && !pairedEntry()) {
+      const r = await askMissingEntry(timeInputValue('out'));
+      if (!r) return false;
+      if (r !== 'skip') {
+        setAttendanceAction('both');
+        const [h, m] = r.inTime.split(':');
+        document.getElementById('inHour').value = h;
+        document.getElementById('inMin').value = m;
+        updatePreview();
+      }
+    }
+    // فقط رکوردِ تازه (ورود یا دوره کامل)، نه خروجی که ورودِ ثبت‌شده را کامل می‌کند
+    if (attendanceAction !== 'out' && !closesRecordedEntry()) {
+      const inTime = timeInputValue('in');
+      const prev = previousExitToday(inTime);
+      if (prev) {
+        const r = await askGapReason(prev.outTime, inTime);
+        if (r && r.reason) pendingGap = { from: prev.outTime, to: inTime, reason: r.reason };
+      }
+    }
+    return true;
+  }
+
+  // ---------- آزمایش اعلان (تنظیمات، فقط اپ اندروید) ----------
+  function testExitNotification() {
+    const br = window.AndroidBridge;
+    if (!br || typeof br.testNotification !== 'function') return;
+    if (typeof br.notificationPermission === 'function' && br.notificationPermission() !== 'granted') {
+      br.requestNotificationPermission();
+      showToast('اول اجازه اعلان را بدهید و دوباره «آزمایش» را بزنید');
+      return;
+    }
+    br.testNotification();
+    showToast('🔔 تا ۱۰ ثانیه دیگر اعلان می‌آید (برنامه را هم می‌توانید ببندید)');
+  }
+  function openAppBatterySettings() {
+    const br = window.AndroidBridge;
+    if (br && typeof br.openBatterySettings === 'function') br.openBatterySettings();
+  }
   // ==================== گزارش ماهانه ====================
   // هر رکورد تردد به «جلسه کاری» (ورود تا خروج) تبدیل می‌شود: رکورد کامل مستقیم، و ورود/خروجِ جدا
   // (حتی از نسخه‌های قبل که فقط متن پیام را داشتند) با هم جفت می‌شوند؛ رکوردهای تکراری
@@ -5452,6 +5611,7 @@
   function handleBack() {
     if (document.getElementById('confirmModal').classList.contains('open')) { resolveConfirm(false); return true; }
     if (document.getElementById('vaultModal').classList.contains('open')) { resolveVaultModal(null); return true; }
+    if (document.getElementById('flowModal').classList.contains('open')) { resolveFlowModal(null); return true; }
     if (document.getElementById('appLock').classList.contains('open')) return false;
     const modals = [['invItemModal', closeInvItemModal], ['invPanelModal', closeInvPanel], ['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal]];
     for (const [id, close] of modals) {
@@ -6959,7 +7119,7 @@
   // ==================== رویدادهای رابط (بدون onclick داخل HTML) ====================
   // همه رویدادها از یک‌جا و فقط به تابع‌های این فهرست می‌رسند؛ با این کار CSP می‌تواند هر اسکریپت تزریق‌شده را ببندد
   // قالب: data-click='["نام‌تابع", آرگومان‌ها...]'؛ "$this" = خود عنصر، "$event" = رویداد، "$value" = مقدار عنصر
-  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "filterChatRoom", "genInvPassword", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitVaultModal", "switchSystemMode", "toggleInvSecret", "toggleEditLocations", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
+  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "filterChatRoom", "genInvPassword", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAppBatterySettings", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "pickGapReason", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveFlowModal", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitGapText", "submitMissingEntry", "submitVaultModal", "switchSystemMode", "testExitNotification", "toggleEditLocations", "toggleInvSecret", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
   const UI_EVENT_ATTRS = { click: 'click', input: 'input', change: 'change', keydown: 'keydown', paste: 'paste', focusout: 'blur' };
   Object.keys(UI_EVENT_ATTRS).forEach(type => document.addEventListener(type, (e) => {
     const attr = 'data-' + UI_EVENT_ATTRS[type];

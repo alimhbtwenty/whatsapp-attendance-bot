@@ -222,6 +222,7 @@
       }
       return { text: generateSupportText(), repeat: false };
     }
+    if (!await attendancePromptsBeforeSend()) return null; // خروج بی‌ورود، فاصله بین دو حضور
     await ensureEntryGeoBeforeSend();
     if (!await ensureSiteForLiveEntry()) return null;
     return { text: generateAttendanceText(), repeat: false };
@@ -386,8 +387,11 @@
       actions: isSupport ? document.getElementById('supportActionsText').value : '',
       pending: isSupport ? document.getElementById('supportPendingText').value : '',
       tech: isSupport ? document.getElementById('supportTechInfo').value : '',
-      checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
+      checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null,
+      // «بین دو حضور کجا بودید؟» (فقط آرشیو و گزارش‌ها)
+      gap: !isSupport && pendingGap ? { ...pendingGap } : undefined
     });
+    pendingGap = null;
     // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
     writeLogs(logs);
     return id;
@@ -469,6 +473,7 @@
             ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
+          ${item.gap && item.gap.reason ? `<div class="archive-gap">🕓 ${escapeHtml(toPersianDigits(String(item.gap.from || '')))} تا ${escapeHtml(toPersianDigits(String(item.gap.to || '')))}: ${escapeHtml(String(item.gap.reason))}</div>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
@@ -516,13 +521,13 @@
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده,بین دو حضور\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
       const sup = r.type === 'support'; // رکوردهای تردد قدیمی گاهی متن فرم ساپورت را هم داشتند
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : ''].map(csvCell).join(',') + '\n';
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : '', r.gap && r.gap.reason ? `${r.gap.from || ''}-${r.gap.to || ''} ${r.gap.reason}` : ''].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد

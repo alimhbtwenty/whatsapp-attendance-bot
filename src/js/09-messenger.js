@@ -531,6 +531,7 @@
   function handleBack() {
     if (document.getElementById('confirmModal').classList.contains('open')) { resolveConfirm(false); return true; }
     if (document.getElementById('vaultModal').classList.contains('open')) { resolveVaultModal(null); return true; }
+    if (document.getElementById('flowModal').classList.contains('open')) { resolveFlowModal(null); return true; }
     if (document.getElementById('appLock').classList.contains('open')) return false;
     const modals = [['invItemModal', closeInvItemModal], ['invPanelModal', closeInvPanel], ['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal]];
     for (const [id, close] of modals) {

@@ -24,6 +24,7 @@ public class ExitReminder extends BroadcastReceiver {
     static final int NOTIFICATION_ID = 7101;
     static final String ACTION_FIRE = "com.geomatco.attendance.EXIT_REMINDER";
     static final String ACTION_SNOOZE = "com.geomatco.attendance.EXIT_REMINDER_SNOOZE";
+    static final String ACTION_TEST = "com.geomatco.attendance.EXIT_REMINDER_TEST";
     static final String EXTRA_APP_ACTION = "geoteam_action";
     static final long SNOOZE_MS = 30L * 60L * 1000L;
 
@@ -61,12 +62,28 @@ public class ExitReminder extends BroadcastReceiver {
     }
 
     private static void setAlarm(Context ctx, long at) {
+        setAlarm(ctx, at, firePending(ctx));
+    }
+
+    // آلارم دقیق: آلارمِ «غیردقیق» در اندروید ۱۲ به بعد تا حدود ۷۵٪ فاصله تا زمانش عقب می‌افتد
+    // (ورود ۸:۳۰ و یادآوری ۱۸:۰۰ ممکن بود ساعت ۱ بامداد برسد؛ گزارش مالک: «دسترسی خواست ولی کاری نکرد»)
+    private static void setAlarm(Context ctx, long at, PendingIntent pi) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
-        PendingIntent pi = firePending(ctx);
-        // دقیق‌بودن تا حد چند دقیقه کافی است؛ مجوز «آلارم دقیق» لازم نیست
-        if (Build.VERSION.SDK_INT >= 23) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
-        else am.set(AlarmManager.RTC_WAKEUP, at, pi);
+        if (Build.VERSION.SDK_INT >= 31 && !am.canScheduleExactAlarms()) {
+            am.setWindow(AlarmManager.RTC_WAKEUP, at, 5L * 60L * 1000L, pi); // بدون مجوز: حداکثر ۵ دقیقه دیرتر
+        } else if (Build.VERSION.SDK_INT >= 23) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+        } else {
+            am.setExact(AlarmManager.RTC_WAKEUP, at, pi);
+        }
+    }
+
+    /** اعلان آزمایشی ده ثانیه بعد، از همان مسیر آلارم (حتی اگر برنامه بسته شود) */
+    static void scheduleTest(Context ctx) {
+        Intent i = new Intent(ctx, ExitReminder.class).setAction(ACTION_TEST);
+        PendingIntent pi = PendingIntent.getBroadcast(ctx, 2, i, PendingIntent.FLAG_UPDATE_CURRENT | immutable());
+        setAlarm(ctx, System.currentTimeMillis() + 10000L, pi);
     }
 
     @Override
@@ -78,6 +95,10 @@ public class ExitReminder extends BroadcastReceiver {
             long at = System.currentTimeMillis() + SNOOZE_MS;
             p.edit().putLong("at", at).remove("fired").apply();
             setAlarm(ctx, at);
+            return;
+        }
+        if (ACTION_TEST.equals(action)) {
+            show(ctx, "🔔 اعلان Geo Team کار می‌کند", "یادآوری خروج در ساعت تعیین‌شده همین‌طور می‌آید، حتی با برنامه بسته.");
             return;
         }
         if (!ACTION_FIRE.equals(action)) return;

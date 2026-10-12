@@ -20,7 +20,13 @@ const results = []; const ok = (name, cond, extra='') => { console.log((cond?'PA
     await page.evaluate(() => openAddModal()); await page.fill('#modalProjectInput', name);
     await page.click('#addProjectBtn'); await page.waitForTimeout(1500);
   };
-  const copy = async () => { await page.click('#floatingDock .dock-copy-btn'); await page.waitForTimeout(2500); return page.evaluate(() => navigator.clipboard.readText()); };
+  // پاپ‌آپ «بین دو حضور کجا بودید؟» (ورود تازه بعد از خروج همان روز) → اولین گزینه
+  let gapAsked = 0;
+  const copy = async () => {
+    await page.click('#floatingDock .dock-copy-btn'); await page.waitForTimeout(500);
+    if (await page.locator('#flowModal.open .flow-chip').count()) { gapAsked++; await page.click('#flowModal .flow-chip >> nth=0'); }
+    await page.waitForTimeout(2000); return page.evaluate(() => navigator.clipboard.readText());
+  };
   const logs = () => page.evaluate(() => JSON.parse(localStorage.getItem('geomat_logs_v2')||'[]'));
 
   await addSite('کارگاه الف', A);
@@ -50,6 +56,7 @@ const results = []; const ok = (name, cond, extra='') => { console.log((cond?'PA
   await page.click('#inTimeRow .time-now-pill'); await page.waitForTimeout(1500);
   t = await copy(); console.log('--- msg3\n'+t);
   ok('second site entry no greeting', !/سلام/.test(t) && /#کارگاه_ب/.test(t));
+  ok('second entry of the day asked where you were between the two', gapAsked === 1);
   await page.clock.fastForward(4*3600e3 + 10*60e3);
   await page.evaluate(() => setAttendanceAction('out'));
   await page.click('#outTimeRow .time-now-pill'); await page.waitForTimeout(800);

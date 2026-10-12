@@ -325,6 +325,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         @JavascriptInterface
+        public void testNotification() {
+            if (pageIsApp) ExitReminder.scheduleTest(MainActivity.this);
+        }
+
+        // سامسونگ و بقیه برنامه‌های «خوابیده» را می‌بندند؛ صفحه تنظیمات باتری همین برنامه
+        @JavascriptInterface
+        public void openBatterySettings() {
+            if (!pageIsApp) return;
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "تنظیمات باز نشد", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+
+        @JavascriptInterface
         public String notificationPermission() {
             if (Build.VERSION.SDK_INT < 33) return "granted";
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return "granted";

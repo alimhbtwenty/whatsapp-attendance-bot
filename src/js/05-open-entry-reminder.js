@@ -60,6 +60,8 @@
     const pre = document.getElementById('preUpdateRestoreBtn');
     if (pre) pre.style.display = localStorage.getItem(PRE_UPDATE_BACKUP_KEY) ? '' : 'none';
     renderStorageUsage();
+    const nt = document.getElementById('notifTestRow');
+    if (nt) nt.style.display = window.AndroidBridge && typeof window.AndroidBridge.testNotification === 'function' ? '' : 'none';
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length

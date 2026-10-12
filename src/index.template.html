@@ -412,6 +412,13 @@
         <span>⏰ یادآوری ثبت خروج از ساعت</span>
         <input type="time" id="reminderTimeInput" data-change='["saveSettingField", "reminderTime", "$value"]'>
       </label>
+      <div class="settings-row" id="notifTestRow" style="display:none;">
+        <span>🔔 اعلان یادآوری</span>
+        <span class="notif-test-btns">
+          <button class="inv-small-btn" data-click='["testExitNotification"]'>آزمایش</button>
+          <button class="inv-small-btn" data-click='["openAppBatterySettings"]' title="اگر اعلان نیامد: باتری ← نامحدود">⚙️ باتری</button>
+        </span>
+      </div>
       <label class="settings-row">
         <span>🎨 ظاهر</span>
         <select id="themeInput" data-change='["saveSettingField","theme","$value"]'>
@@ -614,6 +621,10 @@
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveVaultModal", null]'>انصراف</button>
     </div>
   </div>
+</div>
+
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
+  <div class="glass-modal-box flow-box" id="flowModalBox"></div>
 </div>
 
 <div class="cyber-toast" id="toast" role="status" aria-live="polite"></div>

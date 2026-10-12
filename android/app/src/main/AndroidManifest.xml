@@ -7,6 +7,9 @@
     <!-- اعلان «خروج ثبت نشده»، و زمان‌بندی دوباره بعد از ری‌استارت گوشی -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- یادآوری خروج سر ساعت (آلارم غیردقیق ساعت‌ها عقب می‌افتاد). اندروید ۱۳ به بعد: USE_EXACT_ALARM خودکار؛ ۱۲: SCHEDULE_EXACT_ALARM -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <!-- ورود با اثر انگشت یا چهره -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 

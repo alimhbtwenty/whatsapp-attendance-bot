@@ -25,6 +25,8 @@ const T2 = { name: 'تکنسین دو', phone: '09120000003', pw: 'tech-pass-33'
       document.getElementById(id + 'Hour').value = hh; document.getElementById(id + 'Min').value = mm; updatePreview();
     }, [action, h, m]);
     await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(500);
+    // «خروج بدون ورود» برای این حساب → «بدون ورود ارسال کن» (این تست فقط جفت شدن رکوردها را می‌سنجد)
+    if (await p.locator('#flowModal.open .flow-alt').count()) { await p.click('#flowModal .flow-alt'); await p.waitForTimeout(500); }
   };
 
   await p.evaluate(() => lockApp(true)); await login(p, T1);
