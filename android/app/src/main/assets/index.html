@@ -83,6 +83,20 @@
       padding: 3px;
       margin-bottom: 0;
     }
+    /* در حالت پیام‌رسان قاب چت فضای باقی‌مانده را پر می‌کند؛ min-height ثابت ۴۸۰ با باز شدن کیبورد
+       بالای صفحه را از دید بیرون می‌برد */
+    body.mode-messenger .tg-messenger-card {
+      flex: 1;
+      height: auto;
+      min-height: 0;
+    }
+    /* کیبورد باز است: نوار بالا، تب‌ها و دکمه‌های الصاق جا را به پیام‌ها می‌دهند */
+    body.mode-messenger.kb-open .hud-bar,
+    body.mode-messenger.kb-open .mode-switcher-dock,
+    body.mode-messenger.kb-open .install-bar,
+    body.mode-messenger.kb-open .tg-quick-attach-shelf {
+      display: none !important;
+    }
     body.mode-messenger #secMessenger {
       flex: 1;
       min-height: 0;
@@ -789,6 +803,20 @@
     }
 
     /* ==================== TELEGRAM-STYLE IN-APP MESSENGER ==================== */
+    .unpaired-exit-hint {
+      display: none;
+      font-size: 11.5px;
+      color: #fbbf24;
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px dashed rgba(251, 191, 36, 0.35);
+      border-radius: 10px;
+      padding: 7px 10px;
+      cursor: pointer;
+      line-height: 1.7;
+    }
+    .unpaired-exit-hint.show {
+      display: block;
+    }
     .tg-messenger-card {
       background: rgba(14, 18, 26, 0.94);
       border: 1px solid var(--border-subtle);
@@ -1100,12 +1128,12 @@
       color: #fff;
       padding: 9px 15px;
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 20px;
       outline: none;
       resize: none;
       height: 40px;
-      max-height: 124px;
-      overflow-y: auto;
+      min-height: 40px;
+      overflow-y: hidden;
       scrollbar-width: none;
       transition: border-color 0.2s;
     }
@@ -1721,13 +1749,16 @@
           <span>⚡ مجموع ساعت کارکرد:</span>
           <span class="duration-badge-value" id="durationText">۸ ساعت و ۰ دقیقه</span>
         </div>
+        <div class="unpaired-exit-hint" id="unpairedExitHint" onclick="setAttendanceAction('both')">
+          ورودی برای این محل در این روز ثبت نشده؛ برای محاسبه ساعت کارکرد «دوره کامل» را بزنید
+        </div>
 
       </div>
 
       <!-- گزینه‌های تکمیلی -->
       <div class="toggles-shelf">
         <label class="toggle-chip-item">
-          <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> تاریخ و روز
+          <input type="checkbox" id="includeDateCheck" checked onchange="updatePreview()"> سلام و تاریخ در اولین پیام روز
         </label>
         <label class="toggle-chip-item">
           <input type="checkbox" id="hashtagCheck" checked onchange="updatePreview()"> هشتگ (#)
@@ -2122,11 +2153,18 @@
   }
 
   // آرشیو خراب (مثلاً از یک فایل پشتیبان ناقص) نباید کل برنامه را از کار بیندازد
+  // پیش‌نمایش با هر تغییر فرم آرشیو را می‌خواند؛ تا متن ذخیره‌شده عوض نشده، دوباره parse نمی‌شود
+  let logsCache = { raw: null, list: [] };
   function getLogs() {
     try {
-      const logs = JSON.parse(localStorage.getItem('geomat_logs_v2') || '[]');
-      return Array.isArray(logs) ? logs.filter(l => l && typeof l === 'object') : [];
+      const raw = localStorage.getItem('geomat_logs_v2') || '[]';
+      if (raw !== logsCache.raw) {
+        const logs = JSON.parse(raw);
+        logsCache = { raw, list: Array.isArray(logs) ? logs.filter(l => l && typeof l === 'object') : [] };
+      }
+      return logsCache.list.slice();
     } catch(e) {
+      logsCache = { raw: null, list: [] };
       return [];
     }
   }
@@ -2724,6 +2762,7 @@
     }
   }
   window.addEventListener('resize', fitDateRow);
+  window.addEventListener('resize', () => updateChatKeyboardState()); // WebViewهای قدیمی visualViewport ندارند
 
   function updateDateDisplay() {
     const { dayName } = getPersianDateParts(currentDateObj);
@@ -2773,18 +2812,22 @@
     let tag = selectedCompany;
     if (useHashtag) tag = `#${selectedCompany.replace(/\s+/g, '_')}`;
 
+    // اولین پیام تردد هر روز: سلام و احوال‌پرسی متناسب با ساعت، تاریخ و روز؛ پیام‌های بعدی همان روز فقط خودِ تردد.
+    // لوکیشن دیگر در پیام واتساپ نمی‌رود (فقط برای انتخاب خودکار محل و آرشیو گرفته می‌شود)
+    const eventMins = attendanceAction === 'out'
+      ? Number(outH) * 60 + Number(outM)
+      : Number(inH) * 60 + Number(inM);
     let lines = [];
-    if (includeUser && userName) lines.push(`👤 ${userName}`);
-    if (includeDate) {
+    if (includeDate && isFirstAttendanceOfDay(currentDateObj)) {
+      lines.push(`سلام، ${greetingFor(eventMins)}`);
       lines.push(dateStr);
       lines.push(selectedDay);
     }
+    if (includeUser && userName) lines.push(`👤 ${userName}`);
     if (selectedCompany) lines.push(tag);
 
-    const geoLine = entryGeoLine();
     if (attendanceAction === 'both') {
       lines.push(`ورود ${inH}:${inM}`);
-      if (geoLine) lines.push(geoLine);
       lines.push(`خروج ${outH}:${outM}`);
       if (includeDuration) {
         const dur = calculateDuration();
@@ -2792,10 +2835,9 @@
       }
     } else if (attendanceAction === 'in') {
       lines.push(`ورود ${inH}:${inM}`);
-      if (geoLine) lines.push(geoLine);
     } else {
       lines.push(`خروج ${outH}:${outM}`);
-      if (includeDuration && openEntryMatch()) {
+      if (includeDuration && pairedEntry()) {
         const dur = calculateDuration();
         lines.push(`مدت کارکرد: ${dur.h}:${String(dur.m).padStart(2,'0')}`);
       }
@@ -2804,10 +2846,32 @@
     return lines.join('\n');
   }
 
+  function greetingFor(mins) {
+    if (mins >= 4 * 60 && mins < 12 * 60) return 'صبح بخیر';
+    if (mins >= 12 * 60 && mins < 16 * 60) return 'ظهر بخیر';
+    if (mins >= 16 * 60 && mins < 20 * 60) return 'عصر بخیر';
+    return 'شب بخیر';
+  }
+
+  // تا الان هیچ تردی برای این روز ثبت نشده؟ (رکوردهای قدیمی بدون dateISO با تاریخ شمسی مقایسه می‌شوند)
+  function isFirstAttendanceOfDay(dateObj) {
+    const iso = toISODate(dateObj);
+    const day = dayIndex(dateToJalali(dateObj));
+    return !getLogs().some(l => {
+      if (!l || l.type !== 'attendance') return false;
+      if (l.dateISO) return l.dateISO === iso;
+      const j = logJalali(l);
+      return !!j && dayIndex(j) === day;
+    });
+  }
+
   function updatePreview() {
     syncOpenEntryPrefill();
+    const paired = attendanceAction === 'out' && !!pairedEntry();
     document.getElementById('durationBar').style.display =
-      attendanceAction === 'both' || (attendanceAction === 'out' && openEntryMatch()) ? 'flex' : 'none';
+      attendanceAction === 'both' || paired ? 'flex' : 'none';
+    document.getElementById('unpairedExitHint').classList.toggle('show',
+      attendanceAction === 'out' && !!selectedCompany && !paired);
     maybeAutoRequestGeo();
     renderGeoRow();
     document.getElementById('attendancePreview').textContent = generateAttendanceText();
@@ -2913,7 +2977,7 @@
       requestEntryLocation(false),
       new Promise(resolve => setTimeout(() => resolve(false), GEO_SEND_WAIT_MS))
     ]);
-    if (!ok) showToast('⚠️ لوکیشن دریافت نشد؛ تردد بدون لوکیشن ارسال شد');
+    if (!ok) showToast('⚠️ لوکیشن دریافت نشد');
   }
 
   function renderGeoRow() {
@@ -3251,23 +3315,41 @@
     return null;
   }
 
-  // ساعت ورودِ ورود باز را فقط وقتی شرکت/تاریخ/نوع تردد عوض شد در فرم بگذار (ویرایش دستی بعدی حفظ می‌شود)
+  // ورودِ بی‌خروجِ همین محل که این خروج با آن جفت می‌شود: اول در آرشیو (همان روز، یا روز قبل برای شیفت شب)،
+  // بعد ورود باز. قبلاً فقط «ورود باز» نگاه می‌شد که یک خانه بیشتر نداشت؛ با ورودِ محل دیگر جایگزین می‌شد
+  // یا با «دوره کامل» پاک می‌شد و ساعت کارکردِ خروج از دست می‌رفت
+  function pairedEntry() {
+    if (attendanceAction !== 'out' || !selectedCompany) return null;
+    const iso = toISODate(currentDateObj);
+    const outMins = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
+    for (const l of getLogs()) {
+      if (!l || l.type !== 'attendance' || l.company !== selectedCompany || !l.inTime || l.outTime || !l.dateISO) continue;
+      const inMins = parseHM(l.inTime);
+      if (inMins === null) continue;
+      const diff = Math.round((isoToDate(iso) - isoToDate(l.dateISO)) / 86400000);
+      if ((diff === 0 && inMins <= outMins) || (diff === 1 && outMins < inMins)) {
+        return { inTime: l.inTime, dateISO: l.dateISO, logId: l.id };
+      }
+    }
+    const o = openEntryMatch();
+    return o ? { inTime: o.inTime, dateISO: o.dateISO, logId: o.logId || null } : null;
+  }
+
+  // ساعت ورودِ جفت را فقط وقتی شرکت/تاریخ/نوع تردد عوض شد در فرم بگذار (ویرایش دستی بعدی حفظ می‌شود)
   let lastPrefillKey = '';
   function syncOpenEntryPrefill() {
-    const o = getOpenEntry();
-    const key = o ? `${o.company}|${o.dateISO}|${o.inTime}|${selectedCompany}|${toISODate(currentDateObj)}|${attendanceAction}` : '';
+    const pair = pairedEntry();
+    const key = pair ? `${pair.inTime}|${pair.dateISO}|${selectedCompany}|${toISODate(currentDateObj)}|${attendanceAction}` : '';
     if (key === lastPrefillKey) return;
     lastPrefillKey = key;
-    if (!o || attendanceAction === 'in' || o.company !== selectedCompany) return;
-    const diff = Math.round((isoToDate(toISODate(currentDateObj)) - isoToDate(o.dateISO)) / 86400000);
-    if (diff !== 0 && diff !== 1) return;
-    const [h, m] = o.inTime.split(':');
+    if (!pair) return;
+    const [h, m] = pair.inTime.split(':');
     document.getElementById('inHour').value = h;
     document.getElementById('inMin').value = m;
     calculateDuration();
   }
 
-  function updateOpenEntryAfterCommit() {
+  function updateOpenEntryAfterCommit(logId, pair) {
     const open = getOpenEntry();
     if (attendanceAction === 'in') {
       if (open && open.company !== selectedCompany) showToast(`ورود باز «${open.company}» با ورود جدید جایگزین شد`);
@@ -3275,11 +3357,14 @@
         company: selectedCompany,
         dateISO: toISODate(currentDateObj),
         inTime: timeInputValue('in'),
+        logId: logId,
         ts: Date.now(),
         notified: false
       });
       requestReminderPermission();
-    } else if (open && (openEntryMatch() || (attendanceAction === 'both' && open.company === selectedCompany && open.dateISO === toISODate(currentDateObj)))) {
+    } else if (open && open.company === selectedCompany &&
+      ((pair && pair.dateISO === open.dateISO && pair.inTime === open.inTime) ||
+       (attendanceAction === 'both' && open.dateISO === toISODate(currentDateObj)))) {
       setOpenEntry(null);
     }
     lastPrefillKey = '';
@@ -3288,9 +3373,16 @@
 
   function commitReport(type, text) {
     lastCommit = { sig: reportSignature(type), text, ts: Date.now() };
-    saveToSystemLog(type, text);
-    if (type === 'attendance') updateOpenEntryAfterCommit();
-    else resetChecklistTicks(selectedCompany);
+    // جفت قبل از ذخیره پیدا می‌شود؛ بعد از ادغام، آن ورود دیگر «بی‌خروج» نیست
+    const pair = type === 'attendance' ? pairedEntry() : null;
+    const logId = saveToSystemLog(type, text, pair);
+    if (type === 'attendance') {
+      updateOpenEntryAfterCommit(logId, pair);
+      postReportToChat(text);
+      updatePreview(); // پیام بعدیِ همین روز دیگر سلام و تاریخ ندارد
+    } else {
+      resetChecklistTicks(selectedCompany);
+    }
   }
 
   function isOpenEntryOverdue(o) {
@@ -3683,8 +3775,51 @@
 
   // ثبت در آرشیو (هر رکورد حدود نیم کیلوبایت؛ ۵۰۰۰ رکورد چند سال کار و زیر سقف حافظه مرورگر است)
   const LOGS_MAX = 5000;
-  function saveToSystemLog(type, text) {
+
+  function writeLogs(logs) {
+    if (logs.length > LOGS_MAX) logs.length = LOGS_MAX;
+    for (;;) {
+      try {
+        localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+        return true;
+      } catch(e) {
+        if (logs.length <= 50) {
+          logsCache = { raw: null, list: [] }; // رکوردهای cache در حافظه تغییر کرده بودند
+          showToast('⚠️ حافظه پر است؛ رکورد ذخیره نشد');
+          return false;
+        }
+        logs.length = Math.floor(logs.length * 0.9);
+        showToast('⚠️ حافظه پر است؛ قدیمی‌ترین رکوردها حذف شدند (فایل پشتیبان بگیرید)');
+      }
+    }
+  }
+
+  // خروجِ جفت‌شده در همان رکورد ورود ثبت می‌شود تا هر حضور در آرشیو، اکسل و گزارش ماهانه یک ردیف باشد
+  function mergeExitIntoEntry(logs, pair, text) {
+    const rec = pair && pair.logId ? logs.find(l => l.id === pair.logId) : null;
+    if (!rec || rec.outTime) return null;
+    const outTime = timeInputValue('out');
+    let mins = parseHM(outTime) - parseHM(rec.inTime);
+    if (mins < 0) mins += 1440;
+    rec.action = 'both';
+    rec.outTime = outTime;
+    rec.durationMins = mins;
+    rec.durationText = `${Math.floor(mins / 60)}:${pad2(mins % 60)}`;
+    rec.outText = text;
+    rec.closedAt = Date.now();
+    return rec.id;
+  }
+
+  // برمی‌گرداند: id رکوردی که ساخته یا تکمیل شد
+  function saveToSystemLog(type, text, pair) {
     let logs = getLogs();
+    if (type === 'attendance' && attendanceAction === 'out') {
+      const mergedId = mergeExitIntoEntry(logs, pair, text);
+      if (mergedId !== null) {
+        writeLogs(logs);
+        return mergedId;
+      }
+    }
     const isSupport = type === 'support';
     const { dateStr, dayName } = getPersianDateParts(isSupport ? supportDateObj : currentDateObj);
     const dur = calculateDuration();
@@ -3694,12 +3829,13 @@
 
     const dateObj = isSupport ? supportDateObj : currentDateObj;
     const j = dateToJalali(dateObj);
-    const hasIn = !isSupport && (attendanceAction !== 'out' || !!openEntryMatch());
+    const hasIn = !isSupport && (attendanceAction !== 'out' || !!pair);
     const hasOut = !isSupport && attendanceAction !== 'in';
     const counted = hasIn && hasOut;
 
+    const id = Math.max(Date.now(), ...logs.slice(0, 20).map(l => (Number(l.id) || 0) + 1));
     logs.unshift({
-      id: Date.now(),
+      id: id,
       type: type, // 'attendance' or 'support'
       company: selectedCompany,
       date: dateStr,
@@ -3707,7 +3843,7 @@
       dateISO: toISODate(dateObj),
       jy: j.jy, jm: j.jm, jd: j.jd,
       action: isSupport ? null : attendanceAction,
-      inTime: hasIn ? timeInputValue('in') : null,
+      inTime: hasIn ? (attendanceAction === 'out' ? pair.inTime : timeInputValue('in')) : null,
       outTime: hasOut ? timeInputValue('out') : null,
       geo: geo,
       durationMins: counted ? dur.totalMins : 0,
@@ -3719,17 +3855,8 @@
       checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
     });
     // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
-    if (logs.length > LOGS_MAX) logs.length = LOGS_MAX;
-    for (;;) {
-      try {
-        localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
-        break;
-      } catch(e) {
-        if (logs.length <= 50) { showToast('⚠️ حافظه پر است؛ رکورد ذخیره نشد'); break; }
-        logs.length = Math.floor(logs.length * 0.9);
-        showToast('⚠️ حافظه پر است؛ قدیمی‌ترین رکوردها حذف شدند (فایل پشتیبان بگیرید)');
-      }
-    }
+    writeLogs(logs);
+    return id;
   }
 
   // آرشیو و فیلتر هر شرکت
@@ -3780,7 +3907,7 @@
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-            ${item.type === 'attendance' ? 'مدت: ' + escapeHtml(item.durationText || '-') : (item.actions ? escapeHtml(String(item.actions).slice(0, 30)) + '...' : 'گزارش ساپورت')}
+            ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).slice(0, 30)) + '...' : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
         </div>
@@ -3792,6 +3919,14 @@
     `).join('') + (filtered.length > archiveVisible
       ? `<button class="add-comp-pill" onclick="archiveVisible += 30; renderArchive();">نمایش بیشتر (${toPersianDigits(filtered.length - archiveVisible)} رکورد دیگر)</button>`
       : '');
+  }
+
+  function attendanceSummary(item) {
+    const t = x => toPersianDigits(String(x));
+    if (item.inTime && item.outTime) return `ورود ${t(item.inTime)} تا خروج ${t(item.outTime)} • مدت ${t(item.durationText || '-')}`;
+    if (item.inTime) return `ورود ${t(item.inTime)} • خروج هنوز ثبت نشده`;
+    if (item.outTime) return `خروج ${t(item.outTime)} (ورودش ثبت نشده)`;
+    return 'مدت: ' + (item.durationText || '-');
   }
 
   async function deleteLogItem(id) {
@@ -3817,12 +3952,12 @@
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.durationText || '-', r.actions, r.pending, r.tech, geoLink, checks].map(csvCell).join(',') + '\n';
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', r.actions, r.pending, r.tech, geoLink, checks].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
@@ -4479,13 +4614,38 @@
     }
   }
 
+  // کادر نوشتن: یک خط (۴۰px)، با متن بلندتر تا حداکثر ۵ خط بزرگ می‌شود و هیچ‌وقت بیشتر از ۲۸٪ ارتفاع
+  // صفحه نمی‌شود (با کیبورد باز جای پیام‌ها را نمی‌گیرد)؛ بقیه متن داخل کادر اسکرول می‌شود
+  const CHAT_INPUT_MIN_PX = 40;
+  const CHAT_INPUT_MAX_LINES = 5;
   function syncChatComposer() {
     const input = document.getElementById('tgMessageInput');
     const btn = document.getElementById('tgSendBtn');
     if (!input) return;
-    input.style.height = 'auto';
-    input.style.height = Math.min(input.scrollHeight + 2, 124) + 'px';
+    const lineH = parseFloat(getComputedStyle(input).lineHeight) || 20;
+    const chrome = CHAT_INPUT_MIN_PX - lineH; // padding + border
+    const max = Math.max(CHAT_INPUT_MIN_PX,
+      Math.min(chrome + lineH * CHAT_INPUT_MAX_LINES, Math.round(window.innerHeight * 0.28)));
+    input.style.height = CHAT_INPUT_MIN_PX + 'px';
+    const needed = input.scrollHeight + (input.offsetHeight - input.clientHeight);
+    input.style.height = Math.min(Math.max(needed, CHAT_INPUT_MIN_PX), max) + 'px';
+    input.style.overflowY = needed > max ? 'auto' : 'hidden';
     if (btn) btn.disabled = !input.value.trim();
+  }
+
+  // کیبورد مجازی باز است؟ (ارتفاع صفحه موقع تایپ در پیام‌رسان به‌وضوح از ارتفاع عادی کمتر شده)
+  let chatBaseHeight = window.innerHeight;
+  function updateChatKeyboardState() {
+    const input = document.getElementById('tgMessageInput');
+    const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const typing = systemMode === 'messenger' && document.activeElement === input;
+    if (!typing) chatBaseHeight = vh;
+    const open = typing && vh < chatBaseHeight * 0.8;
+    if (document.body.classList.contains('kb-open') !== open) {
+      document.body.classList.toggle('kb-open', open);
+      setTimeout(() => scrollChatToBottom(false), 30);
+    }
+    syncChatComposer();
   }
 
   function sendChatMessage() {
@@ -4513,6 +4673,21 @@
     if (chatEnterSends) {
       input.focus();
     }
+  }
+
+  // هر تردد ثبت‌شده (ارسال یا کپی) خودکار در کانال «ترددها»ی پیام‌رسان داخلی هم ثبت می‌شود
+  function postReportToChat(text) {
+    const now = Date.now();
+    const msgs = getChatMessages();
+    msgs.push({
+      id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
+      sender: getUserName(),
+      isMine: true,
+      channel: 'attendance',
+      ts: now,
+      text: text
+    });
+    if (saveChatMessages(msgs) && systemMode === 'messenger') renderChatMessages();
   }
 
   function attachCurrentReportToChat(type) {
@@ -4592,6 +4767,7 @@
   // با باز شدن کیبورد، فقط وقتی کاربر در حال تایپ است به آخرین پیام برو
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
+      updateChatKeyboardState();
       if (systemMode === 'messenger' && document.activeElement === document.getElementById('tgMessageInput')) {
         setTimeout(() => scrollChatToBottom(true), 80);
       }
@@ -4605,8 +4781,10 @@
       chatInp.addEventListener('keydown', onChatInputKeydown);
       chatInp.addEventListener('input', syncChatComposer);
       chatInp.addEventListener('focus', () => {
+        updateChatKeyboardState();
         setTimeout(() => scrollChatToBottom(true), 280);
       });
+      chatInp.addEventListener('blur', () => setTimeout(updateChatKeyboardState, 50));
     }
     const stream = document.getElementById('tgChatStream');
     if (stream) {
