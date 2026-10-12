@@ -12,7 +12,7 @@
   }
   function saveOutbox(list) {
     try {
-      if (list.length) localStorage.setItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
+      if (list.length) storeItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
       else localStorage.removeItem(OUTBOX_KEY);
       return true;
     } catch(e) {

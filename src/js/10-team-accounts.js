@@ -710,12 +710,26 @@
       if (!r || !session) return;
       setFails({ n: 0, until: 0 });
       const team = getTeam();
-      team.users = users;
+      const admin = isAdmin();
+      if (admin) {
+        team.users = users;
+      } else {
+        // تکنسین کلید تیم را دارد و می‌تواند فایل تیم را دستکاری کند؛ پس از فایلِ او فقط این‌ها پذیرفته می‌شود:
+        // رمز تازه حساب خودش و حساب‌های تازه (فقط با نقش تکنسین). نقش، فعال بودن و رمز بقیه همان قبلی می‌ماند.
+        const byId = new Map(team.users.map(u => [u.id, u]));
+        team.users = team.users.map(u => {
+          if (u.id !== session.user.id) return u;
+          const f = users.find(x => x.id === u.id);
+          return f ? { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped, name: f.name, phone: f.phone || u.phone } : u;
+        });
+        users.filter(u => !byId.has(u.id) && !team.users.some(x => x.phone && x.phone === u.phone)).forEach(u => team.users.push({ ...u, role: 'tech' }));
+      }
       teamLog(team, 'team-import', 'به‌روزرسانی حساب‌ها از فایل تیم');
       if (saveTeam(team)) {
-        session.user.role = me.role;
-        session.user.name = me.name;
-        session.user.phone = me.phone || session.user.phone;
+        const mine = team.users.find(u => u.id === session.user.id);
+        session.user.role = mine.role;
+        session.user.name = mine.name;
+        session.user.phone = mine.phone || session.user.phone;
         lockTech(true);
         showToast('📥 حساب‌های تیم به‌روز شد');
       }

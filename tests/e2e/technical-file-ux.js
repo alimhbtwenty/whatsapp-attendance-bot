@@ -53,6 +53,12 @@ const item = (id, company, section, data, extra = {}) => ({ id, company, section
   await p.evaluate(() => saveInvItem()); await p.waitForTimeout(400);
   ok('editing keeps the link to a deleted host', await p.evaluate(() => getInventory().items.find(i => i.id === 's1').data.host) === 'h1');
 
+  // ارجاع به آیتمی که اصلاً نیست (مثلاً بعد از بازگردانی ناقص) هم با ویرایش بی‌صدا پاک نشود
+  await p.evaluate(() => { const inv = getInventory(); inv.items.find(i => i.id === 's1').data.host = 'missing-id'; saveInventory(inv); openInvItemModal('servers', 's1'); });
+  ok('a link to a missing item is shown, not dropped', (await p.textContent('#invItemForm')).includes('(آیتم پیدا نشد)'));
+  await p.evaluate(() => saveInvItem()); await p.waitForTimeout(400);
+  ok('editing keeps a link to a missing item', await p.evaluate(() => getInventory().items.find(i => i.id === 's1').data.host) === 'missing-id');
+
   ok('no page errors', !errs.length, errs.join(';'));
   await b.close();
 })();

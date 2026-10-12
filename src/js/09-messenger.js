@@ -99,7 +99,7 @@
 
   function saveChatMessages(msgs) {
     try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-CHAT_MAX_MESSAGES)));
+      storeItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-CHAT_MAX_MESSAGES)));
       return true;
     } catch(e) {
       try {

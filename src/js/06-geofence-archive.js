@@ -526,7 +526,8 @@
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? `geoteam-archive-all${archivePersonFilter === 'all' ? '' : '-person'}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const who = archivePersonFilter === 'all' ? '' : '-person';
+    const filename = targetComp === 'all' ? `geoteam-archive-all${who}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}${who}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }

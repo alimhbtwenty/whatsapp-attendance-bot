@@ -69,6 +69,15 @@ const TECH = { name: 'تکنسین', phone: '09120000002', pw: 'tech-pass-22' };
   await login(p, TECH);
   await p.click('#tabMessengerBtn'); await p.waitForTimeout(200);
   ok('on a shared phone the admin\'s message is not «mine» for the technician', await p.locator('.tg-bubble-row.other', { hasText: 'سلام از مدیر' }).count() === 1);
+  // تکنسین فیلتر نفر ندارد؛ اضافه‌کار و کسرِ خودش باید حساب شود (نه «—»)
+  await p.evaluate(() => {
+    const logs = getLogs(); const d = new Date(); const j = dateToJalali(d);
+    logs.unshift({ id: Date.now(), by: sessionWho(), type: 'attendance', company: 'کرانه', date: 'x', day: 'x', dateISO: toISODate(d), jy: j.jy, jm: j.jm, jd: j.jd, action: 'both', inTime: '07:00', outTime: '18:00', durationMins: 660, durationText: '11:00', text: 't' });
+    writeLogs(logs); archiveCompanyFilter = 'all';
+  });
+  await p.click('#tabArchiveBtn'); await p.waitForTimeout(200);
+  ok('a technician on a shared phone still gets their own overtime', await p.evaluate(() => monthlyData().balance !== null && document.getElementById('reportOvertime').textContent !== '—'));
+  ok('the technician\'s overtime counts only their own records', await p.evaluate(() => { const b = monthlyData().balance; return Object.values(b).reduce((a, d) => a + d.overtime, 0) >= 180; }));
   ok('the welcome text matches what the messenger does', await p.evaluate(() => !buildDefaultChatMessages()[0].text.includes('ساپورت')));
 
   ok('no page errors', !errs.length, errs.join(';'));

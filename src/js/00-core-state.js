@@ -72,7 +72,11 @@
     }
   }
   function saveCompanies(list) {
-    localStorage.setItem('geomat_companies_v2', JSON.stringify(list));
+    try {
+      storeItem('geomat_companies_v2', JSON.stringify(list));
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ فهرست محل‌ها ذخیره نشد');
+    }
   }
 
   // نام کاربرِ واردشده؛ بیرون از حساب (مثلاً روی صفحه ورود) نام قبلی دستگاه

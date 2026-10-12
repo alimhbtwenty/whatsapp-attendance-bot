@@ -471,8 +471,13 @@
       if (f.type === 'ref') {
         const opts = inv.items.filter(i => !i.deleted && i.company === (it ? it.company : selectedCompany) && f.ref.includes(i.section) && i.id !== id);
         // ارجاع به آیتمی که حذف (نرم) شده با ویرایشِ فیلدهای دیگر بی‌صدا پاک نشود
-        const gone = v && !opts.some(o => o.id === v) ? inv.items.find(i => i.id === v) : null;
-        const goneOpt = gone ? `<option value="${escapeHtml(gone.id)}" selected>${escapeHtml((gone.data[sectionOf(gone.section) ? sectionOf(gone.section).titleField : ''] || '—') + ' (حذف‌شده)')}</option>` : '';
+        let goneOpt = '';
+        if (v && !opts.some(o => o.id === v)) {
+          const gone = inv.items.find(i => i.id === v);
+          const title = gone ? (gone.data[sectionOf(gone.section) ? sectionOf(gone.section).titleField : ''] || '—') : '';
+          const label = !gone ? '(آیتم پیدا نشد)' : gone.deleted ? `${title} (حذف‌شده)` : title;
+          goneOpt = `<option value="${escapeHtml(v)}" selected>${escapeHtml(label)}</option>`;
+        }
         return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${goneOpt}${opts.map(o =>
           `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
       }

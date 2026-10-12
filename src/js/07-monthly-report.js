@@ -123,8 +123,10 @@
     // فیلتر «👤» شخص هم اعمال می‌شود؛ اضافه‌کار و کسر فقط وقتی رکوردها مال یک نفرند معنا دارد
     const logs = personScopedLogs(getLogs());
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
-    const people = new Set(logs.filter(l => l.by && l.by.id).map(l => l.by.id));
-    const allSessions = computeSessions(logs);
+    // تکنسین فیلتر نفر ندارد؛ اضافه‌کار و کسرِ او از رکوردهای خودش (و رکوردهای قدیمیِ بی‌نام) حساب می‌شود
+    const own = !isAdmin() && session ? logs.filter(l => !l.by || !l.by.id || l.by.id === session.user.id) : logs;
+    const people = new Set(own.filter(l => l.by && l.by.id).map(l => l.by.id));
+    const allSessions = computeSessions(own);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};
     sessions.forEach(x => {

@@ -24,7 +24,7 @@ const DAY = 86400000;
   const logs = JSON.stringify([1, 2, 3].map(i => ({ id: i, type: 'attendance', company: 'کرانه', date: 'x', day: 'x', dateISO: iso, jy: 1405, jm: 7, jd: 20, action: 'both', inTime: '08:00', outTime: '12:00', durationMins: 240, durationText: '4:00', text: 't' })));
 
   // ---------- حافظه پر ----------
-  const p = await page({ geomat_schema_version: '14', geomat_companies_v2: JSON.stringify(['کرانه']), geomat_logs_v2: logs, geomat_backup_pre_1_4: backup(2, 1500000) });
+  const p = await page({ geomat_schema_version: '14', geomat_companies_v2: JSON.stringify(['کرانه']), geomat_logs_v2: logs, geomat_backup_pre_1_4: backup(2, 1500000), geomat_chat_messages_v1: JSON.stringify(Array.from({ length: 60 }, (_, i) => ({ id: 'm' + i, sender: 'x', isMine: false, channel: 'general', ts: Date.now() - 1e6 + i, text: 'پیام ' + i }))) });
   await login(p);
   await p.click('#tabArchiveBtn'); await p.waitForTimeout(200);
   const pct = await p.evaluate(() => (document.getElementById('storageUsage') || {}).textContent || '');
@@ -34,7 +34,7 @@ const DAY = 86400000;
   await p.click('#tabAttendanceBtn');
   await p.evaluate(() => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction('both'); updatePreview(); });
   await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(600);
-  const after = await p.evaluate(() => ({ n: getLogs().length, backup: !!localStorage.getItem('geomat_backup_pre_1_4') }));
+  const after = await p.evaluate(() => ({ n: getLogs().length, backup: !!localStorage.getItem('geomat_backup_pre_1_4'), chat: getChatMessages().length }));
   ok('with storage full, a new record is still saved', after.n === 4, JSON.stringify(after));
   ok('no archive record is dropped to make room', after.n >= 4);
   ok('the pre-update copy is what gets freed', after.backup === false);
@@ -42,6 +42,13 @@ const DAY = 86400000;
   await p.click('#tabArchiveBtn'); await p.waitForTimeout(200);
   ok('the restore-before-update button is gone with the copy', await p.locator('#preUpdateRestoreBtn').isHidden());
   ok('no page errors (full storage)', !p.errs.length, p.errs.join(';'));
+
+  // ---------- پیام‌رسان با حافظه پر ----------
+  const c = await page({ geomat_schema_version: '14', geomat_logs_v2: logs, geomat_backup_pre_1_4: backup(2, 1500000), geomat_chat_messages_v1: JSON.stringify(Array.from({ length: 60 }, (_, i) => ({ id: 'm' + i, sender: 'x', isMine: false, channel: 'general', ts: Date.now() - 1e6 + i, text: 'پیام ' + i }))) });
+  await login(c);
+  await c.evaluate(() => { for (const size of [100000, 10000, 1000, 50]) { let i = 0; try { for (;;) localStorage.setItem('zz_fill_' + size + '_' + (i++), 'f'.repeat(size)); } catch (e) {} } });
+  await c.click('#tabMessengerBtn'); await c.fill('#tgMessageInput', 'پیام تازه'); await c.click('#tgSendBtn'); await c.waitForTimeout(300);
+  ok('with storage full the chat keeps its history (not cut to 30)', await c.evaluate(() => getChatMessages().length) === 61);
 
   // ---------- هشدار ۸۰٪ ----------
   const w = await page({ geomat_schema_version: '14', geomat_logs_v2: logs, geomat_backup_pre_1_4: backup(1, 4400000) });

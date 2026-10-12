@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iyGOWIWYUeyqed6fdpzfHNI7NcOH1N6p2CtqM7mGXEk='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EiZYye53GvUJgSk7dQXuY+j4HP8zfzGNWVoWWHRobNI='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -2469,7 +2469,11 @@
     }
   }
   function saveCompanies(list) {
-    localStorage.setItem('geomat_companies_v2', JSON.stringify(list));
+    try {
+      storeItem('geomat_companies_v2', JSON.stringify(list));
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ فهرست محل‌ها ذخیره نشد');
+    }
   }
 
   // نام کاربرِ واردشده؛ بیرون از حساب (مثلاً روی صفحه ورود) نام قبلی دستگاه
@@ -3381,7 +3385,7 @@
   }
   function saveOutbox(list) {
     try {
-      if (list.length) localStorage.setItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
+      if (list.length) storeItem(OUTBOX_KEY, JSON.stringify(list.slice(-OUTBOX_MAX)));
       else localStorage.removeItem(OUTBOX_KEY);
       return true;
     } catch(e) {
@@ -3681,7 +3685,7 @@
   }
   function setOpenEntry(o) {
     try {
-      if (o) localStorage.setItem(OPEN_ENTRY_KEY, JSON.stringify(o));
+      if (o) storeItem(OPEN_ENTRY_KEY, JSON.stringify(o));
       else localStorage.removeItem(OPEN_ENTRY_KEY);
     } catch(e) {}
     syncExitReminder();
@@ -4427,7 +4431,8 @@
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? `geoteam-archive-all${archivePersonFilter === 'all' ? '' : '-person'}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const who = archivePersonFilter === 'all' ? '' : '-person';
+    const filename = targetComp === 'all' ? `geoteam-archive-all${who}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}${who}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }
@@ -4558,8 +4563,10 @@
     // فیلتر «👤» شخص هم اعمال می‌شود؛ اضافه‌کار و کسر فقط وقتی رکوردها مال یک نفرند معنا دارد
     const logs = personScopedLogs(getLogs());
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
-    const people = new Set(logs.filter(l => l.by && l.by.id).map(l => l.by.id));
-    const allSessions = computeSessions(logs);
+    // تکنسین فیلتر نفر ندارد؛ اضافه‌کار و کسرِ او از رکوردهای خودش (و رکوردهای قدیمیِ بی‌نام) حساب می‌شود
+    const own = !isAdmin() && session ? logs.filter(l => !l.by || !l.by.id || l.by.id === session.user.id) : logs;
+    const people = new Set(own.filter(l => l.by && l.by.id).map(l => l.by.id));
+    const allSessions = computeSessions(own);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};
     sessions.forEach(x => {
@@ -4907,7 +4914,7 @@
 
   function saveChatMessages(msgs) {
     try {
-      localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-CHAT_MAX_MESSAGES)));
+      storeItem(CHAT_STORAGE_KEY, JSON.stringify(msgs.slice(-CHAT_MAX_MESSAGES)));
       return true;
     } catch(e) {
       try {
@@ -6063,12 +6070,26 @@
       if (!r || !session) return;
       setFails({ n: 0, until: 0 });
       const team = getTeam();
-      team.users = users;
+      const admin = isAdmin();
+      if (admin) {
+        team.users = users;
+      } else {
+        // تکنسین کلید تیم را دارد و می‌تواند فایل تیم را دستکاری کند؛ پس از فایلِ او فقط این‌ها پذیرفته می‌شود:
+        // رمز تازه حساب خودش و حساب‌های تازه (فقط با نقش تکنسین). نقش، فعال بودن و رمز بقیه همان قبلی می‌ماند.
+        const byId = new Map(team.users.map(u => [u.id, u]));
+        team.users = team.users.map(u => {
+          if (u.id !== session.user.id) return u;
+          const f = users.find(x => x.id === u.id);
+          return f ? { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped, name: f.name, phone: f.phone || u.phone } : u;
+        });
+        users.filter(u => !byId.has(u.id) && !team.users.some(x => x.phone && x.phone === u.phone)).forEach(u => team.users.push({ ...u, role: 'tech' }));
+      }
       teamLog(team, 'team-import', 'به‌روزرسانی حساب‌ها از فایل تیم');
       if (saveTeam(team)) {
-        session.user.role = me.role;
-        session.user.name = me.name;
-        session.user.phone = me.phone || session.user.phone;
+        const mine = team.users.find(u => u.id === session.user.id);
+        session.user.role = mine.role;
+        session.user.name = mine.name;
+        session.user.phone = mine.phone || session.user.phone;
         lockTech(true);
         showToast('📥 حساب‌های تیم به‌روز شد');
       }
@@ -6548,8 +6569,13 @@
       if (f.type === 'ref') {
         const opts = inv.items.filter(i => !i.deleted && i.company === (it ? it.company : selectedCompany) && f.ref.includes(i.section) && i.id !== id);
         // ارجاع به آیتمی که حذف (نرم) شده با ویرایشِ فیلدهای دیگر بی‌صدا پاک نشود
-        const gone = v && !opts.some(o => o.id === v) ? inv.items.find(i => i.id === v) : null;
-        const goneOpt = gone ? `<option value="${escapeHtml(gone.id)}" selected>${escapeHtml((gone.data[sectionOf(gone.section) ? sectionOf(gone.section).titleField : ''] || '—') + ' (حذف‌شده)')}</option>` : '';
+        let goneOpt = '';
+        if (v && !opts.some(o => o.id === v)) {
+          const gone = inv.items.find(i => i.id === v);
+          const title = gone ? (gone.data[sectionOf(gone.section) ? sectionOf(gone.section).titleField : ''] || '—') : '';
+          const label = !gone ? '(آیتم پیدا نشد)' : gone.deleted ? `${title} (حذف‌شده)` : title;
+          goneOpt = `<option value="${escapeHtml(v)}" selected>${escapeHtml(label)}</option>`;
+        }
         return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${goneOpt}${opts.map(o =>
           `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
       }

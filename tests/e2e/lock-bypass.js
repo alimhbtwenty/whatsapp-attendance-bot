@@ -97,6 +97,38 @@ const TECH = { name: 'تکنسین', phone: '09120000002', pw: 'tech-pass-22' };
   ok('the team log is kept and the import is appended', after.log.length === logLen + 1 && after.log[after.log.length - 1].action === 'team-import');
   ok('the stored password still opens with the team key', await p.evaluate(async () => decryptWith(session.key, getInventory().items.find(i => i.id === 'sec1').secrets.password)) === 'S3cret!');
 
+  // فایل تیمِ همان کلید ولی با کلید تیم دیگر برای همان شناسه: بررسی «همان تیم» باید ردش کند
+  const sameIdOtherKey = await p.evaluate(async (t) => {
+    const me = getTeam().users.find(u => u.id === session.user.id);
+    const acc = await makeAccount(me.name, me.phone, 'tech', t.pw, crypto.getRandomValues(new Uint8Array(32)), null);
+    acc.id = me.id;
+    return JSON.stringify({ app: BACKUP_APP_ID, kind: 'team', format: 1, team: { schema: 1, users: [{ ...getTeam().users[0] }, acc], log: [] } });
+  }, TECH);
+  const teamMid = await p.evaluate(() => localStorage.getItem('geomat_team_v1'));
+  await p.evaluate(() => importTeamFileFromSession());
+  await p.setInputFiles('#teamFileInput', { name: 'team.json', mimeType: 'application/json', buffer: Buffer.from(sameIdOtherKey) });
+  await p.waitForSelector('#vaultModal.open');
+  await p.fill('#vaultPw1', TECH.pw); await p.click('#vaultModalOk'); await p.waitForTimeout(1500);
+  ok('a file with my account but another team key is refused', (await p.textContent('#vaultModalError')).includes('تیم دیگری'));
+  await p.evaluate(() => resolveVaultModal(null));
+  ok('...and nothing changed', await p.evaluate(() => localStorage.getItem('geomat_team_v1')) === teamMid);
+
+  // تکنسین فایل تیم را دستکاری می‌کند: خودش مدیر، مدیر غیرفعال، یک مدیر تازه
+  const forged = await p.evaluate(async () => {
+    const users = JSON.parse(JSON.stringify(getTeam().users));
+    users.forEach(u => { if (u.id === session.user.id) u.role = 'admin'; else if (u.role === 'admin') u.active = false; });
+    users.push(await makeAccount('مدیر ساختگی', '09130000077', 'admin', 'forged-pass-1', session.raw, null));
+    return JSON.stringify({ app: BACKUP_APP_ID, kind: 'team', format: 1, team: { schema: 1, users, log: [] } });
+  });
+  await p.evaluate(() => importTeamFileFromSession());
+  await p.setInputFiles('#teamFileInput', { name: 'team.json', mimeType: 'application/json', buffer: Buffer.from(forged) });
+  await p.waitForSelector('#vaultModal.open');
+  await p.fill('#vaultPw1', TECH.pw); await p.click('#vaultModalOk'); await p.waitForTimeout(1500);
+  const esc = await p.evaluate(() => ({ admin: isAdmin(), role: getTeam().users.find(u => u.id === session.user.id).role, realAdminActive: getTeam().users[0].active, forgedRole: (getTeam().users.find(u => u.phone === '09130000077') || {}).role }));
+  ok('a technician cannot make themselves admin with an edited team file', !esc.admin && esc.role === 'tech', JSON.stringify(esc));
+  ok('a technician cannot disable the admin with an edited team file', esc.realAdminActive === true);
+  ok('a new account from a technician\'s file can only be a technician', esc.forgedRole === undefined || esc.forgedRole === 'tech', JSON.stringify(esc));
+
   // گوشی تازه (بدون تیم) هنوز از صفحه ورود فایل تیم را می‌گیرد
   const p2 = await ctx.newPage();
   await p2.goto(BASE + '/index.html'); await p2.evaluate(() => localStorage.clear()); await p2.reload(); await p2.waitForTimeout(600);

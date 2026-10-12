@@ -92,7 +92,7 @@
   }
   function setOpenEntry(o) {
     try {
-      if (o) localStorage.setItem(OPEN_ENTRY_KEY, JSON.stringify(o));
+      if (o) storeItem(OPEN_ENTRY_KEY, JSON.stringify(o));
       else localStorage.removeItem(OPEN_ENTRY_KEY);
     } catch(e) {}
     syncExitReminder();
