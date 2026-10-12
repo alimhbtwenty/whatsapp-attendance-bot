@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-yxbq/tAWXAOQF8fUepRsw2XvMn6msVtSxZqiLHMPYHU='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6J9bqlcWmU+8PPMqa9Szpc+dP/ZUrx1mX4fO+Aq9pd8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -5770,6 +5770,9 @@
   // autoBio: صفحه ورود خودش بیومتریک را باز کند (باز شدن برنامه، قفل بعد از پس‌زمینه)؛ نه بعد از «خروج از حساب»
   let lockAutoBio = false;
   function lockApp(silent, autoBio) {
+    // پنجره‌های بازِ تأیید و پرسش هم بسته می‌شوند: بالای صفحه قفل نمی‌مانند (مثلاً «حذف شود؟» بدون ورود)
+    if (confirmResolver) resolveConfirm(false);
+    if (flowResolver) resolveFlowModal(null);
     lockAutoBio = !!autoBio;
     techAutoBioTried = false;
     if (session && session.raw) session.raw.fill(0);

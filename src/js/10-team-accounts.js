@@ -144,6 +144,9 @@
   // autoBio: صفحه ورود خودش بیومتریک را باز کند (باز شدن برنامه، قفل بعد از پس‌زمینه)؛ نه بعد از «خروج از حساب»
   let lockAutoBio = false;
   function lockApp(silent, autoBio) {
+    // پنجره‌های بازِ تأیید و پرسش هم بسته می‌شوند: بالای صفحه قفل نمی‌مانند (مثلاً «حذف شود؟» بدون ورود)
+    if (confirmResolver) resolveConfirm(false);
+    if (flowResolver) resolveFlowModal(null);
     lockAutoBio = !!autoBio;
     techAutoBioTried = false;
     if (session && session.raw) session.raw.fill(0);

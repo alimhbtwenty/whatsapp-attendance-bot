@@ -138,6 +138,13 @@ const TECH = { name: 'تکنسین', phone: '09120000002', pw: 'tech-pass-22' };
   await login(p2, TECH);
   ok('a technician logs in on the new phone with the team file', await p2.evaluate(() => session && session.user.phone === '09120000002'));
 
+  // بازبینی دور ۱۱: پنجره «حذف شود؟» نباید بعد از قفل شدن بالای صفحه قفل بماند
+  await p.evaluate(() => { appConfirm('حذف شود؟'); });
+  await p.evaluate(() => lockApp(true, false));
+  ok('an open confirm dialog is closed when the app locks', await p.locator('#confirmModal.open').count() === 0);
+  await p.evaluate(() => { openFlowModal('<div>x</div>'); lockApp(true, false); });
+  ok('an open report pop-up is closed when the app locks', await p.locator('#flowModal.open').count() === 0);
+
   ok('no page errors', !errs.length, errs.join(';'));
   await b.close();
 })();

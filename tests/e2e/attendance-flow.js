@@ -23,8 +23,9 @@ const results = []; const ok = (name, cond, extra='') => { console.log((cond?'PA
   // پاپ‌آپ «بین دو حضور کجا بودید؟» (ورود تازه بعد از خروج همان روز) → اولین گزینه
   let gapAsked = 0;
   const copy = async () => {
-    await page.click('#floatingDock .dock-copy-btn'); await page.waitForTimeout(500);
-    if (await page.locator('#flowModal.open .flow-chip').count()) { gapAsked++; await page.click('#flowModal .flow-chip >> nth=0'); }
+    await page.click('#floatingDock .dock-copy-btn');
+    const chip = await page.waitForSelector('#flowModal.open .flow-chip', { timeout: 1500 }).catch(() => null);
+    if (chip) { gapAsked++; await page.click('#flowModal .flow-chip >> nth=0'); }
     await page.waitForTimeout(2000); return page.evaluate(() => navigator.clipboard.readText());
   };
   const logs = () => page.evaluate(() => JSON.parse(localStorage.getItem('geomat_logs_v2')||'[]'));
