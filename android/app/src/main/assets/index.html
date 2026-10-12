@@ -1591,6 +1591,9 @@
       white-space: nowrap;
     }
 
+    .holiday-list { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+    .holiday-chip { background: var(--surface-hover); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 3px 8px; font-size: 11px; color: var(--text); display: inline-flex; gap: 6px; align-items: center; }
+    .holiday-chip button { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 11px; padding: 0; }
     /* پرونده فنی شرکت‌ها (ساپورت) */
     #supportReportView, #supportInventoryView { display: flex; flex-direction: column; gap: 14px; }
     .inv-filter-row { flex-wrap: wrap; }
@@ -1948,9 +1951,22 @@
         <input type="time" id="reminderTimeInput" onchange="saveSettingField('reminderTime', this.value)">
       </label>
       <label class="settings-row">
-        <span>⏱ اضافه‌کار بعد از (ساعت در روز)</span>
-        <input type="text" inputmode="decimal" id="overtimeHoursInput" maxlength="4" onchange="saveSettingField('overtimeHours', this.value)">
+        <span>🕘 شروع ساعت اداری</span>
+        <input type="time" id="workStartInput" onchange="saveSettingField('workStart', this.value)">
       </label>
+      <label class="settings-row">
+        <span>🕔 پایان ساعت اداری</span>
+        <input type="time" id="workEndInput" onchange="saveSettingField('workEnd', this.value)">
+      </label>
+      <label class="settings-row">
+        <span>🕑 پایان پنجشنبه</span>
+        <input type="time" id="thuEndInput" onchange="saveSettingField('thuEnd', this.value)">
+      </label>
+      <div class="settings-row" style="flex-wrap:wrap;">
+        <span>🎌 تعطیلات رسمی (مثل جمعه: همه اضافه‌کار، بدون کسر)</span>
+        <button class="inv-link-btn" style="border:1px solid var(--gold-border); text-decoration:none; padding:4px 9px;" onclick="addHoliday()">➕ افزودن</button>
+        <div class="holiday-list" id="holidayList"></div>
+      </div>
       <div style="display:flex; gap:8px;">
         <button class="dock-copy-btn" style="flex:1; padding:10px; font-size:12px;" onclick="exportBackup()">💾 فایل پشتیبان</button>
         <button class="dock-copy-btn" style="flex:1; padding:10px; font-size:12px;" onclick="document.getElementById('restoreInput').click()">♻️ بازگردانی</button>
@@ -1992,6 +2008,14 @@
         <div class="hud-stat-box">
           <span class="stat-caption" id="reportOvertimeCaption">اضافه‌کار:</span>
           <span class="stat-number" id="reportOvertime">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="stat-caption">کسر کار (دیرآمد، زودرفت، غیبت):</span>
+          <span class="stat-number" id="reportDeficit">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="stat-caption">روز کاریِ بدون تردد:</span>
+          <span class="stat-number" id="reportAbsent">0</span>
         </div>
       </div>
       <div id="reportTableWrap"></div>
@@ -2705,6 +2729,8 @@
       document.getElementById('outHour').value = hh;
       document.getElementById('outMin').value = mm;
     }
+    // ساعت ورودِ پیش‌فرض نباید ساعت ورودِ ثبت‌شده را بپوشاند (بعد از باز شدن دوباره اپ، خروج رکورد دوم می‌ساخت)
+    lastPrefillKey = '';
     calculateDuration();
     if (notify) showToast(`ساعت ${hh}:${mm} تنظیم شد`);
   }
@@ -2949,7 +2975,9 @@
 
     // اولین پیام تردد هر روز: سلام و احوال‌پرسی متناسب با ساعت، تاریخ و روز؛ پیام‌های بعدی همان روز فقط خودِ تردد.
     // لوکیشن دیگر در پیام واتساپ نمی‌رود (فقط برای انتخاب خودکار محل و آرشیو گرفته می‌شود)
-    const eventMins = attendanceAction === 'out'
+    // خروجِ یک ورودِ قبلاً فرستاده‌شده: ساعت ورود دوباره در پیام نمی‌آید
+    const exitOnly = closesRecordedEntry();
+    const eventMins = exitOnly
       ? Number(outH) * 60 + Number(outM)
       : Number(inH) * 60 + Number(inM);
     let lines = [];
@@ -2960,7 +2988,7 @@
     }
     if (selectedCompany) lines.push(tag);
 
-    if (attendanceAction === 'both') {
+    if (attendanceAction === 'both' && !exitOnly) {
       lines.push(`ورود ${inH}:${inM}`);
       lines.push(`خروج ${outH}:${outM}`);
       if (includeDuration) {
@@ -2971,13 +2999,21 @@
       lines.push(`ورود ${inH}:${inM}`);
     } else {
       lines.push(`خروج ${outH}:${outM}`);
-      if (includeDuration && pairedEntry()) {
+      if (includeDuration && (exitOnly || pairedEntry())) {
         const dur = calculateDuration();
         lines.push(`مدت کارکرد: ${dur.h}:${String(dur.m).padStart(2,'0')}`);
       }
     }
 
     return lines.join('\n');
+  }
+
+  // این ثبت ورودی را که قبلاً ثبت و فرستاده شده می‌بندد؟ (پیام و ادغام رکورد هر دو از همین تصمیم پیروی می‌کنند)
+  function closesRecordedEntry() {
+    if (attendanceAction === 'in') return false;
+    const pair = pairedEntry();
+    if (attendanceAction === 'out') return !!pair;
+    return !!pair && timeInputValue('in') === pair.inTime;
   }
 
   function greetingFor(mins) {
@@ -3377,7 +3413,8 @@
   // ساعت ورود را خودش پر می‌کند و مدت درست در آرشیو ثبت می‌شود
   const OPEN_ENTRY_KEY = 'geomat_open_entry_v1';
   const SETTINGS_KEY = 'geomat_settings_v1';
-  const DEFAULT_SETTINGS = { reminderTime: '18:00', overtimeHours: 8 };
+  const DEFAULT_SETTINGS = { reminderTime: '18:00', workStart: '09:00', workEnd: '17:00', thuEnd: '14:00', holidays: [] };
+  const TIME_SETTINGS = ['reminderTime', 'workStart', 'workEnd', 'thuEnd'];
 
   function pad2(n) { return String(n).padStart(2, '0'); }
   function toISODate(d) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
@@ -3393,19 +3430,16 @@
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') || {}; } catch(e) {}
     const out = Object.assign({}, DEFAULT_SETTINGS, saved);
-    if (!/^\d{2}:\d{2}$/.test(out.reminderTime)) out.reminderTime = DEFAULT_SETTINGS.reminderTime;
-    out.overtimeHours = Number(out.overtimeHours);
-    if (!Number.isFinite(out.overtimeHours) || out.overtimeHours <= 0 || out.overtimeHours > 24) out.overtimeHours = DEFAULT_SETTINGS.overtimeHours;
+    TIME_SETTINGS.forEach(k => { if (!/^\d{2}:\d{2}$/.test(out[k])) out[k] = DEFAULT_SETTINGS[k]; });
+    if (parseHM(out.workEnd) <= parseHM(out.workStart)) { out.workStart = DEFAULT_SETTINGS.workStart; out.workEnd = DEFAULT_SETTINGS.workEnd; }
+    if (parseHM(out.thuEnd) <= parseHM(out.workStart)) out.thuEnd = DEFAULT_SETTINGS.thuEnd;
+    out.holidays = Array.isArray(out.holidays) ? out.holidays.filter(h => isoToDate(h)).sort() : [];
+    delete out.overtimeHours; // تنظیم قدیمی «اضافه‌کار بعد از n ساعت»
     return out;
   }
   function saveSettingField(field, value) {
     const st = getSettings();
-    if (field === 'overtimeHours') {
-      // ممیز فارسی/عربی (٫) و ویرگول هم ممیز حساب می‌شوند: «۷٫۵» یعنی هفت و نیم
-      value = parseFloat(faToEnDigits(value).replace(/[٫,،]/g, '.'));
-      if (!Number.isFinite(value) || value <= 0 || value > 24) value = st.overtimeHours;
-    }
-    if (field === 'reminderTime' && !/^\d{2}:\d{2}$/.test(value)) value = st.reminderTime;
+    if (TIME_SETTINGS.includes(field) && !/^\d{2}:\d{2}$/.test(value)) value = st[field];
     st[field] = value;
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(st)); } catch(e) {}
     renderSettings();
@@ -3415,10 +3449,26 @@
   }
   function renderSettings() {
     const st = getSettings();
-    const t = document.getElementById('reminderTimeInput');
-    const o = document.getElementById('overtimeHoursInput');
-    if (t) t.value = st.reminderTime;
-    if (o) o.value = st.overtimeHours;
+    [['reminderTimeInput', 'reminderTime'], ['workStartInput', 'workStart'], ['workEndInput', 'workEnd'], ['thuEndInput', 'thuEnd']].forEach(([id, k]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = st[k];
+    });
+    const list = document.getElementById('holidayList');
+    if (list) {
+      list.innerHTML = st.holidays.length
+        ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button onclick="removeHoliday('${escapeHtml(h)}')" title="حذف">✕</button></span>`).join('')
+        : '<span style="color:var(--text-dim); font-size:11px;">ثبت نشده</span>';
+    }
+  }
+  function addHoliday() {
+    openCalendar(new Date(), (date) => {
+      const st = getSettings();
+      const iso = toISODate(date);
+      if (!st.holidays.includes(iso)) saveSettingField('holidays', [...st.holidays, iso]);
+    });
+  }
+  function removeHoliday(iso) {
+    saveSettingField('holidays', getSettings().holidays.filter(h => h !== iso));
   }
 
   function getOpenEntry() {
@@ -3949,8 +3999,7 @@
   function saveToSystemLog(type, text, pair) {
     let logs = getLogs();
     // «دوره کامل» فقط وقتی همان ورود را می‌بندد که ساعت ورود فرم دست نخورده باشد
-    const completesEntry = attendanceAction === 'out' ||
-      (attendanceAction === 'both' && pair && timeInputValue('in') === pair.inTime);
+    const completesEntry = attendanceAction === 'out' || closesRecordedEntry();
     if (type === 'attendance' && completesEntry) {
       const mergedId = mergeExitIntoEntry(logs, pair, text);
       if (mergedId !== null) {
@@ -4188,6 +4237,39 @@
     renderMonthlyReport();
   }
 
+  // ساعت اداری آن روز به دقیقه؛ null یعنی جمعه یا تعطیل رسمی (همه کارش اضافه‌کار، بدون کسر)
+  function workWindow(date, st) {
+    if (date.getDay() === 5 || st.holidays.includes(toISODate(date))) return null;
+    const end = date.getDay() === 4 ? st.thuEnd : st.workEnd;
+    return [parseHM(st.workStart), parseHM(end)];
+  }
+
+  // اضافه‌کار و کسر کار هر روز. بازه حضور از اولین ورود تا آخرین خروج است:
+  // فاصله بین دو کارگاه (مسیر) کسر نیست. اضافه‌کار = حضور بیرون از ساعت اداری؛
+  // کسر = دیرآمد + زودرفت، و روز کاریِ بدون تردد کلاً کسر است
+  function dailyBalance(sessions, fromDay, toDay, st) {
+    const byDay = {};
+    sessions.forEach(x => {
+      const d = byDay[x.day] || (byDay[x.day] = { start: Infinity, end: -Infinity });
+      d.start = Math.min(d.start, x.inM);
+      d.end = Math.max(d.end, x.inM + x.mins);
+    });
+    const days = {};
+    for (let day = fromDay; day <= toDay; day++) {
+      const j = d2j(day);
+      const win = workWindow(jalaliToDate(j.jy, j.jm, j.jd), st);
+      const span = byDay[day];
+      const winLen = win ? win[1] - win[0] : 0;
+      if (!span) {
+        if (winLen) days[day] = { j, overtime: 0, deficit: winLen, absent: true };
+        continue;
+      }
+      const inside = win ? Math.max(0, Math.min(span.end, win[1]) - Math.max(span.start, win[0])) : 0;
+      days[day] = { j, overtime: span.end - span.start - inside, deficit: winLen - inside, absent: false };
+    }
+    return days;
+  }
+
   function monthlyData() {
     if (reportJY === null) {
       const t = dateToJalali(new Date());
@@ -4196,25 +4278,34 @@
     }
     const logs = getLogs();
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+    const allSessions = computeSessions(logs);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
-    const limit = Math.round(getSettings().overtimeHours * 60);
-    const perDay = {};
-    sessions.forEach(x => { perDay[x.day] = (perDay[x.day] || 0) + x.mins; });
-    const overtimeByDay = {};
-    Object.keys(perDay).forEach(d => { overtimeByDay[d] = Math.max(0, perDay[d] - limit); });
     const perCompany = {};
     sessions.forEach(x => {
       const c = perCompany[x.company] || (perCompany[x.company] = { mins: 0, days: new Set() });
       c.mins += x.mins;
       c.days.add(x.day);
     });
+    // اضافه‌کار و کسر مال کل روزِ شخص است، نه یک شرکت؛ با فیلتر شرکت نشان داده نمی‌شود.
+    // روزها از اولین تردد ثبت‌شده تا امروز شمرده می‌شوند (نه آینده، نه قبل از شروع استفاده)
+    let balance = null;
+    if (archiveCompanyFilter === 'all' && allSessions.length) {
+      const first = Math.min(...allSessions.map(x => x.day));
+      const today = dayIndex(dateToJalali(new Date()));
+      const from = Math.max(j2d(reportJY, reportJM, 1), first);
+      const to = Math.min(j2d(reportJY, reportJM, jalaliMonthLength(reportJY, reportJM)), today);
+      balance = dailyBalance(allSessions.filter(x => x.day >= from && x.day <= to), from, to, getSettings());
+    }
+    const sum = (k) => balance ? Object.values(balance).reduce((a, d) => a + d[k], 0) : 0;
     return {
       sessions,
       total: sessions.reduce((a, x) => a + x.mins, 0),
-      overtime: Object.values(overtimeByDay).reduce((a, v) => a + v, 0),
-      overtimeByDay,
+      balance,
+      overtime: sum('overtime'),
+      deficit: sum('deficit'),
+      absentDays: balance ? Object.values(balance).filter(d => d.absent).length : 0,
       perCompany,
-      days: Object.keys(perDay).length
+      days: new Set(sessions.map(x => x.day)).size
     };
   }
 
@@ -4224,8 +4315,11 @@
     const d = monthlyData();
     title.textContent = `${JALALI_MONTHS[reportJM - 1]} ${toPersianDigits(reportJY)}`;
     document.getElementById('reportTotal').textContent = formatHM(d.total);
-    document.getElementById('reportOvertime').textContent = formatHM(d.overtime);
-    document.getElementById('reportOvertimeCaption').textContent = `اضافه‌کار (بیش از ${toPersianDigits(getSettings().overtimeHours)} ساعت در روز):`;
+    const st = getSettings();
+    document.getElementById('reportOvertimeCaption').textContent = `اضافه‌کار (قبل از ${toPersianDigits(st.workStart)}، بعد از ${toPersianDigits(st.workEnd)}، جمعه و تعطیل):`;
+    document.getElementById('reportOvertime').textContent = d.balance ? formatHM(d.overtime) : '—';
+    document.getElementById('reportDeficit').textContent = d.balance ? formatHM(d.deficit) : '—';
+    document.getElementById('reportAbsent').textContent = d.balance ? toPersianDigits(d.absentDays) : '—';
     const wrap = document.getElementById('reportTableWrap');
     const names = Object.keys(d.perCompany).sort((a, b) => d.perCompany[b].mins - d.perCompany[a].mins);
     if (!names.length) {
@@ -4249,25 +4343,37 @@
   function exportMonthlyCsv() {
     playTactileFeedback();
     const d = monthlyData();
-    if (!d.sessions.length) {
+    if (!d.sessions.length && !(d.balance && Object.keys(d.balance).length)) {
       showToast('در این ماه ترددی ثبت نشده است');
       return;
     }
     const hm = (m) => `${Math.floor(m / 60)}:${pad2(m % 60)}`;
     const clock = (m) => `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`;
-    const rows = [['ردیف', 'تاریخ', 'روز', 'شرکت', 'ورود', 'خروج', 'مدت', 'اضافه‌کار آن روز']];
-    const shownOvertime = new Set();
-    d.sessions.forEach((x, i) => {
-      const date = jalaliToDate(x.jy, x.jm, x.jd);
-      const ot = shownOvertime.has(x.day) ? '' : hm(d.overtimeByDay[x.day] || 0);
-      shownOvertime.add(x.day);
-      rows.push([i + 1, `${x.jy}/${pad2(x.jm)}/${pad2(x.jd)}`, WEEK_DAYS[(date.getDay() + 1) % 7], x.company, clock(x.inM), clock(x.outM), hm(x.mins), ot]);
+    const rows = [['ردیف', 'تاریخ', 'روز', 'شرکت', 'ورود', 'خروج', 'مدت', 'اضافه‌کار آن روز', 'کسر آن روز']];
+    const dateCells = (j) => [`${j.jy}/${pad2(j.jm)}/${pad2(j.jd)}`, WEEK_DAYS[(jalaliToDate(j.jy, j.jm, j.jd).getDay() + 1) % 7]];
+    // ردیف‌ها به ترتیب روز؛ اضافه‌کار و کسرِ هر روز فقط روی اولین ردیف همان روز، روز کاریِ بی‌تردد یک ردیف «غیبت»
+    const entries = d.sessions.map(x => ({ day: x.day, x }));
+    if (d.balance) Object.keys(d.balance).forEach(k => { if (d.balance[k].absent) entries.push({ day: Number(k), absent: d.balance[k] }); });
+    entries.sort((a, b) => a.day - b.day);
+    const shownDay = new Set();
+    entries.forEach((e, i) => {
+      const bal = d.balance && d.balance[e.day];
+      const first = !shownDay.has(e.day);
+      shownDay.add(e.day);
+      const ot = bal && first ? hm(bal.overtime) : '';
+      const def = bal && first ? hm(bal.deficit) : '';
+      if (e.absent) rows.push([i + 1, ...dateCells(e.absent.j), 'غیبت (بدون تردد)', '', '', '', ot, def]);
+      else rows.push([i + 1, ...dateCells(e.x), e.x.company, clock(e.x.inM), clock(e.x.outM % 1440), hm(e.x.mins), ot, def]);
     });
     rows.push([]);
     rows.push(['', 'شرکت', 'تعداد روز', 'مجموع ساعت']);
     Object.keys(d.perCompany).forEach(n => rows.push(['', n, d.perCompany[n].days.size, hm(d.perCompany[n].mins)]));
     rows.push(['', 'جمع کل', d.days, hm(d.total)]);
-    rows.push(['', 'اضافه‌کار', '', hm(d.overtime)]);
+    if (d.balance) {
+      rows.push(['', 'اضافه‌کار', '', hm(d.overtime)]);
+      rows.push(['', 'کسر کار', '', hm(d.deficit)]);
+      rows.push(['', 'روز کاریِ بدون تردد', d.absentDays, '']);
+    }
     const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
     const name = `geomat-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
