@@ -228,7 +228,15 @@
           <button class="install-btn" style="padding:10px 14px;" data-act="unlock-pw">🔑 با رمز</button>
           <button class="dock-copy-btn" style="padding:10px 14px; display:none;" id="techBioBtn" data-act="unlock-bio">👆 با اثر انگشت</button>
         </div>`;
-      Bio.enrolled(session.user.id).then(on => { const b = document.getElementById('techBioBtn'); if (b && on) b.style.display = ''; });
+      Bio.enrolled(session.user.id).then(on => {
+        const b = document.getElementById('techBioBtn');
+        if (b && on) b.style.display = '';
+        // درخواست مالک: با باز کردن پرونده فنیِ قفل، اثر انگشت خودش بیاید؛ فقط یک بار تا قفل بعدی
+        if (on && !techAutoBioTried && session && !techUnlocked() && !document.hidden && systemMode === 'support' && supportView === 'inventory') {
+          techAutoBioTried = true;
+          unlockTechWithBiometric();
+        }
+      });
       return;
     }
     card.innerHTML = `<div class="card-header-bar">

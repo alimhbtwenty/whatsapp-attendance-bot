@@ -1,0 +1,86 @@
+// گزارش مالک (APK): رکوردی که حذف شد بعد از ری‌استارت گوشی برگشت؛ ورود تازه هم گم شد و خروج با ساعت رکورد حذف‌شده جفت شد.
+// علت: WebView نوشته‌های localStorage را با تأخیر روی دیسک می‌برد و با ری‌استارت، تغییرهای آخر گم می‌شوند.
+// این تست با یک پل اندروید ساختگی (که مثل فایل‌های برنامه بین بارگذاری‌ها می‌ماند) همان ری‌استارت را شبیه‌سازی می‌کند:
+// localStorage به وضع پیش از حذف برمی‌گردد و صفحه دوباره بار می‌شود.
+const { chromium } = require('playwright');
+const { login } = require('../helpers/session');
+const BASE = process.env.BASE_URL || 'http://localhost:8765';
+const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
+
+(async () => {
+  const b = await chromium.launch();
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, timezoneId: 'Asia/Tehran' });
+  await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+  const p = await ctx.newPage(); p.setDefaultTimeout(15000);
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.addInitScript(() => {
+    // «فایل‌های برنامه» در sessionStorage همین تب: با بارگذاری دوباره می‌مانند، مثل دیسک گوشی
+    const NS = 'fake_native_store';
+    const load = () => JSON.parse(sessionStorage.getItem(NS) || '{"seq":0,"data":{}}');
+    const save = (s) => Storage.prototype.setItem.call(sessionStorage, NS, JSON.stringify(s));
+    window.__nativeCalls = [];
+    window.AndroidBridge = {
+      saveFile() {}, bioStatus: () => 'unavailable', bioEnrolled: () => false,
+      scheduleExitReminder() {}, cancelExitReminder() {}, notificationPermission: () => 'granted', requestNotificationPermission() {},
+      storeSet(k, v) { window.__nativeCalls.push(k); const s = load(); s.data[k] = v; s.seq++; save(s); return String(s.seq); },
+      storeRemove(k) { window.__nativeCalls.push('-' + k); const s = load(); delete s.data[k]; s.seq++; save(s); return String(s.seq); },
+      storeSnapshot() { return JSON.stringify(load()); }
+    };
+    if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه'])); }
+  });
+  await p.goto(BASE + '/index.html'); await p.waitForTimeout(700);
+  await login(p);
+  const rec = async (a, id, h, m) => {
+    await p.click('#tabAttendanceBtn');
+    await p.evaluate(([a, id, h, m]) => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction(a); document.getElementById(id + 'Hour').value = h; document.getElementById(id + 'Min').value = m; updatePreview(); }, [a, id, h, m]);
+    await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(600);
+  };
+  // نوشتن مستقیم در localStorage بدون رد شدن از نسخه دوم (همان «دیسکِ WebView»)
+  const rawSet = () => p.evaluate(() => { window.__rawSet = typeof nativeSetItem !== 'undefined' ? nativeSetItem : Storage.prototype.setItem; window.__rawRemove = typeof nativeRemoveItem !== 'undefined' ? nativeRemoveItem : Storage.prototype.removeItem; });
+
+  await rec('in', 'in', '08', '00');
+  ok('entry 08:00 recorded with an open entry', await p.evaluate(() => getLogs().length === 1 && !!getOpenEntry()));
+  const diskBefore = await p.evaluate(() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } return o; });
+
+  await p.click('#tabArchiveBtn'); await p.waitForTimeout(200);
+  await p.click('#archiveStream button[aria-label="حذف رکورد"]'); await p.click('#confirmOkBtn'); await p.waitForTimeout(300);
+  ok('the record is deleted', await p.evaluate(() => getLogs().length === 0 && !getOpenEntry()));
+
+  // ---------- ری‌استارت گوشی: WebView آخرین نوشته‌ها را گم کرده است ----------
+  await rawSet();
+  await p.evaluate((before) => {
+    for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (!(k in before)) window.__rawRemove.call(localStorage, k); }
+    for (const k in before) window.__rawSet.call(localStorage, k, before[k]);
+  }, diskBefore);
+  await p.reload(); await p.waitForTimeout(800);
+  await login(p);
+  const after = await p.evaluate(() => ({ logs: getLogs().length, open: !!getOpenEntry(), banner: document.getElementById('openEntryBanner').classList.contains('show') }));
+  ok('after a restart the deleted record does not come back', after.logs === 0, JSON.stringify(after));
+  ok('after a restart the deleted open entry does not come back', !after.open && !after.banner);
+
+  // ورود تازه با ساعت دیگر → انتظار خروج فعال، و خروج با همین ساعت جفت می‌شود
+  await rec('in', 'in', '09', '30');
+  ok('the new entry shows the waiting-for-exit banner', await p.evaluate(() => document.getElementById('openEntryBanner').classList.contains('show') && getOpenEntry().inTime === '09:30'));
+  await p.click('#tabAttendanceBtn'); await p.evaluate(() => setAttendanceAction('out')); await p.waitForTimeout(200);
+  ok('the exit form uses the new entry time, not the deleted one', await p.evaluate(() => `${document.getElementById('inHour').value}:${document.getElementById('inMin').value}`) === '09:30');
+
+  // ری‌استارت دوباره بعد از ورود تازه: ورود و بنرش می‌مانند
+  const disk2 = await p.evaluate(() => { const o = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } return o; });
+  await rawSet();
+  await p.evaluate((before) => { // WebView فقط تا پیش از ورود تازه را نوشته بود
+    const logs = JSON.parse(before.geomat_logs_v2 || '[]'); logs.shift();
+    window.__rawSet.call(localStorage, 'geomat_logs_v2', JSON.stringify(logs));
+    window.__rawRemove.call(localStorage, 'geomat_open_entry_v1');
+    window.__rawSet.call(localStorage, 'geomat_mirror_seq', '1');
+  }, disk2);
+  await p.reload(); await p.waitForTimeout(800); await login(p);
+  ok('after another restart the new entry and its banner are still there', await p.evaluate(() => getLogs().length === 1 && getOpenEntry() && getOpenEntry().inTime === '09:30' && document.getElementById('openEntryBanner').classList.contains('show')));
+
+  // فقط کلیدهای geomat_* به نسخه دوم می‌روند
+  await p.evaluate(() => { window.__nativeCalls.length = 0; localStorage.setItem('other_key', 'x'); localStorage.setItem('geomat_user_name', 'نام'); });
+  ok('only geomat_* keys are mirrored', await p.evaluate(() => JSON.stringify(window.__nativeCalls)) === JSON.stringify(['geomat_user_name']));
+  ok('the backup file does not carry the mirror counter', await p.evaluate(() => !DEVICE_LOCAL_KEYS.includes('x') && DEVICE_LOCAL_KEYS.includes('geomat_mirror_seq')));
+
+  ok('no page errors', !errs.length, errs.join(';'));
+  await b.close();
+})();

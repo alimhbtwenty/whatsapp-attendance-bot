@@ -26,8 +26,9 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   await p.click('#lockBioBtn'); await p.waitForTimeout(1500);
   ok('biometric login works', await p.locator('#appLock.open').count() === 0 && await p.evaluate(() => !!session && session.user.phone === '09120000001'));
   await p.click('#tabSupportBtn'); await p.click('#supportViewRow button:nth-child(2)'); await p.waitForTimeout(300);
-  await p.click('#techBioBtn'); await p.waitForTimeout(1500);
-  ok('technical file unlocks with biometric', await p.evaluate(() => techUnlocked()));
+  // درخواست مالک: پرونده فنیِ قفل خودش بیومتریک را می‌آورد (بدون زدن دکمه)
+  await p.waitForFunction(() => techUnlocked(), null, { timeout: 8000 }).catch(() => {});
+  ok('technical file unlocks with biometric by itself', await p.evaluate(() => techUnlocked()));
   // حسگر کاربر را تأیید نکند: ورود نباید انجام شود
   await cdp.send('WebAuthn.setUserVerified', { authenticatorId, isUserVerified: false });
   await p.evaluate(() => lockApp(true)); await p.waitForTimeout(300);

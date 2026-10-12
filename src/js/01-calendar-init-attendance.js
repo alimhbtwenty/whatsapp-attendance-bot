@@ -207,9 +207,12 @@
   }
 
   function init() {
+    restoreFromMirror(); // اپ اندروید: اگر ری‌استارت نوشته‌های آخر را گم کرده بود، از نسخه دوم برمی‌گردند
     applyTheme(getSettings().theme);
     runMigrations();
+    lockAutoBio = true; // با باز شدن برنامه، اگر اثر انگشت روشن است خودش بیاید
     renderLockScreen();
+    if (mirrorRestored) showToast('♻️ تغییرهای آخر که با خاموش شدن گوشی گم شده بودند برگردانده شد');
     document.getElementById('userNameHeader').textContent = getUserName() || 'ورود';
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();

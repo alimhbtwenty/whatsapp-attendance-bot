@@ -8,7 +8,7 @@
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY) data[k] = localStorage.getItem(k);
+      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY && k !== MIRROR_SEQ_KEY) data[k] = localStorage.getItem(k);
     }
     const payload = { app: BACKUP_APP_ID, format: 1, version: APP_VERSION, exportedAt: new Date().toISOString(), data };
     const t = dateToJalali(new Date());
@@ -67,7 +67,7 @@
   // جایگزینی کل داده با پشتیبان، به‌صورت همه یا هیچ (اگر وسط کار حافظه پر شد، داده قبلی برمی‌گردد).
   // پرونده فنی جایگزین نمی‌شود بلکه ادغام می‌شود تا با بازگرداندن یک پشتیبان قدیمی هیچ نسخه‌ای از تاریخچه گم نشود؛
   // حساب‌های تیم و تنظیمات امنیتی خود گوشی (بیومتریک، شمارنده رمز اشتباه) هم دست نمی‌خورند.
-  const DEVICE_LOCAL_KEYS = ['geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
+  const DEVICE_LOCAL_KEYS = ['geomat_mirror_seq', 'geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
   function replaceAppData(incoming) {
     const current = snapshotAppData();
     const next = { ...incoming };

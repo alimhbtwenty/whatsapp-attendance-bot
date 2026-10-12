@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-n+zBwP4pd1bH1NryY4Inn59IDv8Q9pcLbcF/Ta5zVnE='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RQOesnq1MctlWWUZlJD5BpFCLkNqyMTZPsIcT34Q6ik='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -2499,6 +2499,71 @@
     return { dateStr: "۱۴۰۵/۰۷/۱۸", dayName: "شنبه" };
   }
 
+  // ==================== نسخه دوم روی دیسک (فقط اپ اندروید) ====================
+  // WebView نوشته‌های localStorage را با تأخیر روی دیسک می‌برد؛ با خاموش/ری‌استارت شدن گوشی تغییرهای آخر گم می‌شد
+  // (گزارش مالک: رکورد حذف‌شده برگشت، ورود تازه گم شد). هر نوشتن در کلیدهای geomat_* همان لحظه و اتمیک در فایل‌های
+  // خود برنامه هم نوشته می‌شود و اگر بعد از شروع، localStorage عقب بود، از همان فایل‌ها برگردانده می‌شود.
+  // نام کلیدها و ساختار داده عوض نمی‌شود؛ در وب‌اپ (بدون پل) هیچ کاری نمی‌کند.
+  const MIRROR_SEQ_KEY = 'geomat_mirror_seq';
+  const MIRROR_KEY_RE = /^geomat_[a-z0-9_]+$/;
+  const mirrorBridge = () => window.AndroidBridge && typeof window.AndroidBridge.storeSet === 'function' &&
+    typeof window.AndroidBridge.storeSnapshot === 'function' ? window.AndroidBridge : null;
+  const nativeSetItem = Storage.prototype.setItem;
+  const nativeRemoveItem = Storage.prototype.removeItem;
+  let mirrorPaused = false;
+  let mirrorRestored = false;
+  const mirrored = (store, key) => store === localStorage && !mirrorPaused && MIRROR_KEY_RE.test(key) && key !== MIRROR_SEQ_KEY;
+  function noteMirrorSeq(seq) {
+    const n = Number(seq);
+    if (n > 0) { try { nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(n)); } catch(e) {} }
+  }
+  (function installMirror() {
+    const br = mirrorBridge();
+    if (!br) return;
+    // اگر نوشتن در localStorage شکست بخورد (حافظه پر)، به نسخه دوم هم نمی‌رسد؛ دو طرف هم‌خوان می‌مانند
+    Storage.prototype.setItem = function(key, value) {
+      nativeSetItem.call(this, key, value);
+      if (mirrored(this, key)) noteMirrorSeq(br.storeSet(String(key), String(value)));
+    };
+    Storage.prototype.removeItem = function(key) {
+      nativeRemoveItem.call(this, key);
+      if (mirrored(this, key)) noteMirrorSeq(br.storeRemove(String(key)));
+    };
+  })();
+
+  // اول init، پیش از مهاجرت و هر خواندن داده
+  function restoreFromMirror() {
+    const br = mirrorBridge();
+    if (!br) return;
+    let snap = null;
+    try { snap = JSON.parse(br.storeSnapshot() || 'null'); } catch(e) { return; }
+    if (!snap || !snap.data || typeof snap.data !== 'object') return;
+    const keys = Object.keys(snap.data).filter(k => MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY && typeof snap.data[k] === 'string');
+    const local = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY) local.push(k);
+    }
+    // نسخه دوم خالی است (اولین اجرای این نسخه): یک بار همه داده فعلی در آن نوشته می‌شود
+    if (!keys.length) {
+      local.forEach(k => { const v = localStorage.getItem(k); if (v !== null) noteMirrorSeq(br.storeSet(k, v)); });
+      return;
+    }
+    const localSeq = Number(localStorage.getItem(MIRROR_SEQ_KEY)) || 0;
+    if (!(Number(snap.seq) > localSeq)) return;
+    // localStorage از نسخه دوم عقب است: نوشته‌های آخر گم شده‌اند؛ همان وضع نسخه دوم برمی‌گردد
+    mirrorPaused = true;
+    try {
+      local.filter(k => !keys.includes(k)).forEach(k => nativeRemoveItem.call(localStorage, k));
+      keys.forEach(k => nativeSetItem.call(localStorage, k, snap.data[k]));
+      nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(Number(snap.seq)));
+      mirrorRestored = true;
+    } catch(e) {
+      // حافظه پر: هر چه نوشته شد ماند؛ دفعه بعد دوباره تلاش می‌شود (seq محلی بالا نرفته)
+    } finally {
+      mirrorPaused = false;
+    }
+  }
   // ==================== تقویم شمسی داخلی ====================
   // تبدیل جلالی/میلادی (الگوریتم jalaali-js) تا تقویم بدون اینترنت و کتابخانه کار کند
   const JALALI_MONTHS = ["فروردین", "اردیبهشت", "خرداد", "تیر", "مرداد", "شهریور", "مهر", "آبان", "آذر", "دی", "بهمن", "اسفند"];
@@ -2708,9 +2773,12 @@
   }
 
   function init() {
+    restoreFromMirror(); // اپ اندروید: اگر ری‌استارت نوشته‌های آخر را گم کرده بود، از نسخه دوم برمی‌گردند
     applyTheme(getSettings().theme);
     runMigrations();
+    lockAutoBio = true; // با باز شدن برنامه، اگر اثر انگشت روشن است خودش بیاید
     renderLockScreen();
+    if (mirrorRestored) showToast('♻️ تغییرهای آخر که با خاموش شدن گوشی گم شده بودند برگردانده شد');
     document.getElementById('userNameHeader').textContent = getUserName() || 'ورود';
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
@@ -4682,7 +4750,7 @@
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY) data[k] = localStorage.getItem(k);
+      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY && k !== MIRROR_SEQ_KEY) data[k] = localStorage.getItem(k);
     }
     const payload = { app: BACKUP_APP_ID, format: 1, version: APP_VERSION, exportedAt: new Date().toISOString(), data };
     const t = dateToJalali(new Date());
@@ -4741,7 +4809,7 @@
   // جایگزینی کل داده با پشتیبان، به‌صورت همه یا هیچ (اگر وسط کار حافظه پر شد، داده قبلی برمی‌گردد).
   // پرونده فنی جایگزین نمی‌شود بلکه ادغام می‌شود تا با بازگرداندن یک پشتیبان قدیمی هیچ نسخه‌ای از تاریخچه گم نشود؛
   // حساب‌های تیم و تنظیمات امنیتی خود گوشی (بیومتریک، شمارنده رمز اشتباه) هم دست نمی‌خورند.
-  const DEVICE_LOCAL_KEYS = ['geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
+  const DEVICE_LOCAL_KEYS = ['geomat_mirror_seq', 'geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
   function replaceAppData(incoming) {
     const current = snapshotAppData();
     const next = { ...incoming };
@@ -5472,6 +5540,7 @@
   const LAST_PHONE_KEY = 'geomat_last_phone';
   let session = null; // { user, key, raw }
   let techUnlockedUntil = 0;
+  let techAutoBioTried = false; // بیومتریک خودکار پرونده فنی تا قفل بعدی فقط یک بار
   let sessionIdleTimer = null;
   let hiddenAt = 0;
   const isAdmin = () => !!session && session.user.role === 'admin';
@@ -5482,6 +5551,7 @@
   async function startSession(user, raw) {
     session = { user: { id: user.id, name: user.name, phone: user.phone || '', role: user.role }, key: await importTeamKey(raw), raw };
     techUnlockedUntil = 0;
+    techAutoBioTried = false;
     try {
       if (user.phone) localStorage.setItem(LAST_PHONE_KEY, user.phone);
       localStorage.setItem('geomat_user_name', user.name);
@@ -5501,7 +5571,11 @@
     runPendingNotificationAction();
     offerBiometric();
   }
-  function lockApp(silent) {
+  // autoBio: صفحه ورود خودش بیومتریک را باز کند (باز شدن برنامه، قفل بعد از پس‌زمینه)؛ نه بعد از «خروج از حساب»
+  let lockAutoBio = false;
+  function lockApp(silent, autoBio) {
+    lockAutoBio = !!autoBio;
+    techAutoBioTried = false;
     if (session && session.raw) session.raw.fill(0);
     session = null;
     techUnlockedUntil = 0;
@@ -5517,6 +5591,7 @@
   function lockTech(silent) {
     if (!techUnlockedUntil) return;
     techUnlockedUntil = 0;
+    techAutoBioTried = false;
     clearTimeout(sessionIdleTimer);
     closeInvItemModal();
     closeInvPanel();
@@ -5535,7 +5610,7 @@
       hiddenAt = Date.now();
       lockTech(true);
     } else if (session && hiddenAt && Date.now() - hiddenAt > APP_LOCK_AFTER_MS) {
-      lockApp(true);
+      lockApp(true, true);
     }
   });
 
@@ -5595,7 +5670,13 @@
       <button class="dock-copy-btn lock-bio-btn" id="lockBioBtn" style="display:none;" data-click='["loginWithBiometric"]'>👆 ورود با اثر انگشت / چهره</button>
       <div class="lock-err" id="lockErr" role="alert"></div>
       ${legacy.length ? `<button class="lock-link" data-click='["toggleLegacyLogin"]'>${lockLegacyMode ? 'ورود با شماره موبایل' : 'حساب قدیمی بدون شماره؟ ورود با نام'}</button>` : ''}`;
-    refreshLockBio();
+    const auto = lockAutoBio;
+    lockAutoBio = false;
+    refreshLockBio().then(() => {
+      const btn = document.getElementById('lockBioBtn');
+      // درخواست مالک: با باز شدن برنامه اثر انگشت/چهره خودش بیاید؛ فقط یک بار (لغو = همان صفحه ورود)
+      if (auto && btn && btn.style.display === '' && !session && !document.hidden) loginWithBiometric();
+    });
     const phone = document.getElementById('lockPhone');
     if (phone) phone.addEventListener('input', refreshLockBio);
   }
@@ -6340,7 +6421,15 @@
           <button class="install-btn" style="padding:10px 14px;" data-act="unlock-pw">🔑 با رمز</button>
           <button class="dock-copy-btn" style="padding:10px 14px; display:none;" id="techBioBtn" data-act="unlock-bio">👆 با اثر انگشت</button>
         </div>`;
-      Bio.enrolled(session.user.id).then(on => { const b = document.getElementById('techBioBtn'); if (b && on) b.style.display = ''; });
+      Bio.enrolled(session.user.id).then(on => {
+        const b = document.getElementById('techBioBtn');
+        if (b && on) b.style.display = '';
+        // درخواست مالک: با باز کردن پرونده فنیِ قفل، اثر انگشت خودش بیاید؛ فقط یک بار تا قفل بعدی
+        if (on && !techAutoBioTried && session && !techUnlocked() && !document.hidden && systemMode === 'support' && supportView === 'inventory') {
+          techAutoBioTried = true;
+          unlockTechWithBiometric();
+        }
+      });
       return;
     }
     card.innerHTML = `<div class="card-header-bar">

@@ -110,6 +110,7 @@
   const LAST_PHONE_KEY = 'geomat_last_phone';
   let session = null; // { user, key, raw }
   let techUnlockedUntil = 0;
+  let techAutoBioTried = false; // بیومتریک خودکار پرونده فنی تا قفل بعدی فقط یک بار
   let sessionIdleTimer = null;
   let hiddenAt = 0;
   const isAdmin = () => !!session && session.user.role === 'admin';
@@ -120,6 +121,7 @@
   async function startSession(user, raw) {
     session = { user: { id: user.id, name: user.name, phone: user.phone || '', role: user.role }, key: await importTeamKey(raw), raw };
     techUnlockedUntil = 0;
+    techAutoBioTried = false;
     try {
       if (user.phone) localStorage.setItem(LAST_PHONE_KEY, user.phone);
       localStorage.setItem('geomat_user_name', user.name);
@@ -139,7 +141,11 @@
     runPendingNotificationAction();
     offerBiometric();
   }
-  function lockApp(silent) {
+  // autoBio: صفحه ورود خودش بیومتریک را باز کند (باز شدن برنامه، قفل بعد از پس‌زمینه)؛ نه بعد از «خروج از حساب»
+  let lockAutoBio = false;
+  function lockApp(silent, autoBio) {
+    lockAutoBio = !!autoBio;
+    techAutoBioTried = false;
     if (session && session.raw) session.raw.fill(0);
     session = null;
     techUnlockedUntil = 0;
@@ -155,6 +161,7 @@
   function lockTech(silent) {
     if (!techUnlockedUntil) return;
     techUnlockedUntil = 0;
+    techAutoBioTried = false;
     clearTimeout(sessionIdleTimer);
     closeInvItemModal();
     closeInvPanel();
@@ -173,7 +180,7 @@
       hiddenAt = Date.now();
       lockTech(true);
     } else if (session && hiddenAt && Date.now() - hiddenAt > APP_LOCK_AFTER_MS) {
-      lockApp(true);
+      lockApp(true, true);
     }
   });
 
@@ -233,7 +240,13 @@
       <button class="dock-copy-btn lock-bio-btn" id="lockBioBtn" style="display:none;" data-click='["loginWithBiometric"]'>👆 ورود با اثر انگشت / چهره</button>
       <div class="lock-err" id="lockErr" role="alert"></div>
       ${legacy.length ? `<button class="lock-link" data-click='["toggleLegacyLogin"]'>${lockLegacyMode ? 'ورود با شماره موبایل' : 'حساب قدیمی بدون شماره؟ ورود با نام'}</button>` : ''}`;
-    refreshLockBio();
+    const auto = lockAutoBio;
+    lockAutoBio = false;
+    refreshLockBio().then(() => {
+      const btn = document.getElementById('lockBioBtn');
+      // درخواست مالک: با باز شدن برنامه اثر انگشت/چهره خودش بیاید؛ فقط یک بار (لغو = همان صفحه ورود)
+      if (auto && btn && btn.style.display === '' && !session && !document.hidden) loginWithBiometric();
+    });
     const phone = document.getElementById('lockPhone');
     if (phone) phone.addEventListener('input', refreshLockBio);
   }

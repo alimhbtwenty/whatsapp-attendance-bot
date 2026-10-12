@@ -22,8 +22,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import android.widget.Toast;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,6 +53,10 @@ public class MainActivity extends AppCompatActivity {
     private BiometricVault bio;
     // دکمه اعلان (ثبت خروج / بستن) تا وقتی صفحه آماده شود
     private String pendingAppAction;
+    // نسخه دوم داده روی دیسک: WebView نوشته‌های localStorage را با تأخیر ذخیره می‌کند و با ری‌استارت گوشی گم می‌شدند
+    private static final Pattern STORE_KEY = Pattern.compile("^geomat_[a-z0-9_]+$");
+    private static final String STORE_SEQ = ".seq";
+    private final Object storeLock = new Object();
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -227,6 +238,56 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // ---------- نسخه دوم داده (هر نوشتن همان لحظه و اتمیک روی دیسک) ----------
+        @JavascriptInterface
+        public String storeSet(String key, String value) {
+            if (!pageIsApp || key == null || value == null || !STORE_KEY.matcher(key).matches()) return "0";
+            synchronized (storeLock) {
+                try {
+                    writeAtomic(new File(storeDir(), key), value);
+                    return Long.toString(bumpStoreSeq());
+                } catch (Exception e) {
+                    return "0";
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public String storeRemove(String key) {
+            if (!pageIsApp || key == null || !STORE_KEY.matcher(key).matches()) return "0";
+            synchronized (storeLock) {
+                try {
+                    File f = new File(storeDir(), key);
+                    if (f.exists() && !f.delete()) return "0";
+                    return Long.toString(bumpStoreSeq());
+                } catch (Exception e) {
+                    return "0";
+                }
+            }
+        }
+
+        @JavascriptInterface
+        public String storeSnapshot() {
+            if (!pageIsApp) return "null";
+            synchronized (storeLock) {
+                try {
+                    JSONObject data = new JSONObject();
+                    File[] files = storeDir().listFiles();
+                    if (files != null) {
+                        for (File f : files) {
+                            if (STORE_KEY.matcher(f.getName()).matches()) data.put(f.getName(), readText(f));
+                        }
+                    }
+                    JSONObject out = new JSONObject();
+                    out.put("seq", readSeq());
+                    out.put("data", data);
+                    return out.toString();
+                } catch (Exception e) {
+                    return "null";
+                }
+            }
+        }
+
         @JavascriptInterface
         public void cancelExitReminder() {
             if (pageIsApp) ExitReminder.cancel(MainActivity.this);
@@ -245,6 +306,46 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFICATIONS));
         }
+    }
+
+    private File storeDir() {
+        File d = new File(getFilesDir(), "geoteam_store");
+        if (!d.exists()) d.mkdirs();
+        return d;
+    }
+
+    // اول فایل موقت، fsync، بعد rename: با قطع برق یا ری‌استارت یا نسخه قبلی کامل می‌ماند یا نسخه تازه
+    private static void writeAtomic(File f, String text) throws IOException {
+        File tmp = new File(f.getPath() + ".tmp");
+        try (FileOutputStream out = new FileOutputStream(tmp)) {
+            out.write(text.getBytes(StandardCharsets.UTF_8));
+            out.getFD().sync();
+        }
+        if (!tmp.renameTo(f)) throw new IOException("rename failed");
+    }
+
+    private static String readText(File f) throws IOException {
+        try (InputStream in = new FileInputStream(f)) {
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            byte[] chunk = new byte[16384];
+            int n;
+            while ((n = in.read(chunk)) > 0) buf.write(chunk, 0, n);
+            return new String(buf.toByteArray(), StandardCharsets.UTF_8);
+        }
+    }
+
+    private long readSeq() {
+        try {
+            return Long.parseLong(readText(new File(storeDir(), STORE_SEQ)).trim());
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    private long bumpStoreSeq() throws IOException {
+        long next = readSeq() + 1;
+        writeAtomic(new File(storeDir(), STORE_SEQ), Long.toString(next));
+        return next;
     }
 
     private void bioDone(final String cbId, final boolean ok, final String payload) {
