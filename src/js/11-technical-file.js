@@ -213,6 +213,14 @@
       </div>` : ''}`;
   }
 
+  // جستجو: رقم فارسی/لاتین، ی/ي و ک/ك و حروف بزرگ/کوچک یکی حساب می‌شوند (IP با رقم فارسی هم پیدا شود)
+  function searchNorm(v) {
+    return faToEnDigits(String(v == null ? '' : v)).replace(/[يى]/g, 'ی').replace(/ك/g, 'ک').replace(/\u200c/g, ' ').toLowerCase();
+  }
+  function itemMatches(inv, it, q) {
+    const sec = sectionOf(it.section);
+    return !!sec && sec.fields.some(f => f.type !== 'secret' && searchNorm(f.type === 'ref' ? itemLabel(inv, it.data[f.k]) : it.data[f.k]).includes(q));
+  }
   function renderInventory() {
     renderAuthCard();
     const main = document.getElementById('invMain');
@@ -227,19 +235,24 @@
     document.getElementById('invFilterRow').innerHTML = INV_FILTERS.map(f =>
       `<button class="date-q-btn ${invFilter === f.key ? 'selected' : ''}" data-filter="${f.key}">${f.label}</button>`).join('');
 
-    const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
+    const q = searchNorm(document.getElementById('invSearchInput').value.trim());
+    // با جستجو، فقط شرکت‌هایی که نامشان یا یکی از آیتم‌هایشان می‌خورد (جستجو در همه پرونده‌ها، نه فقط شرکت انتخاب‌شده)
+    const hits = (c) => searchNorm(c).includes(q) ? -1 : liveItems(inv, c).filter(it => itemMatches(inv, it, q)).length;
+    const shown = comps.filter(c => (invFilter === 'all' || companyTraits(inv, c)[invFilter]) && (!q || hits(c) !== 0));
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
-      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" role="button" tabindex="0" aria-pressed="${c === selectedCompany}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
-      : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" role="button" tabindex="0" aria-pressed="${c === selectedCompany}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span>${q && hits(c) > 0 ? `<span class="inv-hit" aria-label="${toPersianDigits(hits(c))} مورد">${toPersianDigits(hits(c))}</span>` : ''}</div>`).join('')
+      : `<div class="inv-empty" style="grid-column:1/-1;">${q ? 'در هیچ پرونده‌ای پیدا نشد' : comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');
-    if (!selectedCompany || !comps.includes(selectedCompany)) { box.innerHTML = ''; return; }
-    const q = document.getElementById('invSearchInput').value.trim().toLowerCase();
+    if (!selectedCompany || !comps.includes(selectedCompany)) {
+      box.innerHTML = comps.length ? '<div class="inv-empty">یک شرکت را انتخاب کنید تا پرونده‌اش باز شود</div>' : '';
+      return;
+    }
     const openNow = new Set([...box.querySelectorAll('details[open]')].map(d => d.dataset.section));
     box.innerHTML = INV_SECTIONS.map(sec => {
       const all = liveItems(inv, selectedCompany, sec.key);
-      const items = q ? all.filter(i => Object.values(i.data).some(v => String(v).toLowerCase().includes(q))) : all;
+      const items = q && !searchNorm(selectedCompany).includes(q) ? all.filter(i => itemMatches(inv, i, q)) : all;
       const open = q ? items.length > 0 : openNow.has(sec.key);
       return `<details class="frost-card inv-section" data-section="${sec.key}" ${open ? 'open' : ''}>
         <summary><span>${sec.title}</span><span class="inv-count">${toPersianDigits(items.length)}${q ? ' / ' + toPersianDigits(all.length) : ''}</span></summary>
@@ -271,7 +284,7 @@
         <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش" aria-label="ویرایش">✏️</button>${isAdmin()
           ? `<button data-history="${id}" title="تاریخچه" aria-label="تاریخچه">🕘</button><button data-del="${id}" title="حذف" aria-label="حذف">🗑</button>` : ''}</span>
       </div>${rows}${secrets}
-      <div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div></div>`;
+      ${by || whenLabel(it.updatedAt) ? `<div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div>` : ''}</div>`;
   }
 
   // همه کلیک‌های پرونده فنی و پنل‌ها از یک‌جا (بدون onclick داخل متن HTML)
@@ -374,7 +387,7 @@
   // پرسش یک متن کوتاه (prompt در اپ اندروید کار نمی‌کند)
   function askText(title, placeholder) {
     return new Promise(resolve => {
-      openInvPanel(title, `<input type="text" class="cyber-input" id="invAskText" maxlength="80" placeholder="${escapeHtml(placeholder)}">
+      openInvPanel(title, `<input type="text" class="cyber-input" id="invAskText" maxlength="80" placeholder="${escapeHtml(placeholder)}" aria-label="${escapeHtml(placeholder)}">
         <button class="install-btn" style="padding:10px;" id="invAskOk">تأیید</button>`);
       const input = document.getElementById('invAskText');
       setTimeout(() => input.focus(), 100);
@@ -401,12 +414,17 @@
       const v = it ? (it.data[f.k] || '') : '';
       const name = `inv_${f.k}`;
       if (f.type === 'select') {
-        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}">${f.options.map(o =>
+        // مقدار ذخیره‌شده‌ای که در گزینه‌ها نیست (داده قدیمی یا پشتیبان) با ویرایش بی‌صدا عوض نشود
+        const options = v && !f.options.includes(v) ? [v, ...f.options] : f.options;
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}">${options.map(o =>
           `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select></label>`;
       }
       if (f.type === 'ref') {
         const opts = inv.items.filter(i => !i.deleted && i.company === (it ? it.company : selectedCompany) && f.ref.includes(i.section) && i.id !== id);
-        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${opts.map(o =>
+        // ارجاع به آیتمی که حذف (نرم) شده با ویرایشِ فیلدهای دیگر بی‌صدا پاک نشود
+        const gone = v && !opts.some(o => o.id === v) ? inv.items.find(i => i.id === v) : null;
+        const goneOpt = gone ? `<option value="${escapeHtml(gone.id)}" selected>${escapeHtml((gone.data[sectionOf(gone.section) ? sectionOf(gone.section).titleField : ''] || '—') + ' (حذف‌شده)')}</option>` : '';
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${goneOpt}${opts.map(o =>
           `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
       }
       if (f.type === 'textarea') {

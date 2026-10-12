@@ -1581,6 +1581,8 @@
       border-radius: 9px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit;
     }
     .inv-row { display: flex; gap: 6px; line-height: 1.7; }
+    #invCompaniesGrid .comp-chip { position: relative; }
+    .inv-hit { position: absolute; top: -7px; left: -5px; min-width: 20px; padding: 1px 6px; border-radius: var(--radius-pill); background: var(--info); color: var(--bg); border: 2px solid var(--surface-1); font-size: 11px; font-weight: 800; line-height: 1.4; text-align: center; }
     .inv-row b { color: var(--text-dim); font-weight: 600; flex-shrink: 0; }
     .inv-row span { overflow-wrap: anywhere; }
     .inv-ltr { direction: ltr; unicode-bidi: isolate; }
