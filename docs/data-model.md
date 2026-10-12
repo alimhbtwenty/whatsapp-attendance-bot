@@ -47,15 +47,24 @@
 ## حساب‌ها — `geomat_team_v1`
 ```json
 { "schema": 1,
-  "users": [ { "id": "uuid", "name": "رضا", "role": "admin | tech", "active": true,
+  "users": [ { "id": "uuid", "name": "رضا", "phone": "09121234567", "role": "admin | tech", "active": true,
                "salt": "base64(16B)", "iter": 310000, "wrapped": { "v": 1, "iv": "...", "ct": "..." },
                "createdAt": "ISO", "createdBy": { "id": "...", "name": "..." } } ],
   "log": [ { "at": "ISO", "by": { }, "action": "team-create|user-add|user-enable|user-disable|password|team-import", "detail": "..." } ] }
 ```
 - `wrapped` همان «کلید تیم» (۳۲ بایت تصادفی، AES-GCM-256) است که با کلیدِ ساخته‌شده از رمز همان نفر (PBKDF2-SHA256) رمز شده. همه `secrets` با کلید تیم رمز می‌شوند.
 - «فایل تیم» (`{app, kind:"team", team}`) همین `users` است، بدون `log` و بدون هیچ رمزی.
+- `phone` شناسه ورود به کل برنامه است (نرمال‌شده `09xxxxxxxxx`)؛ همین با رمز بعداً به دیتابیس سرور می‌رود و پنل مدیریت آن را تغییر می‌دهد. حساب‌های پیش‌نمایش بدون شماره، در اولین ورود شماره می‌گیرند.
+- `geomat_last_phone`: آخرین شماره واردشده روی این گوشی (فقط برای پر کردن فرم ورود).
+- `geomat_bio_v1` (فقط وب): `{ [userId]: { credId, salt, wrapped } }`؛ کلید تیم زیر کلید PRF پس‌کلید پلتفرم. در APK همین در Android Keystore و SharedPreferences برنامه است.
 - `geomat_vault_fail_v1`: شمارنده رمز اشتباه (بعد از ۵ بار، ۳۰ ثانیه صبر).
 - `geomat_vault_meta_v1`: فقط در پیش‌نمایش اول 1.4 بود (یک رمز اصلی). با اولین ورود مدیر منتقل و پاک می‌شود.
 
 ## تنظیمات — `geomat_settings_v1`
-`{ reminderTime, workStart: "09:00", workEnd: "17:00", thuEnd: "14:00", holidays: ["YYYY-MM-DD", ...] }`. گزارش ماهانه اضافه‌کار و کسر کار را از همین‌ها حساب می‌کند (ADR-0001 بند ۱۰).
+`{ reminderTime, workStart: "09:00", workEnd: "17:00", thuEnd: "14:00", holidays: ["YYYY-MM-DD", ...], theme: "dark|light|system" }`. گزارش ماهانه اضافه‌کار و کسر کار را از همین‌ها حساب می‌کند (ADR-0001 بند ۱۰).
+
+## رکوردهای آرشیو: چه کسی
+`by: {id, name}` (ثبت‌کننده) و `closedBy` (ثبت خروج)، از نشست ورود.
+
+## به‌روزرسانی
+`geomat_schema_version` (الان `14`) و `geomat_backup_pre_1_4` (`{at, from, data}`: کپی کامل پیش از اولین اجرای 1.4؛ در فایل پشتیبان نمی‌آید).

@@ -84,34 +84,44 @@ jobs:
           echo "key $KEY / apk $APKSIG"
           [ -n "$KEY" ] && [ "$KEY" = "$APKSIG" ] || { echo "::error::APK is not signed with the release key"; exit 1; }
 
-      - name: Prepare APK File
+      # APK و وب‌اپ با هم در هر ریلیز (نام ثابت برای لینک پیش‌نمایش)
+      - name: Prepare release files
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk geomat-attendance.apk
+          cp android/app/build/outputs/apk/release/app-release.apk geo-team.apk
+          mkdir -p web && cp index.html sw.js manifest.json icon-192.png icon-512.png icon-maskable-512.png web/
+          (cd web && zip -q -r ../geo-team-web.zip .)
 
-      - name: Upload APK Artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: geomat-attendance-apk
-          path: geomat-attendance.apk
+          name: geo-team
+          path: |
+            geo-team.apk
+            geo-team-web.zip
 
-      # برنچ‌ها و PRها: APK در پیش‌ریلیز ثابت «preview» گذاشته می‌شود تا قبل از ادغام روی گوشی تست شود
-      # (لینک همیشه یکی است: releases/download/preview/geomat-attendance.apk)
-      - name: Publish preview APK (before merge)
+      # برنچ‌ها و PRها: پیش‌ریلیز ثابت «preview» تا قبل از ادغام روی گوشی تست شود
+      # لینک‌ها همیشه یکی‌اند: releases/download/preview/geo-team.apk و geo-team-web.zip
+      - name: Publish preview (before merge)
         if: github.ref != 'refs/heads/main' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           gh release delete preview --cleanup-tag -y || true
-          gh release create preview geomat-attendance.apk --prerelease --target "$TARGET_SHA" \
+          gh release create preview geo-team.apk geo-team-web.zip --prerelease --target "$TARGET_SHA" \
             --title "پیش‌نمایش (قبل از ادغام)" \
-            --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود."
+            --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود. geo-team.apk = اپ اندروید، geo-team-web.zip = وب‌اپ."
+          # دفعه قبل ریلیز به حالت پیش‌نویس رفت و لینک دانلود خالی شد: منتشرشده بودن را مطمئن کن
+          gh release edit preview --draft=false
+          test "$(gh release view preview --json isDraft --jq .isDraft)" = "false"
 
       # فقط main ریلیز رسمی می‌سازد
-      - name: Attach APK to GitHub Release v1.4.0
+      - name: Attach APK and web app to GitHub Release v1.4.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view v1.4.0 >/dev/null 2>&1 || gh release create v1.4.0 --title "v1.4.0" --notes "Support tab: per-company technical file (network/domain, accessible systems, AnyDesk/RustDesk remotes, ESXi hosts, servers/VMs, apps, users) with a personal login per person (admin: full control; technician: view, add, edit, no delete), append-only history with who/when/what and restore for the admin, passwords encrypted with a team key (PBKDF2 + AES-GCM), domain/workgroup/ESXi filters and search; overtime and deficit by office hours (09-17, Thursday 09-14, Fridays and holidays all overtime, travel between sites is not a deficit); exit message no longer repeats the entry time; v1.2 split entry/exit records merged into one record per stay; staff-name checkbox removed. Greeting and date only on the first message of the day; no location in WhatsApp messages; entry and exit of a stay are one archive record, and an exit pairs with its entry from the archive; reports are posted to the in-app messenger; messenger fits the screen with the keyboard open. No default companies: each site is added on location with its GPS position; live entry needs the site location; location always on. Geofence per site, open entry + exit reminder, monthly report with overtime, backup/restore, support checklists, offline send queue, entry GPS location, in-app Jalali calendar, chat delete fix." || true
-          gh release upload v1.4.0 geomat-attendance.apk --clobber || true
+          cp geo-team.apk geo-team-1.4.0.apk && cp geo-team-web.zip geo-team-web-1.4.0.zip
+          gh release view v1.4.0 >/dev/null 2>&1 || gh release create v1.4.0 --title "Geo Team 1.4.0" --notes-file docs/release-notes/1.4.0.md
+          gh release upload v1.4.0 geo-team-1.4.0.apk geo-team-web-1.4.0.zip --clobber
+          gh release edit v1.4.0 --draft=false

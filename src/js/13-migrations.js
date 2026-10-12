@@ -41,9 +41,10 @@
     try { snap = JSON.parse(localStorage.getItem(PRE_UPDATE_BACKUP_KEY) || 'null'); } catch(e) {}
     if (!snap || !snap.data) { showToast('پشتیبان پیش از به‌روزرسانی وجود ندارد'); return; }
     if (!await appConfirm('همه اطلاعات به لحظه پیش از نصب این نسخه برگردد؟ تغییرات بعد از آن از بین می‌رود.', 'برگرداندن')) return;
-    Object.keys(snapshotAppData()).forEach(k => localStorage.removeItem(k));
-    Object.entries(snap.data).forEach(([k, v]) => localStorage.setItem(k, v));
-    localStorage.setItem(SCHEMA_VERSION_KEY, String(SCHEMA_VERSION)); // دوباره مهاجرت و کپی نشود
+    if (!replaceAppData({ ...snap.data, [SCHEMA_VERSION_KEY]: String(SCHEMA_VERSION) })) { // دوباره مهاجرت و کپی نشود
+      showToast('⚠️ برگرداندن انجام نشد (حافظه پر است)؛ اطلاعات فعلی دست نخورد');
+      return;
+    }
     showToast('♻️ اطلاعات پیش از به‌روزرسانی برگردانده شد');
     setTimeout(() => location.reload(), 700);
   }

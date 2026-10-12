@@ -76,8 +76,11 @@
   const fieldLabel = (f) => f.label.replace(/ \(.*\)/, '');
 
   function getInventory() {
+    return normalizeInventory(localStorage.getItem(INVENTORY_KEY));
+  }
+  function normalizeInventory(text) {
     try {
-      const o = JSON.parse(localStorage.getItem(INVENTORY_KEY) || 'null');
+      const o = JSON.parse(text || 'null');
       if (o && (o.schema === 1 || o.schema === 2) && Array.isArray(o.items)) {
         o.items = o.items.filter(i => i && typeof i === 'object' && typeof i.id === 'string' && i.id && typeof i.company === 'string' &&
           INV_SECTIONS.some(sec => sec.key === i.section) && i.data && typeof i.data === 'object');
@@ -98,6 +101,34 @@
     } catch(e) {}
     return { schema: 2, companies: [], items: [] };
   }
+  // ادغام دو نسخه پرونده فنی (بازگردانی پشتیبان، و بعداً همگام‌سازی سرور): تاریخچه هر آیتم اجتماع دو طرف است
+  // و وضع فعلی همیشه آخرین نسخه آن است؛ پس هیچ نسخه‌ای با ادغام از بین نمی‌رود
+  function mergeInventoryData(curText, incText) {
+    if (!incText) return curText || null;
+    if (!curText) return JSON.stringify(normalizeInventory(incText));
+    const a = normalizeInventory(curText), b = normalizeInventory(incText);
+    const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
+    const byTime = (x, y) => String(x.at).localeCompare(String(y.at));
+    const items = new Map(a.items.map(i => [i.id, i]));
+    for (const it of b.items) {
+      const mine = items.get(it.id);
+      if (!mine) { items.set(it.id, it); continue; }
+      const seen = new Set(mine.history.map(vkey));
+      const history = mine.history.concat(it.history.filter(v => !seen.has(vkey(v)))).sort(byTime);
+      const last = history[history.length - 1];
+      items.set(it.id, { ...mine, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
+        updatedAt: last.at, updatedBy: last.by });
+    }
+    const companies = new Map(a.companies.map(c => [c.id, c]));
+    for (const c of b.companies) {
+      const mine = companies.get(c.id);
+      if (!mine) { companies.set(c.id, c); continue; }
+      const seen = new Set(mine.history.map(v => `${v.at}|${v.action}`));
+      mine.history = mine.history.concat(c.history.filter(v => !seen.has(`${v.at}|${v.action}`))).sort(byTime);
+    }
+    return JSON.stringify({ schema: 2, companies: [...companies.values()], items: [...items.values()] });
+  }
+
   function saveInventory(inv) {
     try {
       localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
