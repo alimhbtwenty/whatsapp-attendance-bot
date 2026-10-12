@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ci3mZ4oF6ElVwTZk4AqO9Ve/rd+QIfICU0ib4Z/k/ho='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iyGOWIWYUeyqed6fdpzfHNI7NcOH1N6p2CtqM7mGXEk='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -3632,8 +3632,9 @@
   function renderStorageUsage() {
     const use = document.getElementById('storageUsage');
     if (!use) return;
-    const pct = Math.min(100, Math.round(storageUsedChars() / STORAGE_QUOTA_CHARS * 100));
-    use.textContent = `فضای استفاده‌شده روی این گوشی: ${toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
+    const exact = storageUsedChars() / STORAGE_QUOTA_CHARS * 100;
+    const pct = Math.min(100, Math.round(exact));
+    use.textContent = `فضای استفاده‌شده روی این گوشی: ${exact < 1 ? 'کمتر از ۱' : toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
     use.classList.toggle('storage-warn', pct >= 80);
   }
   function renderSettings() {

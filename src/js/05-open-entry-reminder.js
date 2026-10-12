@@ -43,8 +43,9 @@
   function renderStorageUsage() {
     const use = document.getElementById('storageUsage');
     if (!use) return;
-    const pct = Math.min(100, Math.round(storageUsedChars() / STORAGE_QUOTA_CHARS * 100));
-    use.textContent = `فضای استفاده‌شده روی این گوشی: ${toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
+    const exact = storageUsedChars() / STORAGE_QUOTA_CHARS * 100;
+    const pct = Math.min(100, Math.round(exact));
+    use.textContent = `فضای استفاده‌شده روی این گوشی: ${exact < 1 ? 'کمتر از ۱' : toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
     use.classList.toggle('storage-warn', pct >= 80);
   }
   function renderSettings() {
