@@ -1,6 +1,7 @@
 // داده‌ای که خودِ نسخه‌های قدیمی (1.1، 1.2، 1.3، پیش‌نمایش 1.4) ساخته‌اند (tests/fixtures، با generate-from-old-version.js)
 // با نسخه جدید باز می‌شود: هیچ رکورد، محل، تنظیم، چت یا ورود بازی نباید گم یا خراب شود.
 const { chromium } = require('playwright');
+const { login } = require('../helpers/session');
 const BASE = process.env.BASE_URL || 'http://localhost:8765';
 const fs = require('fs');
 const path = require('path');
@@ -15,6 +16,8 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
     await p.clock.install({ time: new Date('2026-10-11T11:00:00+03:30') });
     await p.addInitScript((d) => { if (localStorage.getItem('seeded')) return; localStorage.setItem('seeded', '1'); for (const k in d) localStorage.setItem(k, d[k]); }, fixture);
     await p.goto(BASE + '/index.html'); await p.waitForTimeout(1200);
+    ok(`${v}: setup form keeps the old user name`, await p.inputValue('#lockName') === 'تکنسین تست');
+    await login(p);
     const s = await p.evaluate(() => {
       const logs = JSON.parse(localStorage.getItem('geomat_logs_v2'));
       const att = logs.filter(l => l.type === 'attendance');
@@ -27,7 +30,7 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
         openEntry: getOpenEntry(),
         companies: getCompanies(), sites: Object.keys(getSites()),
         chat: (JSON.parse(localStorage.getItem('geomat_chat_messages_v1') || '[]')).some(m => String(m.text).includes('تست به‌روزرسانی')),
-        reminder: getSettings().reminderTime, user: getUserName(),
+        reminder: getSettings().reminderTime,
         schema: localStorage.getItem('geomat_schema_version'),
         backup: JSON.parse(localStorage.getItem('geomat_backup_pre_1_4') || 'null')
       };
@@ -37,11 +40,11 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
     ok(`${v}: open entry kept`, s.open.join() === 'هاستیدا 09:30' && s.openEntry && s.openEntry.company === 'هاستیدا', s.open.join());
     ok(`${v}: support report kept`, s.support === 1);
     ok(`${v}: companies and sites kept`, s.companies.join() === 'کرانه,هاستیدا' && s.sites.length === 2);
-    ok(`${v}: chat, settings, user kept`, s.chat && s.reminder === '18:30' && s.user === 'تکنسین تست');
+    ok(`${v}: chat and settings kept`, s.chat && s.reminder === '18:30');
     ok(`${v}: pre-update copy is the untouched old data`, !!s.backup && s.backup.data.geomat_logs_v2 === fixture.geomat_logs_v2 && s.schema === '14');
     // دوباره باز کردن چیزی را عوض نمی‌کند
     const before = await p.evaluate(() => JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k)]))));
-    await p.reload(); await p.waitForTimeout(800);
+    await p.reload(); await p.waitForTimeout(800); await login(p);
     const after = await p.evaluate(() => JSON.stringify(Object.fromEntries(Object.keys(localStorage).sort().map(k => [k, localStorage.getItem(k)]))));
     ok(`${v}: second start changes nothing`, before === after);
     // برگرداندن به قبل از به‌روزرسانی

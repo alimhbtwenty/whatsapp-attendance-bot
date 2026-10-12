@@ -16,7 +16,8 @@ const server = createServer(async (req, res) => {
   } catch { res.writeHead(404).end(); }
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
-const base = `http://127.0.0.1:${server.address().port}`;
+// localhost (نه IP): WebAuthn شناسه سایتِ IP را نمی‌پذیرد
+const base = `http://localhost:${server.address().port}`;
 
 const only = process.argv.slice(2);
 const files = (await readdir(join(root, 'tests/e2e'))).filter(f => f.endsWith('.js') && (!only.length || only.some(o => f.includes(o)))).sort();

@@ -32,6 +32,7 @@
     const st = getSettings();
     if (TIME_SETTINGS.includes(field) && !/^\d{2}:\d{2}$/.test(value)) value = st[field];
     st[field] = value;
+    if (field === 'reminderTime') setTimeout(syncExitReminder, 0);
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(st)); } catch(e) {}
     renderSettings();
     renderOpenEntryBanner();
@@ -84,6 +85,50 @@
       if (o) localStorage.setItem(OPEN_ENTRY_KEY, JSON.stringify(o));
       else localStorage.removeItem(OPEN_ENTRY_KEY);
     } catch(e) {}
+    syncExitReminder();
+  }
+
+  // ==================== اعلان بومی «خروج ثبت نشده» (اپ اندروید) ====================
+  // متن اعلان دقیقاً همان بنر داخل برنامه است؛ حتی وقتی برنامه بسته است در ساعت یادآوری می‌آید
+  const NOTIF_ASKED_KEY = 'geomat_notif_asked_v1';
+  function exitReminderTexts(o) {
+    const when = o.dateISO === toISODate(new Date()) ? '' : ` (${shortDateLabel(isoToDate(o.dateISO))})`;
+    return { title: `⏰ خروج «${o.company}» ثبت نشده`, body: `ورود ${o.inTime}${when} — برای ثبت خروج بزنید` };
+  }
+  function syncExitReminder() {
+    const br = window.AndroidBridge;
+    if (!br || typeof br.scheduleExitReminder !== 'function') return;
+    const o = getOpenEntry();
+    if (!o) { br.cancelExitReminder(); return; }
+    const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
+    const at = isoToDate(o.dateISO);
+    at.setHours(rh, rm, 0, 0);
+    const t = exitReminderTexts(o);
+    br.scheduleExitReminder(t.title, t.body, String(Math.max(at.getTime(), Date.now() + 60000)), `${o.company}|${o.dateISO}|${o.inTime}`);
+    askNotificationPermissionOnce();
+  }
+  async function askNotificationPermissionOnce() {
+    const br = window.AndroidBridge;
+    if (!br || typeof br.notificationPermission !== 'function' || br.notificationPermission() === 'granted') return;
+    if (localStorage.getItem(NOTIF_ASKED_KEY)) return;
+    try { localStorage.setItem(NOTIF_ASKED_KEY, '1'); } catch(e) {}
+    if (await appConfirm('اگر تا ساعت یادآوری خروج ثبت نشود، Geo Team حتی با برنامه بسته یک اعلان می‌دهد. اجازه اعلان داده شود؟', 'اجازه بده')) br.requestNotificationPermission();
+  }
+  // دکمه‌های اعلان: «ثبت خروج»، «✕» یا لمس خود اعلان (بعد از ورود به حساب اجرا می‌شود)
+  let pendingNotificationAction = null;
+  window.handleNotificationAction = (action) => {
+    if (typeof session === 'undefined' || !session) { pendingNotificationAction = action; return; }
+    switchSystemMode('attendance');
+    if (!getOpenEntry()) { showToast('این ورود قبلاً بسته شده است'); return; }
+    if (action === 'exit') startExitForOpenEntry();
+    else if (action === 'dismiss') discardOpenEntry();
+    else renderOpenEntryBanner();
+  };
+  function runPendingNotificationAction() {
+    if (!pendingNotificationAction) return;
+    const a = pendingNotificationAction;
+    pendingNotificationAction = null;
+    window.handleNotificationAction(a);
   }
 
   // ورود باز با شرکت و تاریخِ فرم فعلی جفت می‌شود؟ (همان روز، یا روز بعد وقتی خروج قبل از ساعت ورود است)

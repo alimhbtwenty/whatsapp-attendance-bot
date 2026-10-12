@@ -4,6 +4,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- اعلان «خروج ثبت نشده»، و زمان‌بندی دوباره بعد از ری‌استارت گوشی -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- ورود با اثر انگشت یا چهره -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <queries>
         <package android:name="com.whatsapp" />
@@ -29,6 +34,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -36,6 +42,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- زمان‌بندی و دکمه‌های اعلان: فقط خود برنامه (exported=false) -->
+        <receiver
+            android:name=".ExitReminder"
+            android:exported="false" />
+        <!-- فقط پیام‌های سیستمی ری‌استارت و آپدیت -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

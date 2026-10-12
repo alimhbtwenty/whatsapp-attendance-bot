@@ -75,27 +75,10 @@
     localStorage.setItem('geomat_companies_v2', JSON.stringify(list));
   }
 
+  // نام کاربرِ واردشده؛ بیرون از حساب (مثلاً روی صفحه ورود) نام قبلی دستگاه
   function getUserName() {
-    return localStorage.getItem('geomat_user_name') || 'علی محبی';
-  }
-  function saveUserName() {
-    const val = document.getElementById('userNameInput').value.trim();
-    if (val) {
-      localStorage.setItem('geomat_user_name', val);
-      document.getElementById('userNameHeader').textContent = val;
-      updatePreview();
-      updateSupportPreview();
-      showToast('نام شما ذخیره شد');
-    }
-    closeUserModal();
-  }
-  function openUserModal() {
-    playTactileFeedback();
-    document.getElementById('userNameInput').value = getUserName();
-    document.getElementById('userModal').classList.add('open');
-  }
-  function closeUserModal() {
-    document.getElementById('userModal').classList.remove('open');
+    if (typeof session !== 'undefined' && session) return session.user.name;
+    return localStorage.getItem('geomat_user_name') || '';
   }
 
   function getPersianDateParts(date) {

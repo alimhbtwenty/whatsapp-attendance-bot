@@ -336,6 +336,7 @@
     rec.durationText = `${Math.floor(mins / 60)}:${pad2(mins % 60)}`;
     rec.outText = text;
     rec.closedAt = Date.now();
+    rec.closedBy = sessionWho();
     return rec.id;
   }
 
@@ -367,6 +368,7 @@
     const id = Math.max(Date.now(), ...logs.slice(0, 20).map(l => (Number(l.id) || 0) + 1));
     logs.unshift({
       id: id,
+      by: sessionWho(), // چه کسی ثبت کرد (بعد از ورود با شماره)
       type: type, // 'attendance' or 'support'
       company: selectedCompany,
       date: dateStr,
@@ -392,6 +394,7 @@
 
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
+  let archivePersonFilter = 'all';
   function renderArchive() {
     const logs = getLogs();
     const comps = getCompanies();
@@ -414,7 +417,21 @@
       filterBar.appendChild(chip);
     });
 
-    const filtered = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+    // مدیر وقتی رکورد چند نفر در این گوشی هست، می‌تواند بر اساس شخص هم فیلتر کند
+    const people = [...new Map(logs.filter(l => l.by && l.by.id).map(l => [l.by.id, l.by.name])).entries()];
+    if (isAdmin() && people.length > 1) {
+      [['all', 'همه افراد'], ...people].forEach(([id, name]) => {
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
+        chip.textContent = id === 'all' ? name : `👤 ${name}`;
+        chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
+        filterBar.appendChild(chip);
+      });
+    } else {
+      archivePersonFilter = 'all';
+    }
+    const filtered = logs.filter(l => (archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter) &&
+      (archivePersonFilter === 'all' || (l.by && l.by.id === archivePersonFilter)));
 
     // آمار (ورود و خروج جدا هم جفت و حساب می‌شوند)
     const totalMins = computeSessions(filtered).reduce((sum, x) => sum + x.mins, 0);

@@ -5,7 +5,10 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.graphics.Bitmap;
+import org.json.JSONObject;
 import android.webkit.GeolocationPermissions;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -27,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQ_LOCATION = 1001;
     private static final int REQ_SAVE_FILE = 1002;
     private static final int REQ_PICK_FILE = 1003;
+    private static final int REQ_NOTIFICATIONS = 1004;
     private static final String APP_URL = "file:///android_asset/index.html";
 
     private WebView webView;
@@ -37,12 +41,19 @@ public class MainActivity extends AppCompatActivity {
     private String pendingSaveContent;
     // انتخاب فایل برای <input type="file"> (بازگردانی پشتیبان)
     private ValueCallback<Uri[]> pendingFileCallback;
+    // پل جاوا فقط برای صفحه خود برنامه؛ متدهای پل روی رشته دیگری اجرا می‌شوند و getUrl() آن‌جا مجاز نیست
+    private volatile boolean pageIsApp = false;
+    private BiometricVault bio;
+    // دکمه اعلان (ثبت خروج / بستن) تا وقتی صفحه آماده شود
+    private String pendingAppAction;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        bio = new BiometricVault(this);
+        pendingAppAction = getIntent() != null ? getIntent().getStringExtra(ExitReminder.EXTRA_APP_ACTION) : null;
         webView = new WebView(this);
         setContentView(webView);
 
@@ -96,9 +107,20 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // WebView دانلود blob را پشتیبانی نمی‌کند؛ صفحه فایل‌ها (اکسل، پشتیبان) را از این پل ذخیره می‌کند
-        webView.addJavascriptInterface(new FileBridge(), "AndroidBridge");
+        webView.addJavascriptInterface(new AppBridge(), "AndroidBridge");
 
         webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                pageIsApp = url != null && url.startsWith(APP_URL);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                pageIsApp = url != null && url.startsWith(APP_URL);
+                deliverAppAction();
+            }
+
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 return handleUri(request.getUrl());
@@ -128,28 +150,30 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } catch (Exception ignored) {}
                     }
-                } else if (scheme != null && !scheme.equals("file") && !scheme.equals("http") && !scheme.equals("https")) {
+                } else if (scheme != null && uriStr.startsWith(APP_URL)) {
+                    return false; // خود برنامه
+                } else if (scheme != null && !scheme.equals("file") && !scheme.equals("javascript")) {
+                    // هر صفحه بیرونی (از جمله http/https) در مرورگر یا برنامه خودش باز می‌شود، نه داخل WebView،
+                    // تا هیچ صفحه‌ای جز برنامه به پل جاوا (AndroidBridge) دسترسی نداشته باشد
                     try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                        startActivity(intent);
-                        return true;
+                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     } catch (Exception ignored) {}
+                    return true;
                 }
-                return false;
+                return true; // فایل‌های دیگر و javascript: بارگذاری نمی‌شوند
             }
         });
 
         webView.loadUrl("file:///android_asset/index.html");
     }
 
-    private class FileBridge {
+    private class AppBridge {
         @JavascriptInterface
         public void saveFile(final String name, final String mime, final String content) {
+            if (!pageIsApp) return;
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    String url = webView.getUrl();
-                    if (url == null || !url.startsWith(APP_URL)) return; // فقط صفحه خود اپ
                     pendingSaveContent = content;
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
                     intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -164,6 +188,89 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        // ---------- بیومتریک ----------
+        @JavascriptInterface
+        public String bioStatus() {
+            return pageIsApp ? bio.status() : "unavailable";
+        }
+
+        @JavascriptInterface
+        public boolean bioEnrolled(String userId) {
+            return pageIsApp && userId != null && bio.enrolled(userId);
+        }
+
+        @JavascriptInterface
+        public void bioEnroll(final String userId, final String rawB64, final String cbId) {
+            if (!pageIsApp || userId == null || rawB64 == null) return;
+            runOnUiThread(() -> bio.enroll(userId, rawB64, (ok, payload) -> bioDone(cbId, ok, payload)));
+        }
+
+        @JavascriptInterface
+        public void bioUnlock(final String userId, final String cbId) {
+            if (!pageIsApp || userId == null) return;
+            runOnUiThread(() -> bio.unlock(userId, (ok, payload) -> bioDone(cbId, ok, payload)));
+        }
+
+        @JavascriptInterface
+        public void bioRemove(String userId) {
+            if (pageIsApp && userId != null) bio.remove(userId);
+        }
+
+        // ---------- یادآوری خروج ----------
+        @JavascriptInterface
+        public void scheduleExitReminder(String title, String body, String atMillis, String key) {
+            if (!pageIsApp || title == null || body == null || key == null) return;
+            try {
+                ExitReminder.schedule(MainActivity.this, title, body, Long.parseLong(atMillis), key);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        @JavascriptInterface
+        public void cancelExitReminder() {
+            if (pageIsApp) ExitReminder.cancel(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public String notificationPermission() {
+            if (Build.VERSION.SDK_INT < 33) return "granted";
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return "granted";
+            return "ask";
+        }
+
+        @JavascriptInterface
+        public void requestNotificationPermission() {
+            if (!pageIsApp || Build.VERSION.SDK_INT < 33) return;
+            runOnUiThread(() -> ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFICATIONS));
+        }
+    }
+
+    private void bioDone(final String cbId, final boolean ok, final String payload) {
+        runOnUiThread(() -> {
+            if (webView == null || !pageIsApp) return;
+            webView.evaluateJavascript("window.__geoBioDone && window.__geoBioDone(" + JSONObject.quote(cbId) + ","
+                    + ok + "," + JSONObject.quote(payload == null ? "" : payload) + ")", null);
+        });
+    }
+
+    // دکمه‌های اعلان یادآوری خروج
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        String action = intent.getStringExtra(ExitReminder.EXTRA_APP_ACTION);
+        if (action != null) {
+            pendingAppAction = action;
+            deliverAppAction();
+        }
+    }
+
+    private void deliverAppAction() {
+        if (pendingAppAction == null || webView == null || !pageIsApp) return;
+        String a = pendingAppAction;
+        pendingAppAction = null;
+        webView.evaluateJavascript("window.handleNotificationAction && window.handleNotificationAction(" + JSONObject.quote(a) + ")", null);
     }
 
     @Override

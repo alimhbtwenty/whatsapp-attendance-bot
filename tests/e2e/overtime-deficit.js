@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { login } = require('../helpers/session');
 const BASE = process.env.BASE_URL || 'http://localhost:8765';
 const OUT = process.env.TEST_OUT || require('path').join(__dirname, '..', 'output');
 require('fs').mkdirSync(OUT, { recursive: true });
@@ -8,7 +9,7 @@ const ok=(n,c,x='')=>console.log((c?'PASS ':'FAIL ')+n+' '+x);
   const b = await chromium.launch(); const ctx = await b.newContext({ viewport:{width:390,height:844}, isMobile:true, timezoneId:'Asia/Tehran' });
   const p = await ctx.newPage(); p.setDefaultTimeout(8000); const errs=[]; p.on('pageerror', e=>errs.push(e.message));
   await p.clock.install({ time: new Date('2026-10-12T20:00:00+03:30') });
-  await p.goto(BASE + '/index.html'); await p.waitForTimeout(800);
+  await p.goto(BASE + '/index.html'); await p.waitForTimeout(800); await login(p);
   const res = await p.evaluate(() => {
     let id = 1;
     const rec = (iso, company, inT, outT) => { const d = isoToDate(iso); const j = dateToJalali(d);

@@ -209,7 +209,8 @@
   function init() {
     applyTheme(getSettings().theme);
     runMigrations();
-    document.getElementById('userNameHeader').textContent = getUserName();
+    renderLockScreen();
+    document.getElementById('userNameHeader').textContent = getUserName() || 'ورود';
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
     renderCompanies();
@@ -226,6 +227,7 @@
     renderSettings();
     renderOutbox();
     checkExitReminder();
+    syncExitReminder();
     setInterval(checkExitReminder, 30000);
 
     let todayISO = toISODate(new Date());

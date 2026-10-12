@@ -159,47 +159,34 @@
 
   function renderAuthCard() {
     const card = document.getElementById('invAuthCard');
-    const team = getTeam();
-    if (session) {
-      card.innerHTML = `<div class="card-header-bar">
-          <span class="inv-who">👤 ${escapeHtml(session.user.name)}<span class="inv-role ${isAdmin() ? '' : 'tech'}">${ROLE_LABELS[session.user.role]}</span></span>
-          <button class="inv-vault-btn" data-act="logout">🔒 خروج</button>
-        </div>
-        <div class="inv-tools">
-          <button class="inv-vault-btn" data-act="mypw">🔑 تغییر رمز من</button>
-          ${isAdmin() ? `<button class="inv-vault-btn" data-act="users">👥 کاربران</button>
-          <button class="inv-vault-btn" data-act="audit">📜 گزارش تغییرات</button>
-          <button class="inv-vault-btn" data-act="deleted">🗑 حذف‌شده‌ها</button>
-          <button class="inv-vault-btn" data-act="export-team">📤 فایل تیم</button>` : ''}
+    if (!session) { card.innerHTML = ''; return; }
+    if (!techUnlocked()) {
+      card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🔐 پرونده فنی قفل است</div></div>
+        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.9;">برای دیدن پسوردها و مشخصات فنی، هویت «${escapeHtml(session.user.name)}» را دوباره تأیید کنید.</div>
+        <div class="inv-auth-row">
+          <button class="install-btn" style="padding:10px 14px;" data-act="unlock-pw">🔑 با رمز</button>
+          <button class="dock-copy-btn" style="padding:10px 14px; display:none;" id="techBioBtn" data-act="unlock-bio">👆 با اثر انگشت</button>
         </div>`;
+      Bio.enrolled(session.user.id).then(on => { const b = document.getElementById('techBioBtn'); if (b && on) b.style.display = ''; });
       return;
     }
-    const importBtn = `<button class="inv-link-btn" data-act="import-team">📥 ورود فایل تیم</button>
-      <input type="file" id="teamFileInput" accept=".json,application/json" style="display:none;" data-change='["importTeamFile", "$this"]'>`;
-    if (!team) {
-      card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🛡 راه‌اندازی پرونده فنی</div></div>
-        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.9;">مدیر اینجا حساب خودش را می‌سازد و بعد برای هر تکنسین حساب جدا. تکنسین‌ها «فایل تیم» را از مدیر می‌گیرند.</div>
-        <div class="inv-auth-row"><input type="text" class="cyber-input" id="invSetupName" maxlength="60" placeholder="نام مدیر"><button class="install-btn" style="padding:10px 14px;" data-act="setup">ساخت حساب مدیر</button></div>
-        <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
-        <div>${importBtn}</div>`;
-      return;
-    }
-    const users = team.users.filter(u => u.active);
-    card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🔑 ورود به پرونده فنی</div></div>
-      <div class="inv-auth-row">
-        <select class="cyber-input" id="invLoginUser">${users.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)} (${ROLE_LABELS[u.role]})</option>`).join('')}</select>
-        <input type="password" class="cyber-input" id="invLoginPw" dir="ltr" maxlength="128" autocomplete="current-password" placeholder="رمز">
+    card.innerHTML = `<div class="card-header-bar">
+        <span class="inv-who">👤 ${escapeHtml(session.user.name)}<span class="inv-role ${isAdmin() ? '' : 'tech'}">${ROLE_LABELS[session.user.role]}</span></span>
+        <button class="inv-vault-btn" data-act="lock-tech">🔒 قفل</button>
       </div>
-      <button class="install-btn" style="padding:10px;" id="invLoginBtn" data-act="login">ورود</button>
-      <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
-      <div>${importBtn}</div>`;
+      ${isAdmin() ? `<div class="inv-tools">
+        <button class="inv-vault-btn" data-act="users">👥 کاربران</button>
+        <button class="inv-vault-btn" data-act="audit">📜 گزارش تغییرات</button>
+        <button class="inv-vault-btn" data-act="deleted">🗑 حذف‌شده‌ها</button>
+        <button class="inv-vault-btn" data-act="export-team">📤 فایل تیم</button>
+      </div>` : ''}`;
   }
 
   function renderInventory() {
     renderAuthCard();
     const main = document.getElementById('invMain');
-    main.style.display = session ? 'flex' : 'none';
-    if (!session) {
+    main.style.display = techUnlocked() ? 'flex' : 'none';
+    if (!techUnlocked()) {
       document.getElementById('invSections').innerHTML = '';
       return;
     }
@@ -266,14 +253,13 @@
     if (!t) return;
     const d = t.dataset;
     const acts = {
-      login: loginInventory, setup: setupAdmin, logout: () => endSession(false), mypw: changeMyPassword,
-      users: openUsersPanel, audit: () => openAuditPanel(''), deleted: openDeletedPanel, 'export-team': exportTeamFile,
-      'import-team': () => document.getElementById('teamFileInput').click()
+      'unlock-pw': unlockTechWithPassword, 'unlock-bio': unlockTechWithBiometric, 'lock-tech': () => lockTech(false),
+      users: openUsersPanel, audit: () => openAuditPanel(''), deleted: openDeletedPanel, 'export-team': exportTeamFile
     };
-    if (d.act) { if (acts[d.act]) acts[d.act](); return; }
+    if (d.act) { if (acts[d.act] && (d.act.startsWith('unlock') || techUnlocked())) acts[d.act](); return; }
     if (d.filter) { invFilter = d.filter; renderInventory(); }
     else if (d.company !== undefined) { selectedCompany = d.company; renderCompanies(); updatePreview(); updateSupportPreview(); renderInventory(); }
-    else if (!session) return;
+    else if (!techUnlocked()) return;
     else if (d.add) openInvItemModal(d.add, null);
     else if (d.edit) { const it = getInventory().items.find(i => i.id === d.edit); if (it) openInvItemModal(it.section, it.id); }
     else if (d.del) deleteInvItem(d.del);
@@ -291,13 +277,13 @@
 
   // ref: «id|field» برای پسورد فعلی، یا «id|field|index» برای پسوردِ یک نسخه قدیمی (فقط مدیر)
   async function readSecret(ref) {
-    if (!session) return null;
+    if (!techUnlocked()) return null;
     const [id, field, ver] = ref.split('|');
     const it = getInventory().items.find(i => i.id === id);
     if (!it) return null;
     let src = it.secrets;
     if (ver !== undefined) {
-      if (!isAdmin()) return null;
+      if (!techAdmin()) return null;
       src = (it.history[Number(ver)] || {}).secrets;
     }
     if (!src || !src[field]) return null;
@@ -336,9 +322,9 @@
   }
 
   async function createInvCompany() {
-    if (!session) return;
+    if (!techUnlocked()) return;
     const r = await askText('➕ پرونده فنی جدید', 'نام شرکت یا مشتری');
-    if (!r || !session) return;
+    if (!r || !techUnlocked()) return;
     const inv = getInventory();
     if (invCompanyNames(inv).includes(r)) { selectedCompany = r; renderInventory(); showToast('این شرکت از قبل هست'); return; }
     const old = inv.companies.find(c => c.name === r && c.deleted);
@@ -372,7 +358,7 @@
   }
 
   function openInvItemModal(sectionKey, id) {
-    if (!session) return;
+    if (!techUnlocked()) return;
     if (!selectedCompany) { showToast('اول شرکت را انتخاب کنید'); return; }
     const sec = sectionOf(sectionKey);
     const inv = getInventory();
@@ -412,7 +398,7 @@
 
   let invSaving = false;
   async function saveInvItem() {
-    if (!invEditing || invSaving || !session) return;
+    if (!invEditing || invSaving || !techUnlocked()) return;
     const sec = sectionOf(invEditing.section);
     const form = document.getElementById('invItemForm');
     const val = (k) => { const el = form.querySelector(`[name="inv_${k}"]`); return el ? el.value : ''; };
@@ -465,7 +451,7 @@
 
   // فقط مدیر؛ حذف نرم: داده و تاریخچه می‌ماند و از «حذف‌شده‌ها» برمی‌گردد
   async function deleteInvItem(id) {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const inv = getInventory();
     const it = inv.items.find(i => i.id === id);
     if (!it) return;
@@ -512,7 +498,7 @@
   }
 
   function openHistoryPanel(id) {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const inv = getInventory();
     const it = inv.items.find(i => i.id === id);
     if (!it) return;
@@ -527,7 +513,7 @@
   }
 
   async function restoreVersion(ref) {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const [id, idx] = ref.split('|');
     const inv = getInventory();
     const it = inv.items.find(i => i.id === id);
@@ -544,7 +530,7 @@
   }
 
   function openDeletedPanel() {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const inv = getInventory();
     const items = inv.items.filter(i => i.deleted).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
     const comps = inv.companies.filter(c => c.deleted);
@@ -560,7 +546,7 @@
     openInvPanel('🗑 حذف‌شده‌ها', html);
   }
   function restoreDeleted(ref) {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const [kind, id] = ref.split('|');
     const inv = getInventory();
     if (kind === 'company') {
@@ -579,7 +565,7 @@
 
   // همه تغییرات همه شرکت‌ها و حساب‌ها، جدیدترین اول؛ با فیلتر شخص
   function openAuditPanel(who) {
-    if (!isAdmin()) return;
+    if (!techAdmin()) return;
     const inv = getInventory();
     const team = getTeam();
     const events = [];

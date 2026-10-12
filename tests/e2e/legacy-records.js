@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { login } = require('../helpers/session');
 const BASE = process.env.BASE_URL || 'http://localhost:8765';
 const OUT = process.env.TEST_OUT || require('path').join(__dirname, '..', 'output');
 require('fs').mkdirSync(OUT, { recursive: true });
@@ -21,14 +22,14 @@ const logs = [
   const p = await ctx.newPage(); const errs=[]; p.on('pageerror', e=>errs.push(e.message));
   await p.clock.install({ time: new Date('2026-10-12T10:00:00+03:30') });
   await p.addInitScript(l => { if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded','1'); localStorage.setItem('geomat_logs_v2', JSON.stringify(l)); localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه','هاستیدا','گئومات','صدف'])); } }, logs);
-  await p.goto(BASE + '/index.html'); await p.waitForTimeout(1200);
+  await p.goto(BASE + '/index.html'); await p.waitForTimeout(1200); await login(p);
   const get = () => p.evaluate(() => JSON.parse(localStorage.getItem('geomat_logs_v2')));
   let L = await get();
   console.log('records after load:', L.length, L.map(l => `${l.company} ${l.inTime}-${l.outTime||'?'} ${l.durationText}`).join(' | '));
   const ok=(n,c,x='')=>console.log((c?'PASS ':'FAIL ')+n+' '+x);
   ok('split v1.2 stays merged into one record each', L.length === 4);
   const total = L.reduce((s,l)=>s+(l.durationMins||0),0); ok('total minutes unchanged', total === 910, String(total));
-  await p.reload(); await p.waitForTimeout(1000); const L2 = await get(); ok('second run changes nothing', JSON.stringify(L2)===JSON.stringify(L));
+  await p.reload(); await p.waitForTimeout(1000); await login(p); const L2 = await get(); ok('second run changes nothing', JSON.stringify(L2)===JSON.stringify(L));
   await p.click('#tabArchiveBtn'); await p.waitForTimeout(600); await p.screenshot({path: OUT + '/legacy.png', fullPage:true});
   ok('night shift merged', L.filter(l=>l.company==='صدف').length===1 && L.find(l=>l.company==='صدف').outTime==='06:00'); ok('no errors', !errs.length, errs.join(';')); await b.close();
 })();

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- آیکون کوچک اعلان: سنجاق Geo Team، یک‌رنگ (اندروید رنگش را خودش می‌دهد) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="64" android:viewportHeight="64">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M32,4C20.4,4 11,13.2 11,24.6c0,15.3 18.3,33 20,34.6a1.4,1.4 0,0 0,2 0C34.7,57.6 53,39.9 53,24.6 53,13.2 43.6,4 32,4zM32,13a3.4,3.4 0,1 1,0 6.8a3.4,3.4 0,1 1,0 -6.8zM25.6,26a3.4,3.4 0,1 1,0 6.8a3.4,3.4 0,1 1,0 -6.8zM38.4,26a3.4,3.4 0,1 1,0 6.8a3.4,3.4 0,1 1,0 -6.8z" />
+</vector>

@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const { login } = require('../helpers/session');
 const BASE = process.env.BASE_URL || 'http://localhost:8765';
 const OUT = process.env.TEST_OUT || require('path').join(__dirname, '..', 'output');
 require('fs').mkdirSync(OUT, { recursive: true });
@@ -11,7 +12,7 @@ const results = []; const ok = (name, cond, extra='') => { console.log((cond?'PA
   const page = await ctx.newPage();
   const errors = []; page.on('pageerror', e => errors.push(e.message)); page.on('console', m => { if (m.type()==='error') errors.push(m.text()); });
   await page.clock.install({ time: new Date('2026-10-12T08:30:00+03:30') });
-  await page.goto(BASE + '/index.html'); await page.waitForTimeout(1500);
+  await page.goto(BASE + '/index.html'); await page.waitForTimeout(1500); await login(page);
   await page.screenshot({ path: `${OUT}/01-start.png`, fullPage:false });
   if (await page.locator('#userModal.open').count()) { await page.fill('#userNameInput','تست'); await page.locator('#userModal button').first().click(); }
   const addSite = async (name, geo) => {

@@ -3,6 +3,8 @@ const BASE = process.env.BASE_URL || 'http://localhost:8765';
 const OUT = process.env.TEST_OUT || require('path').join(__dirname, '..', 'output');
 require('fs').mkdirSync(OUT, { recursive: true });
 const fs = require('fs');
+const { login: appLogin, unlockTech } = require('../helpers/session');
+const TECH = { name: 'رضا', phone: '09120000002', pw: 'tech-pass-1' };
 const R=[]; const ok=(n,c,x='')=>{const l=(c?'PASS ':'FAIL ')+n+' '+x; console.log(l); R.push(l);};
 async function mkPage(b, seed) {
   const ctx = await b.newContext({ viewport:{width:390,height:844}, isMobile:true, hasTouch:true, timezoneId:'Asia/Tehran', permissions:['clipboard-read','clipboard-write'], acceptDownloads:true });
@@ -10,13 +12,11 @@ async function mkPage(b, seed) {
   p.errs = []; p.on('pageerror', e=>p.errs.push(e.message)); p.on('dialog', d=>{ p.errs.push('native dialog'); d.dismiss(); });
   await p.addInitScript((seed) => { if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded','1'); localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه'])); localStorage.setItem('geomat_user_name','نام‌تایپی'); for (const k in seed) localStorage.setItem(k, seed[k]); } window.__xss = 0; }, seed || {});
   await p.goto(BASE + '/index.html'); await p.waitForTimeout(600);
-  await p.click('#tabSupportBtn'); await p.click('#supportViewRow button:nth-child(2)'); await p.waitForTimeout(200);
   return p;
 }
 const pw = async (p, a, b) => { await p.fill('#vaultPw1', a); if (b !== undefined) await p.fill('#vaultPw2', b); await p.click('#vaultModalOk'); await p.waitForTimeout(1800); };
-const login = async (p, name, pass) => { await p.selectOption('#invLoginUser', { label: new RegExp(name) ? undefined : name }).catch(()=>{});
-  const id = await p.evaluate((n) => getTeam().users.find(u=>u.name===n).id, name); await p.selectOption('#invLoginUser', id);
-  await p.fill('#invLoginPw', pass); await p.click('#invLoginBtn'); await p.waitForTimeout(1800); };
+const lockLogin = async (p, phone, pass) => { await p.fill('#lockPhone', phone); await p.fill('#lockPw', pass); await p.click('#lockSubmit'); await p.waitForTimeout(1800); };
+const openTech = async (p) => { await p.click('#tabSupportBtn'); await p.click('#supportViewRow button:nth-child(2)'); await p.waitForTimeout(200); };
 const openAll = (p) => p.evaluate(() => document.querySelectorAll('#invSections details').forEach(d => d.open = true));
 const add = async (p, sec, fields, secret) => {
   await p.evaluate((s) => { document.querySelector(`#invSections details[data-section="${s}"]`).open = true; }, sec); await p.click(`[data-add="${sec}"]`);
@@ -35,19 +35,24 @@ const add = async (p, sec, fields, secret) => {
 
   // ===== Admin phone
   const A = await mkPage(b, legacy);
-  ok('locked: nothing shown before login', !(await A.locator('#invMain').isVisible()));
-  await A.fill('#invSetupName', 'مدیر'); await A.click('[data-act="setup"]');
-  await pw(A, 'admin-pass-1', 'admin-pass-1');
+  ok('app locked before login', await A.locator('#appLock.open').count() === 1);
+  await A.fill('#lockName', 'مدیر'); await A.fill('#lockPhone', '09120000001'); await A.fill('#lockPw', 'admin-pass-1'); await A.fill('#lockPw2', 'admin-pass-1');
+  await A.click('#lockSubmit'); await A.waitForTimeout(1500);
   ok('migration prompt shown', await A.locator('#vaultModal.open').isVisible());
   await pw(A, 'wrong-old'); ok('wrong old master rejected', (await A.locator('#vaultModalError').innerText()).includes('اشتباه'));
   await pw(A, 'old-master-1');
   ok('legacy meta removed', await A.evaluate(() => localStorage.getItem('geomat_vault_meta_v1') === null));
+  await openTech(A);
+  ok('technical file needs re-auth after app login', !(await A.locator('#invMain').isVisible()) && await A.locator('[data-act="unlock-pw"]').count() === 1);
+  await A.click('[data-act="unlock-pw"]'); await pw(A, 'wrong-pass'); ok('wrong re-auth rejected', (await A.locator('#vaultModalError').innerText()).includes('اشتباه'));
+  await A.fill('#vaultPw1', 'admin-pass-1'); await A.click('#vaultModalOk'); await A.waitForTimeout(1500);
+  ok('technical file opens after re-auth', await A.locator('#invMain').isVisible());
   await A.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(A);
   await A.click('[data-reveal$="|password"] >> nth=0'); await A.waitForTimeout(400);
   ok('legacy password readable after migration', (await A.locator('[data-secret-view] >> nth=0').innerText()) === 'legacy-pass');
   // admin adds tech
-  await A.click('[data-act="users"]'); await A.fill('#newUserName', 'رضا'); await A.click('[data-user-add]'); await pw(A, 'tech-pass-1', 'tech-pass-1');
-  ok('tech account created', await A.evaluate(() => getTeam().users.some(u => u.name === 'رضا' && u.role === 'tech')));
+  await A.click('[data-act="users"]'); await A.fill('#newUserName', 'رضا'); await A.fill('#newUserPhone', '+98 912 000 0002'); await A.click('[data-user-add]'); await pw(A, 'tech-pass-1', 'tech-pass-1');
+  ok('tech account created with normalized phone', await A.evaluate(() => getTeam().users.some(u => u.name === 'رضا' && u.role === 'tech' && u.phone === '09120000002')));
   await A.click('#invPanelModal .dock-copy-btn');
   await add(A, 'hosts', { name:'ESX01', hypervisor:'ESXi', ip:'10.0.0.10' }, 'esx-root');
   // new company file
@@ -64,11 +69,14 @@ const add = async (p, sec, fields, secret) => {
 
   // ===== Technician phone: same data (via backup) + team file
   const T = await mkPage(b, { 'geomat_inventory_v1': store['geomat_inventory_v1'] });
-  ok('tech phone: setup screen until team file', (await T.locator('#invAuthCard').innerText()).includes('ورود فایل تیم'));
+  ok('tech phone: setup screen until team file', (await T.locator('#appLockBody').innerText()).includes('ورود فایل تیم'));
   await T.setInputFiles('#teamFileInput', teamPath); await T.waitForTimeout(400);
-  await login(T, 'رضا', 'bad-pass'); ok('tech wrong pw rejected', (await T.locator('#invLoginErr').innerText()).includes('اشتباه'));
-  await login(T, 'رضا', 'tech-pass-1');
-  ok('tech logged in as tech', (await T.locator('#invAuthCard').innerText()).includes('تکنسین'));
+  await lockLogin(T, '09120000002', 'bad-pass'); ok('tech wrong pw rejected', (await T.locator('#lockErr').innerText()).includes('اشتباه'));
+  await lockLogin(T, '09999999999', 'tech-pass-1'); ok('unknown phone gets the same message', (await T.locator('#lockErr').innerText()).includes('شماره یا رمز اشتباه'));
+  await lockLogin(T, '۰۹۱۲۰۰۰۰۰۰۲', 'tech-pass-1');
+  ok('tech logged in', await T.locator('#appLock.open').count() === 0 && (await T.locator('#userNameHeader').innerText()) === 'رضا');
+  await openTech(T); await unlockTech(T, 'tech-pass-1');
+  ok('tech role shown', (await T.locator('#invAuthCard').innerText()).includes('تکنسین'));
   ok('tech has no admin tools', await T.locator('[data-act="users"],[data-act="audit"],[data-act="deleted"]').count() === 0);
   await T.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(T);
   await T.screenshot({ path: OUT + '/tech-view.png' });
@@ -90,6 +98,7 @@ const add = async (p, sec, fields, secret) => {
 
   // ===== Back on admin phone with tech's data
   await A.evaluate((inv) => { localStorage.setItem('geomat_inventory_v1', inv); renderInventory(); }, techStore);
+  ok('attendance/tech changes carry the logged-in name', JSON.parse(techStore).items.some(i => i.history.some(h => h.by && h.by.name === 'رضا' && h.by.id)));
   await A.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(A);
   await A.click('details[data-section="hosts"] [data-history]'); await A.waitForTimeout(300);
   const hist = await A.locator('#invPanelBody').innerText(); await A.screenshot({ path: OUT + '/history.png' });
@@ -117,14 +126,20 @@ const add = async (p, sec, fields, secret) => {
   // deactivate tech -> tech login refused
   await A.click('[data-act="users"]'); await A.click('[data-user-toggle]'); await A.waitForTimeout(200);
   const teamNow = await A.evaluate(() => localStorage.getItem('geomat_team_v1'));
-  await T.evaluate((t) => { localStorage.setItem('geomat_team_v1', t); endSession(true); }, teamNow); await T.waitForTimeout(200);
-  ok('disabled tech not in login list', !(await T.locator('#invLoginUser').innerText()).includes('رضا'));
+  await T.evaluate((t) => { localStorage.setItem('geomat_team_v1', t); lockApp(true); }, teamNow); await T.waitForTimeout(200);
+  await lockLogin(T, '09120000002', 'tech-pass-1');
+  ok('disabled tech cannot log in', (await T.locator('#lockErr').innerText()).includes('غیرفعال') && await T.locator('#appLock.open').count() === 1);
   // auto-lock on background
   await A.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); Object.defineProperty(document, 'hidden', { value: false, configurable: true }); });
-  ok('locked after background', await A.evaluate(() => session === null) && !(await A.locator('#invMain').isVisible()));
+  ok('technical file locks at once in background', await A.evaluate(() => !techUnlocked() && session !== null) && !(await A.locator('#invMain').isVisible()));
+  // بیش از ۵ دقیقه در پس‌زمینه: کل برنامه قفل
+  await A.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); hiddenAt = Date.now() - 6 * 60 * 1000; Object.defineProperty(document, 'hidden', { value: false, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); });
+  ok('app locks after 5 min in background', await A.evaluate(() => session === null) && await A.locator('#appLock.open').count() === 1);
   // 5 wrong attempts throttle
-  for (let i = 0; i < 5; i++) await login(A, 'مدیر', 'nope' + i);
-  ok('throttled', (await A.locator('#invLoginErr').innerText()).includes('۳۰'));
+  for (let i = 0; i < 5; i++) await lockLogin(A, '09120000001', 'nope' + i);
+  ok('throttled', (await A.locator('#lockErr').innerText()).includes('۳۰'));
+  await lockLogin(A, '09120000001', 'admin-pass-1');
+  ok('correct password still blocked during wait', await A.locator('#appLock.open').count() === 1);
   await A.screenshot({ path: OUT + '/team-admin.png', fullPage: true });
   await T.screenshot({ path: OUT + '/team-tech.png', fullPage: true });
   ok('no errors', !A.errs.length && !T.errs.length, [...A.errs, ...T.errs].join(';'));
