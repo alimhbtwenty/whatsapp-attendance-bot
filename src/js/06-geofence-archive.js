@@ -224,7 +224,9 @@
     }
     if (!await attendancePromptsBeforeSend()) return null; // خروج بی‌ورود، فاصله بین دو حضور
     await ensureEntryGeoBeforeSend();
-    if (!await ensureSiteForLiveEntry()) return null;
+    if (!session || !await ensureSiteForLiveEntry()) return null;
+    // اگر برنامه وسط این پرسش‌ها قفل شد، هیچ چیزی ثبت یا ارسال نمی‌شود
+    if (!session) return null;
     return { text: generateAttendanceText(), repeat: false };
   }
 

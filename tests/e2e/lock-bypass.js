@@ -145,6 +145,25 @@ const TECH = { name: 'تکنسین', phone: '09120000002', pw: 'tech-pass-22' };
   await p.evaluate(() => { openFlowModal('<div>x</div>'); lockApp(true, false); });
   ok('an open report pop-up is closed when the app locks', await p.locator('#flowModal.open').count() === 0);
 
+  // بازبینی دور ۱۲: قفل شدن وسط پاپ‌آپ «کجا بودید؟» نباید گزارش را ثبت یا کپی کند (مسیر واقعی ارسال)
+  await p.evaluate(() => localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه'])));
+  await p.reload(); await p.waitForTimeout(600);
+  await login(p, TECH);
+  const send = async (a, inT, outT) => { await p.evaluate(([a, inT, outT]) => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction(a);
+    if (inT) { inHour.value = inT.slice(0, 2); inMin.value = inT.slice(3); } if (outT) { outHour.value = outT.slice(0, 2); outMin.value = outT.slice(3); } updatePreview(); }, [a, inT, outT]);
+    await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(600); };
+  await p.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
+  await send('in', '08:00', null); await send('out', null, '12:00');
+  await p.evaluate(() => navigator.clipboard.writeText('-'));
+  const nBefore = await p.evaluate(() => getLogs().length);
+  await p.click('#tabAttendanceBtn');
+  await p.evaluate(() => { setAttendanceAction('in'); inHour.value = '13'; inMin.value = '15'; updatePreview(); });
+  await p.click('#floatingDock .dock-copy-btn');
+  await p.waitForSelector('#flowModal.open .flow-chip');
+  await p.evaluate(() => lockApp(true, false)); await p.waitForTimeout(600);
+  ok('locking during the between-stays pop-up records nothing', await p.evaluate(() => getLogs().length) === nBefore);
+  ok('...and copies nothing', await p.evaluate(() => navigator.clipboard.readText()) === '-');
+
   ok('no page errors', !errs.length, errs.join(';'));
   await b.close();
 })();

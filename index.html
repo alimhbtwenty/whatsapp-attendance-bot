@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6J9bqlcWmU+8PPMqa9Szpc+dP/ZUrx1mX4fO+Aq9pd8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-H4mtN5VWFSDZho5QhMvk3UWm9OwALt91CMtuw3w8Qmw='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -4263,7 +4263,9 @@
     }
     if (!await attendancePromptsBeforeSend()) return null; // خروج بی‌ورود، فاصله بین دو حضور
     await ensureEntryGeoBeforeSend();
-    if (!await ensureSiteForLiveEntry()) return null;
+    if (!session || !await ensureSiteForLiveEntry()) return null;
+    // اگر برنامه وسط این پرسش‌ها قفل شد، هیچ چیزی ثبت یا ارسال نمی‌شود
+    if (!session) return null;
     return { text: generateAttendanceText(), repeat: false };
   }
 
@@ -4665,7 +4667,7 @@
     pendingGap = null;
     if (attendanceAction === 'out' && !pairedEntry()) {
       const r = await askMissingEntry(timeInputValue('out'));
-      if (!r) return false;
+      if (!r || !session) return false; // انصراف، دکمه برگشت، یا قفل شدن برنامه
       if (r !== 'skip') {
         setAttendanceAction('both');
         const [h, m] = r.inTime.split(':');
@@ -4680,7 +4682,9 @@
       const prev = previousExitToday(inTime);
       if (prev) {
         const r = await askGapReason(prev.outTime, inTime);
-        if (r && r.reason) pendingGap = { from: prev.outTime, to: inTime, reason: r.reason };
+        // null = برگشت، لمس بیرون پنجره یا قفل شدن برنامه → ارسال لغو؛ «رد شدن» = 'skip'
+        if (r === null || !session) return false;
+        if (r.reason) pendingGap = { from: prev.outTime, to: inTime, reason: r.reason };
       }
     }
     return true;

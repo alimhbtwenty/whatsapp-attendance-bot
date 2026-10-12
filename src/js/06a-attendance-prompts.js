@@ -86,7 +86,7 @@
     pendingGap = null;
     if (attendanceAction === 'out' && !pairedEntry()) {
       const r = await askMissingEntry(timeInputValue('out'));
-      if (!r) return false;
+      if (!r || !session) return false; // انصراف، دکمه برگشت، یا قفل شدن برنامه
       if (r !== 'skip') {
         setAttendanceAction('both');
         const [h, m] = r.inTime.split(':');
@@ -101,7 +101,9 @@
       const prev = previousExitToday(inTime);
       if (prev) {
         const r = await askGapReason(prev.outTime, inTime);
-        if (r && r.reason) pendingGap = { from: prev.outTime, to: inTime, reason: r.reason };
+        // null = برگشت، لمس بیرون پنجره یا قفل شدن برنامه → ارسال لغو؛ «رد شدن» = 'skip'
+        if (r === null || !session) return false;
+        if (r.reason) pendingGap = { from: prev.outTime, to: inTime, reason: r.reason };
       }
     }
     return true;
