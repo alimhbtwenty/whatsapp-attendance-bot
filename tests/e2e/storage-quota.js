@@ -32,7 +32,10 @@ const DAY = 86400000;
   // بقیه فضا با کلیدی بیرون از برنامه پر می‌شود
   await p.evaluate(() => { for (const size of [100000, 10000, 1000, 50]) { let i = 0; try { for (;;) localStorage.setItem('zz_fill_' + size + '_' + (i++), 'f'.repeat(size)); } catch (e) {} } });
   await p.click('#tabAttendanceBtn');
-  await p.evaluate(() => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction('both'); updatePreview(); });
+  // ساعت‌ها صریح (نه «الان»): بعد از نیمه‌شب پیش‌فرضِ ورود «الان» است و برنامه موقعیت محل را می‌خواهد
+  await p.evaluate(() => { selectedCompany = 'کرانه'; renderCompanies(); setAttendanceAction('both');
+    document.getElementById('inHour').value = '08'; document.getElementById('inMin').value = '00';
+    document.getElementById('outHour').value = '12'; document.getElementById('outMin').value = '00'; updatePreview(); });
   await p.click('#floatingDock .dock-copy-btn'); await p.waitForTimeout(600);
   const after = await p.evaluate(() => ({ n: getLogs().length, backup: !!localStorage.getItem('geomat_backup_pre_1_4'), chat: getChatMessages().length }));
   ok('with storage full, a new record is still saved', after.n === 4, JSON.stringify(after));
