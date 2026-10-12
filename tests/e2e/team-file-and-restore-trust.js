@@ -61,7 +61,7 @@ const now = new Date().toISOString();
     window.__m = { future: merged.items.some(i => i.id === 'n9'), n8: merged.items.find(i => i.id === 'n8') };
   });
   ok('a backup-only item with only a future-dated version is not added', await p.evaluate(() => !window.__m.future));
-  ok('a backup-only item keeps its normal versions but not a technician-file delete', await p.evaluate(() => window.__m.n8 && !window.__m.n8.deleted && window.__m.n8.history.length === 1));
+  ok('a backup-only item keeps every valid version, including the admin\'s delete (append-only)', await p.evaluate(() => window.__m.n8 && window.__m.n8.deleted === true && window.__m.n8.history.length === 2));
 
   // ---------- فایل تیمِ تکنسین ----------
   const importAs = async (users) => {

@@ -124,9 +124,10 @@
     for (const it of b.items) {
       const mine = items.get(it.id);
       if (!mine) {
-        // آیتمی که فقط در پشتیبان هست هم از همان صافی می‌گذرد (وگرنه نسخه آینده‌دار بعداً «آخرین» می‌شد)
-        if (!it.history.length) { items.set(it.id, it); continue; } // آیتم قدیمیِ بی‌تاریخچه همان‌طور می‌آید
-        const history = it.history.filter(trusted).sort(byTime);
+        // آیتمی که فقط در پشتیبان هست: نسخه آینده‌دار حذف می‌شود (وگرنه بعداً «آخرین» می‌شد). حذف و برگرداندنِ واقعیِ
+        // مدیر می‌ماند؛ حذفِ ساختگی فقط آیتم را روی گوشی خود او پنهان می‌کند و برگرداندنِ ساختگی همان افزودن است
+        if (!it.history.length) { items.set(it.id, it); continue; }
+        const history = it.history.filter(validAt).sort(byTime);
         if (!history.length) continue;
         const last = history[history.length - 1];
         items.set(it.id, { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',

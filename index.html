@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-mSFugPhuAwokb23sex+y52KaQXhr5l0sK1ZsAiZWJso='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7s0gWirYcpAxpkm6FL9WKNkaasEtLBH7lbJrsulUFr8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -6246,9 +6246,10 @@
     for (const it of b.items) {
       const mine = items.get(it.id);
       if (!mine) {
-        // آیتمی که فقط در پشتیبان هست هم از همان صافی می‌گذرد (وگرنه نسخه آینده‌دار بعداً «آخرین» می‌شد)
-        if (!it.history.length) { items.set(it.id, it); continue; } // آیتم قدیمیِ بی‌تاریخچه همان‌طور می‌آید
-        const history = it.history.filter(trusted).sort(byTime);
+        // آیتمی که فقط در پشتیبان هست: نسخه آینده‌دار حذف می‌شود (وگرنه بعداً «آخرین» می‌شد). حذف و برگرداندنِ واقعیِ
+        // مدیر می‌ماند؛ حذفِ ساختگی فقط آیتم را روی گوشی خود او پنهان می‌کند و برگرداندنِ ساختگی همان افزودن است
+        if (!it.history.length) { items.set(it.id, it); continue; }
+        const history = it.history.filter(validAt).sort(byTime);
         if (!history.length) continue;
         const last = history[history.length - 1];
         items.set(it.id, { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
