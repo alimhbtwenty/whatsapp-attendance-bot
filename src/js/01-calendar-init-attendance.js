@@ -480,7 +480,7 @@
   async function deleteCompany(name) {
     if (!await appConfirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
     let list = getCompanies().filter(c => c !== name);
-    saveCompanies(list);
+    if (!saveCompanies(list)) return;
     const sites = getSites();
     if (sites[name]) {
       delete sites[name];
@@ -523,7 +523,7 @@
       const pos = await getFreshPosition();
       const list = getCompanies();
       if (!list.includes(val)) list.push(val);
-      saveCompanies(list);
+      if (!saveCompanies(list)) return;
       const sites = getSites();
       sites[val] = { lat: pos.lat, lng: pos.lng, radius: SITE_DEFAULT_RADIUS, acc: pos.acc };
       saveSites(sites);

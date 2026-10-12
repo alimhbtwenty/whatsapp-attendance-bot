@@ -103,9 +103,17 @@
   }
   // ادغام دو نسخه پرونده فنی (بازگردانی پشتیبان، و بعداً همگام‌سازی سرور): تاریخچه هر آیتم اجتماع دو طرف است
   // و وضع فعلی همیشه آخرین نسخه آن است؛ پس هیچ نسخه‌ای با ادغام از بین نمی‌رود
-  function mergeInventoryData(curText, incText) {
+  // opts.admin: بازگردانی توسط مدیر. نسخه‌های تازه «حذف/برگرداندن» از فایلِ غیرمدیر پذیرفته نمی‌شوند (حذف فقط کار مدیر است
+  // و فایل پشتیبان متن ساده و قابل دستکاری است)؛ نسخه‌ای با تاریخ آینده هم پذیرفته نمی‌شود (وگرنه همیشه «آخرین» می‌ماند).
+  function mergeInventoryData(curText, incText, opts = {}) {
     if (!incText) return curText || null;
-    if (!curText) return JSON.stringify(normalizeInventory(incText));
+    const maxAt = new Date(Date.now() + 86400000).toISOString();
+    const trusted = (v) => String(v.at) <= maxAt && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
+    if (!curText) {
+      const fresh = normalizeInventory(incText);
+      fresh.items.forEach(it => { it.history = it.history.filter(v => String(v.at) <= maxAt); });
+      return JSON.stringify(fresh);
+    }
     const a = normalizeInventory(curText), b = normalizeInventory(incText);
     const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
     const byTime = (x, y) => String(x.at).localeCompare(String(y.at));
@@ -114,7 +122,9 @@
       const mine = items.get(it.id);
       if (!mine) { items.set(it.id, it); continue; }
       const seen = new Set(mine.history.map(vkey));
-      const history = mine.history.concat(it.history.filter(v => !seen.has(vkey(v)))).sort(byTime);
+      const added = it.history.filter(v => !seen.has(vkey(v)) && trusted(v));
+      if (!added.length) continue;
+      const history = mine.history.concat(added).sort(byTime);
       const last = history[history.length - 1];
       items.set(it.id, { ...mine, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
         updatedAt: last.at, updatedBy: last.by });

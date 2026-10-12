@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EiZYye53GvUJgSk7dQXuY+j4HP8zfzGNWVoWWHRobNI='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7O+sPkmuxUgF+J9Ha+/V1+AAfebPOE19/90C2IAIv8o='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -2471,8 +2471,10 @@
   function saveCompanies(list) {
     try {
       storeItem('geomat_companies_v2', JSON.stringify(list));
+      return true;
     } catch(e) {
       showToast('⚠️ حافظه پر است؛ فهرست محل‌ها ذخیره نشد');
+      return false;
     }
   }
 
@@ -2989,7 +2991,7 @@
   async function deleteCompany(name) {
     if (!await appConfirm(`آیا از حذف «${name}» اطمینان دارید؟`)) return;
     let list = getCompanies().filter(c => c !== name);
-    saveCompanies(list);
+    if (!saveCompanies(list)) return;
     const sites = getSites();
     if (sites[name]) {
       delete sites[name];
@@ -3032,7 +3034,7 @@
       const pos = await getFreshPosition();
       const list = getCompanies();
       if (!list.includes(val)) list.push(val);
-      saveCompanies(list);
+      if (!saveCompanies(list)) return;
       const sites = getSites();
       sites[val] = { lat: pos.lat, lng: pos.lng, radius: SITE_DEFAULT_RADIUS, acc: pos.acc };
       saveSites(sites);
@@ -4746,7 +4748,7 @@
     delete next[PRE_UPDATE_BACKUP_KEY];
     if (current[TEAM_KEY]) next[TEAM_KEY] = current[TEAM_KEY];
     DEVICE_LOCAL_KEYS.forEach(k => { if (current[k] !== undefined) next[k] = current[k]; else delete next[k]; });
-    const merged = mergeInventoryData(current[INVENTORY_KEY], incoming[INVENTORY_KEY]);
+    const merged = mergeInventoryData(current[INVENTORY_KEY], incoming[INVENTORY_KEY], { admin: isAdmin() });
     if (merged) next[INVENTORY_KEY] = merged;
     const write = (data) => {
       Object.keys(snapshotAppData()).forEach(k => { if (!(k in data)) localStorage.removeItem(k); });
@@ -6045,6 +6047,8 @@
         return;
       }
       if (!obj.team.users.every(u => u.phone === undefined || normalizePhone(u.phone) === u.phone)) { showToast('⚠️ فایل تیم خراب است'); return; }
+      const ids = obj.team.users.map(u => u.id), phones = obj.team.users.map(u => u.phone).filter(Boolean);
+      if (new Set(ids).size !== ids.length || new Set(phones).size !== phones.length) { showToast('⚠️ فایل تیم خراب است (حساب یا شماره تکراری)'); return; }
       const users = obj.team.users;
       const current = getTeam();
       if (!current) {
@@ -6076,13 +6080,20 @@
       } else {
         // تکنسین کلید تیم را دارد و می‌تواند فایل تیم را دستکاری کند؛ پس از فایلِ او فقط این‌ها پذیرفته می‌شود:
         // رمز تازه حساب خودش و حساب‌های تازه (فقط با نقش تکنسین). نقش، فعال بودن و رمز بقیه همان قبلی می‌ماند.
+        // غیرفعال شدنِ تکنسین دیگر هم پذیرفته می‌شود (رفتنِ یک همکار باید به همه گوشی‌ها برسد)، ولی نه فعال شدن و نه مدیر.
+        // شماره و نام نباید مال حساب دیگری باشد (ورود با شماره اولین حساب را پیدا می‌کند؛ نام در گزارش‌ها می‌آید).
         const byId = new Map(team.users.map(u => [u.id, u]));
+        const taken = (field, value, exceptId) => !!value && team.users.some(x => x.id !== exceptId && x[field] === value);
         team.users = team.users.map(u => {
-          if (u.id !== session.user.id) return u;
           const f = users.find(x => x.id === u.id);
-          return f ? { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped, name: f.name, phone: f.phone || u.phone } : u;
+          if (!f) return u;
+          if (u.id !== session.user.id) return u.role === 'tech' && u.active && f.active === false ? { ...u, active: false } : u;
+          return { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped,
+            name: taken('name', f.name, u.id) ? u.name : f.name,
+            phone: f.phone && !taken('phone', f.phone, u.id) ? f.phone : u.phone };
         });
-        users.filter(u => !byId.has(u.id) && !team.users.some(x => x.phone && x.phone === u.phone)).forEach(u => team.users.push({ ...u, role: 'tech' }));
+        users.filter(u => !byId.has(u.id) && u.phone && normalizePhone(u.phone) === u.phone && !taken('phone', u.phone) && !taken('name', u.name))
+          .forEach(u => team.users.push({ ...u, role: 'tech' }));
       }
       teamLog(team, 'team-import', 'به‌روزرسانی حساب‌ها از فایل تیم');
       if (saveTeam(team)) {
@@ -6201,9 +6212,17 @@
   }
   // ادغام دو نسخه پرونده فنی (بازگردانی پشتیبان، و بعداً همگام‌سازی سرور): تاریخچه هر آیتم اجتماع دو طرف است
   // و وضع فعلی همیشه آخرین نسخه آن است؛ پس هیچ نسخه‌ای با ادغام از بین نمی‌رود
-  function mergeInventoryData(curText, incText) {
+  // opts.admin: بازگردانی توسط مدیر. نسخه‌های تازه «حذف/برگرداندن» از فایلِ غیرمدیر پذیرفته نمی‌شوند (حذف فقط کار مدیر است
+  // و فایل پشتیبان متن ساده و قابل دستکاری است)؛ نسخه‌ای با تاریخ آینده هم پذیرفته نمی‌شود (وگرنه همیشه «آخرین» می‌ماند).
+  function mergeInventoryData(curText, incText, opts = {}) {
     if (!incText) return curText || null;
-    if (!curText) return JSON.stringify(normalizeInventory(incText));
+    const maxAt = new Date(Date.now() + 86400000).toISOString();
+    const trusted = (v) => String(v.at) <= maxAt && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
+    if (!curText) {
+      const fresh = normalizeInventory(incText);
+      fresh.items.forEach(it => { it.history = it.history.filter(v => String(v.at) <= maxAt); });
+      return JSON.stringify(fresh);
+    }
     const a = normalizeInventory(curText), b = normalizeInventory(incText);
     const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
     const byTime = (x, y) => String(x.at).localeCompare(String(y.at));
@@ -6212,7 +6231,9 @@
       const mine = items.get(it.id);
       if (!mine) { items.set(it.id, it); continue; }
       const seen = new Set(mine.history.map(vkey));
-      const history = mine.history.concat(it.history.filter(v => !seen.has(vkey(v)))).sort(byTime);
+      const added = it.history.filter(v => !seen.has(vkey(v)) && trusted(v));
+      if (!added.length) continue;
+      const history = mine.history.concat(added).sort(byTime);
       const last = history[history.length - 1];
       items.set(it.id, { ...mine, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
         updatedAt: last.at, updatedBy: last.by });

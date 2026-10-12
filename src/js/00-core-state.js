@@ -74,8 +74,10 @@
   function saveCompanies(list) {
     try {
       storeItem('geomat_companies_v2', JSON.stringify(list));
+      return true;
     } catch(e) {
       showToast('⚠️ حافظه پر است؛ فهرست محل‌ها ذخیره نشد');
+      return false;
     }
   }
 

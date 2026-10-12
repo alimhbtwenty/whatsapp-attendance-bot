@@ -685,6 +685,8 @@
         return;
       }
       if (!obj.team.users.every(u => u.phone === undefined || normalizePhone(u.phone) === u.phone)) { showToast('⚠️ فایل تیم خراب است'); return; }
+      const ids = obj.team.users.map(u => u.id), phones = obj.team.users.map(u => u.phone).filter(Boolean);
+      if (new Set(ids).size !== ids.length || new Set(phones).size !== phones.length) { showToast('⚠️ فایل تیم خراب است (حساب یا شماره تکراری)'); return; }
       const users = obj.team.users;
       const current = getTeam();
       if (!current) {
@@ -716,13 +718,20 @@
       } else {
         // تکنسین کلید تیم را دارد و می‌تواند فایل تیم را دستکاری کند؛ پس از فایلِ او فقط این‌ها پذیرفته می‌شود:
         // رمز تازه حساب خودش و حساب‌های تازه (فقط با نقش تکنسین). نقش، فعال بودن و رمز بقیه همان قبلی می‌ماند.
+        // غیرفعال شدنِ تکنسین دیگر هم پذیرفته می‌شود (رفتنِ یک همکار باید به همه گوشی‌ها برسد)، ولی نه فعال شدن و نه مدیر.
+        // شماره و نام نباید مال حساب دیگری باشد (ورود با شماره اولین حساب را پیدا می‌کند؛ نام در گزارش‌ها می‌آید).
         const byId = new Map(team.users.map(u => [u.id, u]));
+        const taken = (field, value, exceptId) => !!value && team.users.some(x => x.id !== exceptId && x[field] === value);
         team.users = team.users.map(u => {
-          if (u.id !== session.user.id) return u;
           const f = users.find(x => x.id === u.id);
-          return f ? { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped, name: f.name, phone: f.phone || u.phone } : u;
+          if (!f) return u;
+          if (u.id !== session.user.id) return u.role === 'tech' && u.active && f.active === false ? { ...u, active: false } : u;
+          return { ...u, salt: f.salt, iter: f.iter, wrapped: f.wrapped,
+            name: taken('name', f.name, u.id) ? u.name : f.name,
+            phone: f.phone && !taken('phone', f.phone, u.id) ? f.phone : u.phone };
         });
-        users.filter(u => !byId.has(u.id) && !team.users.some(x => x.phone && x.phone === u.phone)).forEach(u => team.users.push({ ...u, role: 'tech' }));
+        users.filter(u => !byId.has(u.id) && u.phone && normalizePhone(u.phone) === u.phone && !taken('phone', u.phone) && !taken('name', u.name))
+          .forEach(u => team.users.push({ ...u, role: 'tech' }));
       }
       teamLog(team, 'team-import', 'به‌روزرسانی حساب‌ها از فایل تیم');
       if (saveTeam(team)) {

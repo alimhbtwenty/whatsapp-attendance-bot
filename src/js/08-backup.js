@@ -74,7 +74,7 @@
     delete next[PRE_UPDATE_BACKUP_KEY];
     if (current[TEAM_KEY]) next[TEAM_KEY] = current[TEAM_KEY];
     DEVICE_LOCAL_KEYS.forEach(k => { if (current[k] !== undefined) next[k] = current[k]; else delete next[k]; });
-    const merged = mergeInventoryData(current[INVENTORY_KEY], incoming[INVENTORY_KEY]);
+    const merged = mergeInventoryData(current[INVENTORY_KEY], incoming[INVENTORY_KEY], { admin: isAdmin() });
     if (merged) next[INVENTORY_KEY] = merged;
     const write = (data) => {
       Object.keys(snapshotAppData()).forEach(k => { if (!(k in data)) localStorage.removeItem(k); });
