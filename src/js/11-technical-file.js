@@ -230,7 +230,7 @@
     const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
-      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('')
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
       : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');

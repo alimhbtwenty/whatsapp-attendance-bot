@@ -279,7 +279,7 @@
       if (mode === 'messenger') renderChatMessages({ forceBottom: true });
     } else {
       dock.style.display = 'flex';
-      sendLabel.textContent = mode === 'attendance' ? 'ارسال به گروه تردد واتساپ' : 'ارسال به گروه ساپورت واتساپ';
+      sendLabel.textContent = 'ارسال به واتساپ';
     }
   }
 
@@ -430,7 +430,11 @@
       comps.forEach(c => {
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
-        btn.textContent = c;
+        const label = document.createElement('span');
+        label.className = 'chip-label';
+        label.textContent = c;
+        btn.title = c;
+        btn.appendChild(label);
         if (containerId === 'attendanceProjectsGrid' && sites[c]) {
           const pin = document.createElement('span');
           pin.className = 'site-badge';

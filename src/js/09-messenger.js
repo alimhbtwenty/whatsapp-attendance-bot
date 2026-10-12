@@ -9,34 +9,16 @@
     general: { icon: '📢', label: 'عمومی' }
   };
 
+  // نصب تازه: فقط یک پیام راهنما (پیام‌های نمونه با نام آدم‌های ساختگی حذف شد)
   function buildDefaultChatMessages() {
-    const now = Date.now();
-    return [
-      {
-        id: 'seed-1',
-        sender: "Geo Team",
-        isMine: false,
-        channel: "general",
-        ts: now - 95 * 60000,
-        text: "سلام به همگی همکاران عزیز، لطفاً گزارش کارگاه‌ها و سوئیچ‌های تعویضی را پس از اتمام ثبت بفرمایید."
-      },
-      {
-        id: 'seed-2',
-        sender: "علی محبی",
-        isMine: true,
-        channel: "attendance",
-        ts: now - 70 * 60000,
-        text: "۱۴۰۵/۰۷/۱۸\nشنبه\n#صدف\nورود 09:00"
-      },
-      {
-        id: 'seed-3',
-        sender: "عباس رحیمی",
-        isMine: false,
-        channel: "support",
-        ts: now - 20 * 60000,
-        text: "📌 تنظیمات UCM شرکت راه آینده با موفقیت انجام شد. دسترسی ترانک داخلی‌ها برقرار است."
-      }
-    ];
+    return [{
+      id: 'welcome-1',
+      sender: 'Geo Team',
+      isMine: false,
+      channel: 'general',
+      ts: Date.now(),
+      text: 'به پیام‌رسان تیم خوش آمدید. هر تردد و گزارش ساپورتی که ثبت کنید، خودکار در کانال خودش این‌جا هم ثبت می‌شود.'
+    }];
   }
 
   // ابزار ضد نفوذ و فرار کاراکترهای خطرناک (XSS Hardening)

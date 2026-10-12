@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-VDBgVa34EVpm/hSiURGbwO6yC3fr3JjMJnNphxS7a9g='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-rIBldvgCpx9w6PvHUsWo9YziNpBG7BuRjXqaAxAi3p0='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -388,7 +388,16 @@
       transition: all 0.16s ease;
       position: relative;
       user-select: none;
-          }
+    }
+    /* نام‌های بلند حداکثر دو خط */
+    .chip-label {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
     .comp-chip:active {
       transform: scale(0.96);
     }
@@ -1814,7 +1823,7 @@
     </div>
   </div>
 
-  <!-- Primary Dynamic Mode Switcher (تردد | ساپورت و گزارش فنی | آرشیو | چت بتا) -->
+  <!-- Primary Dynamic Mode Switcher (تردد | ساپورت | آرشیو | پیام‌رسان) -->
   <div class="mode-switcher-dock">
     <button class="mode-tab-btn active" id="tabAttendanceBtn" data-click='["switchSystemMode", "attendance"]'>
       <span>🕒</span> تردد
@@ -1826,7 +1835,7 @@
       <span>📊</span> آرشیو
     </button>
     <button class="mode-tab-btn" id="tabMessengerBtn" data-click='["switchSystemMode", "messenger"]'>
-      <span>💬</span> چت بتا
+      <span>💬</span> پیام‌رسان
     </button>
   </div>
 
@@ -2086,7 +2095,73 @@
   <!-- ==================== تب ۳: آرشیو هوشمند و فیلتر هر شرکت ==================== -->
   <div class="tab-section" id="secArchive">
 
-    <!-- تنظیمات -->
+
+
+    <!-- کارت‌های آمار کل -->
+    <div class="stats-hud-grid">
+      <div class="hud-stat-box">
+        <span class="stat-caption">مجموع ساعت کارکرد:</span>
+        <span class="stat-number" id="archiveTotalHours">0 ساعت</span>
+      </div>
+      <div class="hud-stat-box">
+        <span class="stat-caption">تعداد رکوردهای ثبت‌شده:</span>
+        <span class="stat-number" id="archiveTotalCount">0 مورد</span>
+      </div>
+    </div>
+
+    <!-- گزارش ماهانه -->
+    <div class="frost-card" id="monthlyCard">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> گزارش ماهانه</div>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
+          📥 اکسل این ماه
+        </button>
+      </div>
+      <div class="month-nav">
+        <button class="jcal-nav" data-click='["shiftReportMonth", -1]' title="ماه قبل">▶</button>
+        <span class="month-title" id="reportMonthTitle"></span>
+        <button class="jcal-nav" data-click='["shiftReportMonth", 1]' title="ماه بعد">◀</button>
+      </div>
+      <div class="stats-hud-grid">
+        <div class="hud-stat-box">
+          <span class="stat-caption">ساعت کارکرد ماه:</span>
+          <span class="stat-number" id="reportTotal">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="stat-caption" id="reportOvertimeCaption">اضافه‌کار:</span>
+          <span class="stat-number" id="reportOvertime">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="stat-caption">کسر کار:</span>
+          <span class="stat-number" id="reportDeficit">0</span>
+        </div>
+        <div class="hud-stat-box">
+          <span class="stat-caption">روز بدون تردد:</span>
+          <span class="stat-number" id="reportAbsent">0</span>
+        </div>
+      </div>
+      <div id="reportTableWrap"></div>
+    </div>
+
+    <!-- فیلتر اختصاصی بر اساس هر شرکت -->
+    <div class="frost-card">
+      <div class="card-header-bar">
+        <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
+          📥 دانلود اکسل
+        </button>
+      </div>
+
+      <div class="filter-pills-row" id="archiveCompanyFilters">
+        <!-- چیپ‌های فیلتر: همه، صدف، مایسا و... -->
+      </div>
+
+      <div class="record-stream" id="archiveStream">
+        <!-- لاگ‌ها -->
+      </div>
+    </div>
+
+    <!-- تنظیمات (پایین آرشیو تا گزارش‌ها اول دیده شوند) -->
     <div class="frost-card" id="settingsCard">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> تنظیمات</div>
@@ -2128,71 +2203,6 @@
       <input type="file" id="restoreInput" accept=".json,application/json" style="display:none;" data-change='["restoreBackupFromInput", "$this"]'>
       <div style="font-size:11px; color:var(--text-dim); line-height:1.7;">همه اطلاعات (آرشیو، شرکت‌ها، موقعیت‌ها، چت، تنظیمات) فقط روی همین گوشی است؛ قبل از پاک کردن اپ یا عوض کردن گوشی فایل پشتیبان بگیرید.</div>
     </div>
-
-    <!-- کارت‌های آمار کل -->
-    <div class="stats-hud-grid">
-      <div class="hud-stat-box">
-        <span class="stat-caption">مجموع ساعت کارکرد:</span>
-        <span class="stat-number" id="archiveTotalHours">0 ساعت</span>
-      </div>
-      <div class="hud-stat-box">
-        <span class="stat-caption">تعداد رکوردهای ثبت‌شده:</span>
-        <span class="stat-number" id="archiveTotalCount">0 مورد</span>
-      </div>
-    </div>
-
-    <!-- گزارش ماهانه -->
-    <div class="frost-card" id="monthlyCard">
-      <div class="card-header-bar">
-        <div class="title-tag"><span class="gold-marker"></span> گزارش ماهانه</div>
-        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
-          📥 اکسل این ماه
-        </button>
-      </div>
-      <div class="month-nav">
-        <button class="jcal-nav" data-click='["shiftReportMonth", -1]' title="ماه قبل">▶</button>
-        <span class="month-title" id="reportMonthTitle"></span>
-        <button class="jcal-nav" data-click='["shiftReportMonth", 1]' title="ماه بعد">◀</button>
-      </div>
-      <div class="stats-hud-grid">
-        <div class="hud-stat-box">
-          <span class="stat-caption">ساعت کارکرد ماه:</span>
-          <span class="stat-number" id="reportTotal">0</span>
-        </div>
-        <div class="hud-stat-box">
-          <span class="stat-caption" id="reportOvertimeCaption">اضافه‌کار:</span>
-          <span class="stat-number" id="reportOvertime">0</span>
-        </div>
-        <div class="hud-stat-box">
-          <span class="stat-caption">کسر کار (دیرآمد، زودرفت، غیبت):</span>
-          <span class="stat-number" id="reportDeficit">0</span>
-        </div>
-        <div class="hud-stat-box">
-          <span class="stat-caption">روز کاریِ بدون تردد:</span>
-          <span class="stat-number" id="reportAbsent">0</span>
-        </div>
-      </div>
-      <div id="reportTableWrap"></div>
-    </div>
-
-    <!-- فیلتر اختصاصی بر اساس هر شرکت -->
-    <div class="frost-card">
-      <div class="card-header-bar">
-        <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
-        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
-          📥 دانلود اکسل
-        </button>
-      </div>
-
-      <div class="filter-pills-row" id="archiveCompanyFilters">
-        <!-- چیپ‌های فیلتر: همه، صدف، مایسا و... -->
-      </div>
-
-      <div class="record-stream" id="archiveStream">
-        <!-- لاگ‌ها -->
-      </div>
-    </div>
-
   </div>
 
   <!-- ==================== تب ۴: پیام‌رسان تیم (نسخه بتا) ==================== -->
@@ -2755,7 +2765,7 @@
       if (mode === 'messenger') renderChatMessages({ forceBottom: true });
     } else {
       dock.style.display = 'flex';
-      sendLabel.textContent = mode === 'attendance' ? 'ارسال به گروه تردد واتساپ' : 'ارسال به گروه ساپورت واتساپ';
+      sendLabel.textContent = 'ارسال به واتساپ';
     }
   }
 
@@ -2906,7 +2916,11 @@
       comps.forEach(c => {
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
-        btn.textContent = c;
+        const label = document.createElement('span');
+        label.className = 'chip-label';
+        label.textContent = c;
+        btn.title = c;
+        btn.appendChild(label);
         if (containerId === 'attendanceProjectsGrid' && sites[c]) {
           const pin = document.createElement('span');
           pin.className = 'site-badge';
@@ -4525,7 +4539,8 @@
     title.textContent = `${JALALI_MONTHS[reportJM - 1]} ${toPersianDigits(reportJY)}`;
     document.getElementById('reportTotal').textContent = formatHM(d.total);
     const st = getSettings();
-    document.getElementById('reportOvertimeCaption').textContent = `اضافه‌کار (قبل از ${toPersianDigits(st.workStart)}، بعد از ${toPersianDigits(st.workEnd)}، جمعه و تعطیل):`;
+    document.getElementById('reportOvertimeCaption').textContent = 'اضافه‌کار:';
+    document.getElementById('reportOvertimeCaption').title = `قبل از ${st.workStart}، بعد از ${st.workEnd} (پنجشنبه ${st.thuEnd})، جمعه و تعطیل رسمی`;
     document.getElementById('reportOvertime').textContent = d.balance ? formatHM(d.overtime) : '—';
     document.getElementById('reportDeficit').textContent = d.balance ? formatHM(d.deficit) : '—';
     document.getElementById('reportAbsent').textContent = d.balance ? toPersianDigits(d.absentDays) : '—';
@@ -4743,34 +4758,16 @@
     general: { icon: '📢', label: 'عمومی' }
   };
 
+  // نصب تازه: فقط یک پیام راهنما (پیام‌های نمونه با نام آدم‌های ساختگی حذف شد)
   function buildDefaultChatMessages() {
-    const now = Date.now();
-    return [
-      {
-        id: 'seed-1',
-        sender: "Geo Team",
-        isMine: false,
-        channel: "general",
-        ts: now - 95 * 60000,
-        text: "سلام به همگی همکاران عزیز، لطفاً گزارش کارگاه‌ها و سوئیچ‌های تعویضی را پس از اتمام ثبت بفرمایید."
-      },
-      {
-        id: 'seed-2',
-        sender: "علی محبی",
-        isMine: true,
-        channel: "attendance",
-        ts: now - 70 * 60000,
-        text: "۱۴۰۵/۰۷/۱۸\nشنبه\n#صدف\nورود 09:00"
-      },
-      {
-        id: 'seed-3',
-        sender: "عباس رحیمی",
-        isMine: false,
-        channel: "support",
-        ts: now - 20 * 60000,
-        text: "📌 تنظیمات UCM شرکت راه آینده با موفقیت انجام شد. دسترسی ترانک داخلی‌ها برقرار است."
-      }
-    ];
+    return [{
+      id: 'welcome-1',
+      sender: 'Geo Team',
+      isMine: false,
+      channel: 'general',
+      ts: Date.now(),
+      text: 'به پیام‌رسان تیم خوش آمدید. هر تردد و گزارش ساپورتی که ثبت کنید، خودکار در کانال خودش این‌جا هم ثبت می‌شود.'
+    }];
   }
 
   // ابزار ضد نفوذ و فرار کاراکترهای خطرناک (XSS Hardening)
@@ -5492,7 +5489,7 @@
       box.innerHTML = `<div class="lock-title">راه‌اندازی Geo Team</div>
         <div class="lock-hint">اولین بار: حساب مدیر را بسازید. بعد از بخش «پرونده فنی ← کاربران» برای هر تکنسین حساب جدا بسازید و «فایل تیم» را به گوشی‌اش بدهید.</div>
         <input type="text" class="cyber-input" id="lockName" maxlength="60" placeholder="نام و نام خانوادگی" autocomplete="name" value="${escapeHtml(localStorage.getItem('geomat_user_name') || '')}">
-        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" autocomplete="tel" inputmode="tel">
+        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel">
         <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز (حداقل ۸ کاراکتر)" autocomplete="new-password">
         <input type="password" class="cyber-input" id="lockPw2" dir="ltr" maxlength="128" placeholder="تکرار رمز" autocomplete="new-password">
         <button class="install-btn lock-main-btn" id="lockSubmit" data-click='["setupAdmin"]'>ساخت حساب مدیر</button>
@@ -5504,7 +5501,7 @@
     const lastPhone = localStorage.getItem(LAST_PHONE_KEY) || '';
     const who = lockLegacyMode
       ? `<select class="cyber-input" id="lockLegacyUser">${legacy.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}</select>`
-      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
+      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
     box.innerHTML = `<div class="lock-title">ورود</div>
       ${who}
       <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز" autocomplete="current-password">
@@ -5887,7 +5884,7 @@
       <div class="inv-ver">
         <div class="inv-ver-head"><span>➕ حساب جدید</span></div>
         <input type="text" class="cyber-input" id="newUserName" maxlength="60" placeholder="نام">
-        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" inputmode="tel">
+        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" inputmode="tel">
         <select class="cyber-input" id="newUserRole"><option value="tech">تکنسین (دیدن، افزودن، ویرایش)</option><option value="admin">مدیر (کنترل کامل)</option></select>
         <button class="inv-small-btn" data-user-add="1">ساخت حساب و تعیین رمز</button>
       </div>
@@ -6193,7 +6190,7 @@
     const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
-      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('')
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
       : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');

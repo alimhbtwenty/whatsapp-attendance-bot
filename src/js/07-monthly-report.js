@@ -160,7 +160,8 @@
     title.textContent = `${JALALI_MONTHS[reportJM - 1]} ${toPersianDigits(reportJY)}`;
     document.getElementById('reportTotal').textContent = formatHM(d.total);
     const st = getSettings();
-    document.getElementById('reportOvertimeCaption').textContent = `اضافه‌کار (قبل از ${toPersianDigits(st.workStart)}، بعد از ${toPersianDigits(st.workEnd)}، جمعه و تعطیل):`;
+    document.getElementById('reportOvertimeCaption').textContent = 'اضافه‌کار:';
+    document.getElementById('reportOvertimeCaption').title = `قبل از ${st.workStart}، بعد از ${st.workEnd} (پنجشنبه ${st.thuEnd})، جمعه و تعطیل رسمی`;
     document.getElementById('reportOvertime').textContent = d.balance ? formatHM(d.overtime) : '—';
     document.getElementById('reportDeficit').textContent = d.balance ? formatHM(d.deficit) : '—';
     document.getElementById('reportAbsent').textContent = d.balance ? toPersianDigits(d.absentDays) : '—';

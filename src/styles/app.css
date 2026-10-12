@@ -279,7 +279,16 @@
       transition: all 0.16s ease;
       position: relative;
       user-select: none;
-          }
+    }
+    /* نام‌های بلند حداکثر دو خط */
+    .chip-label {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      line-height: 1.5;
+    }
     .comp-chip:active {
       transform: scale(0.96);
     }

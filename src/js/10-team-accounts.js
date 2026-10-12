@@ -204,7 +204,7 @@
       box.innerHTML = `<div class="lock-title">راه‌اندازی Geo Team</div>
         <div class="lock-hint">اولین بار: حساب مدیر را بسازید. بعد از بخش «پرونده فنی ← کاربران» برای هر تکنسین حساب جدا بسازید و «فایل تیم» را به گوشی‌اش بدهید.</div>
         <input type="text" class="cyber-input" id="lockName" maxlength="60" placeholder="نام و نام خانوادگی" autocomplete="name" value="${escapeHtml(localStorage.getItem('geomat_user_name') || '')}">
-        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" autocomplete="tel" inputmode="tel">
+        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel">
         <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز (حداقل ۸ کاراکتر)" autocomplete="new-password">
         <input type="password" class="cyber-input" id="lockPw2" dir="ltr" maxlength="128" placeholder="تکرار رمز" autocomplete="new-password">
         <button class="install-btn lock-main-btn" id="lockSubmit" data-click='["setupAdmin"]'>ساخت حساب مدیر</button>
@@ -216,7 +216,7 @@
     const lastPhone = localStorage.getItem(LAST_PHONE_KEY) || '';
     const who = lockLegacyMode
       ? `<select class="cyber-input" id="lockLegacyUser">${legacy.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}</select>`
-      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
+      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
     box.innerHTML = `<div class="lock-title">ورود</div>
       ${who}
       <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز" autocomplete="current-password">
@@ -599,7 +599,7 @@
       <div class="inv-ver">
         <div class="inv-ver-head"><span>➕ حساب جدید</span></div>
         <input type="text" class="cyber-input" id="newUserName" maxlength="60" placeholder="نام">
-        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل (09...)" inputmode="tel">
+        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" inputmode="tel">
         <select class="cyber-input" id="newUserRole"><option value="tech">تکنسین (دیدن، افزودن، ویرایش)</option><option value="admin">مدیر (کنترل کامل)</option></select>
         <button class="inv-small-btn" data-user-add="1">ساخت حساب و تعیین رمز</button>
       </div>
