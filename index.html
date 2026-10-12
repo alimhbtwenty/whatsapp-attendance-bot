@@ -3318,8 +3318,9 @@
   // ورودِ بی‌خروجِ همین محل که این خروج با آن جفت می‌شود: اول در آرشیو (همان روز، یا روز قبل برای شیفت شب)،
   // بعد ورود باز. قبلاً فقط «ورود باز» نگاه می‌شد که یک خانه بیشتر نداشت؛ با ورودِ محل دیگر جایگزین می‌شد
   // یا با «دوره کامل» پاک می‌شد و ساعت کارکردِ خروج از دست می‌رفت
+  // در «دوره کامل» هم ساعت ورودِ همان ورود در فرم پر می‌شود و همان رکورد تکمیل می‌شود
   function pairedEntry() {
-    if (attendanceAction !== 'out' || !selectedCompany) return null;
+    if (attendanceAction === 'in' || !selectedCompany) return null;
     const iso = toISODate(currentDateObj);
     const outMins = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
     for (const l of getLogs()) {
@@ -3813,7 +3814,10 @@
   // برمی‌گرداند: id رکوردی که ساخته یا تکمیل شد
   function saveToSystemLog(type, text, pair) {
     let logs = getLogs();
-    if (type === 'attendance' && attendanceAction === 'out') {
+    // «دوره کامل» فقط وقتی همان ورود را می‌بندد که ساعت ورود فرم دست نخورده باشد
+    const completesEntry = attendanceAction === 'out' ||
+      (attendanceAction === 'both' && pair && timeInputValue('in') === pair.inTime);
+    if (type === 'attendance' && completesEntry) {
       const mergedId = mergeExitIntoEntry(logs, pair, text);
       if (mergedId !== null) {
         writeLogs(logs);
