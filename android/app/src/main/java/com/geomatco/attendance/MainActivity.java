@@ -248,9 +248,10 @@ public class MainActivity extends AppCompatActivity {
             if (!pageIsApp || key == null || value == null || !STORE_KEY.matcher(key).matches()) return "0";
             synchronized (storeLock) {
                 try {
-                    writeAtomic(new File(storeDir(), key), value);
+                    // اول نشانه حذف پاک می‌شود، بعد داده: «هر دو فایل هست» فقط یعنی حذفی که نیمه‌کاره ماند (حذف برنده است)
                     File del = new File(storeDir(), key + STORE_DEL);
                     if (del.exists() && !del.delete()) throw new IOException("tombstone");
+                    writeAtomic(new File(storeDir(), key), value);
                     return Long.toString(bumpStoreSeq());
                 } catch (Exception e) {
                     clearStoreComplete();

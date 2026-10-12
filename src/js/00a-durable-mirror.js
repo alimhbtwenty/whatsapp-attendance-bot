@@ -11,6 +11,7 @@
   const nativeRemoveItem = Storage.prototype.removeItem;
   let mirrorPaused = false;
   let mirrorRestored = false;
+  let mirrorRestoreFailed = false; // بازگردانی با «حافظه پر» شکست خورد: این بار نسخه دوم دست نمی‌خورد تا شروع بعدی دوباره تلاش کند
   const mirrored = (store, key) => store === localStorage && !mirrorPaused && MIRROR_KEY_RE.test(key) && key !== MIRROR_SEQ_KEY;
   function noteMirrorSeq(seq) {
     const n = Number(seq);
@@ -40,8 +41,9 @@
     try { snap = JSON.parse(br.storeSnapshot() || 'null'); } catch(e) { return; }
     if (!snap || !snap.data || typeof snap.data !== 'object') return;
     const valid = (k) => MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY;
-    const keys = Object.keys(snap.data).filter(k => valid(k) && typeof snap.data[k] === 'string');
-    const removed = Array.isArray(snap.removed) ? snap.removed.filter(k => typeof k === 'string' && valid(k) && !keys.includes(k)) : [];
+    const removed = Array.isArray(snap.removed) ? snap.removed.filter(k => typeof k === 'string' && valid(k)) : [];
+    // اگر هم داده و هم نشانه حذف هست، حذفی نیمه‌کاره ماند (storeSet اول نشانه را پاک می‌کند): حذف برنده است
+    const keys = Object.keys(snap.data).filter(k => valid(k) && typeof snap.data[k] === 'string' && !removed.includes(k));
     const local = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
@@ -59,15 +61,29 @@
     const localSeq = Number(localStorage.getItem(MIRROR_SEQ_KEY)) || 0;
     if (!(Number(snap.seq) > localSeq)) return;
     // localStorage از نسخه دوم عقب است: نوشته‌های آخر گم شده‌اند؛ همان وضع نسخه دوم برمی‌گردد
+    const apply = (skip, seq) => {
+      removed.forEach(k => nativeRemoveItem.call(localStorage, k));
+      keys.filter(k => k !== skip).forEach(k => nativeSetItem.call(localStorage, k, snap.data[k]));
+      nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(seq));
+      mirrorRestored = true;
+    };
     mirrorPaused = true;
     try {
-      removed.forEach(k => nativeRemoveItem.call(localStorage, k));
-      keys.forEach(k => nativeSetItem.call(localStorage, k, snap.data[k]));
-      nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(Number(snap.seq)));
-      mirrorRestored = true;
+      apply(null, Number(snap.seq));
     } catch(e) {
-      // حافظه پر: هر چه نوشته شد ماند؛ دفعه بعد دوباره تلاش می‌شود (seq محلی بالا نرفته)
+      // حافظه پر: کپی پیش از به‌روزرسانی (نسخه دوم همه داده) کنار می‌رود و یک بار دیگر تلاش می‌شود
+      try {
+        if (localStorage.getItem(PRE_UPDATE_BACKUP_KEY) === null && !keys.includes(PRE_UPDATE_BACKUP_KEY)) throw e;
+        nativeRemoveItem.call(localStorage, PRE_UPDATE_BACKUP_KEY);
+        const seq = Number(br.storeRemove(PRE_UPDATE_BACKUP_KEY));
+        apply(PRE_UPDATE_BACKUP_KEY, Math.max(Number(snap.seq), seq || 0));
+      } catch(e2) {
+        // باز جا نیست: این بار نسخه دوم (که داده تازه‌تر را دارد) دیگر نوشته نمی‌شود و seq محلی بالا نمی‌رود،
+        // تا شروع بعدی دوباره بازگرداند؛ به کاربر هم گفته می‌شود
+        mirrorRestoreFailed = true;
+      }
     } finally {
-      mirrorPaused = false;
+      // بعد از شکست، نوشتن در نسخه دوم برای همین اجرا خاموش می‌ماند
+      mirrorPaused = mirrorRestoreFailed;
     }
   }

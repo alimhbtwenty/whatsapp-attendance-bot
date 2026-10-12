@@ -106,6 +106,40 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   ok('restoring a backup does not trigger a false recovery on the next start', await p.evaluate(() => mirrorRestored === false));
   ok('the counter is not in snapshots or restores', await p.evaluate(() => !('geomat_mirror_seq' in snapshotAppData())));
 
+  // ---------- بازبینی دور ۸: بازگردانی با «حافظه پر» ----------
+  // نوشته آخر آرشیو گم شده و بازگردانی‌اش با حافظه پر شکست می‌خورد → داده تازه‌ترِ نسخه دوم نباید رونویسی شود
+  await rawSet();
+  const goodLogs = await p.evaluate(() => localStorage.getItem('geomat_logs_v2'));
+  await p.evaluate(() => {
+    const s = Number(localStorage.getItem('geomat_mirror_seq'));
+    window.__rawSet.call(localStorage, 'geomat_logs_v2', '[]');                 // WebView نوشته آخر را گم کرده
+    window.__rawSet.call(localStorage, 'geomat_mirror_seq', String(s - 1));
+    window.__rawRemove.call(localStorage, 'geomat_backup_pre_1_4');            // چیزی برای آزاد کردن نیست
+    Storage.prototype.setItem.call(sessionStorage, 'quota_key', 'geomat_logs_v2');
+  });
+  await p.addInitScript(() => {
+    if (sessionStorage.getItem('quota_key') !== 'geomat_logs_v2') return;
+    const orig = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(k, v) { if (this === localStorage && k === 'geomat_logs_v2' && sessionStorage.getItem('quota_key') === 'geomat_logs_v2') throw new DOMException('full', 'QuotaExceededError'); return orig.call(this, k, v); };
+  });
+  await p.reload(); await p.waitForTimeout(800);
+  ok('a restore that hits full storage tells the user', await p.evaluate(() => mirrorRestoreFailed === true && document.getElementById('toast').textContent.includes('حافظه')));
+  await login(p);
+  await p.evaluate(() => { localStorage.setItem('geomat_user_name', 'x'); });
+  ok('...and does not overwrite the newer mirrored data afterwards', await p.evaluate(() => JSON.parse(AndroidBridge.storeSnapshot()).data.geomat_logs_v2) === goodLogs);
+  await p.evaluate(() => Storage.prototype.setItem.call(sessionStorage, 'quota_key', ''));
+  await p.reload(); await p.waitForTimeout(800);
+  ok('the next start (with space) restores the newer data', await p.evaluate(() => mirrorRestored === true && localStorage.getItem('geomat_logs_v2')) === goodLogs);
+
+  // حذفی که وسطش برنامه کشته شد: هم داده و هم نشانه حذف → حذف برنده است
+  await p.evaluate(() => {
+    const NS = 'fake_native_store'; const st = JSON.parse(sessionStorage.getItem(NS));
+    st.data.geomat_open_entry_v1 = JSON.stringify({ company: 'کرانه', dateISO: '2026-01-01', inTime: '07:00' }); st.removed.geomat_open_entry_v1 = 1; st.seq += 5;
+    Storage.prototype.setItem.call(sessionStorage, NS, JSON.stringify(st));
+  });
+  await p.reload(); await p.waitForTimeout(800);
+  ok('a half-finished delete stays deleted on restore', await p.evaluate(() => localStorage.getItem('geomat_open_entry_v1') === null));
+
   ok('no page errors', !errs.length, errs.join(';'));
   await b.close();
 })();

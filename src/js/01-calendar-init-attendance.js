@@ -213,6 +213,7 @@
     lockAutoBio = true; // با باز شدن برنامه، اگر اثر انگشت روشن است خودش بیاید
     renderLockScreen();
     if (mirrorRestored) showToast('♻️ تغییرهای آخر که با خاموش شدن گوشی گم شده بودند برگردانده شد');
+    if (mirrorRestoreFailed) showToast('⚠️ حافظه گوشی پر است؛ تغییرهای آخر کامل برنگشت. فایل پشتیبان بگیرید و رکوردهای قدیمی را حذف کنید');
     document.getElementById('userNameHeader').textContent = getUserName() || 'ورود';
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
