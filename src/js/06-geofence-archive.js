@@ -405,6 +405,7 @@
     
     const allChip = document.createElement('div');
     allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
+    allChip.setAttribute('role', 'button'); allChip.tabIndex = 0;
     allChip.textContent = 'همه شرکت‌ها';
     allChip.onclick = () => { archiveCompanyFilter = 'all'; archiveVisible = 30; renderArchive(); };
     filterBar.appendChild(allChip);
@@ -412,6 +413,7 @@
     comps.forEach(c => {
       const chip = document.createElement('div');
       chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
+      chip.setAttribute('role', 'button'); chip.tabIndex = 0;
       chip.textContent = c;
       chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
       filterBar.appendChild(chip);
@@ -423,6 +425,7 @@
       [['all', 'همه افراد'], ...people].forEach(([id, name]) => {
         const chip = document.createElement('div');
         chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
+        chip.setAttribute('role', 'button'); chip.tabIndex = 0;
         chip.textContent = id === 'all' ? name : `👤 ${name}`;
         chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
         filterBar.appendChild(chip);
@@ -450,7 +453,7 @@
       <div class="record-card-item">
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
-            <span style="font-weight:800; color:var(--gold); font-size:13px;">${escapeHtml(item.company)}</span>
+            <span style="font-weight:800; color:var(--accent-fg); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
@@ -461,7 +464,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible

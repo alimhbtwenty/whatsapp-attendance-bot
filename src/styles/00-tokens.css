@@ -16,11 +16,15 @@
       --text-strong: #ffffff;
       --text: #e6ebf2;
       --text-muted: #9aa6b8;
-      --text-dim: #6c7a8f;
+      --text-dim: #8592a6;
 
       --accent: #f5a623;           /* Geo Team amber */
       --accent-ink: #1a1100;       /* متن روی accent */
       --accent-2: #ffbe4d;
+      --accent-fg: #f5a623;        /* متن کهربایی روی سطح (در تم روشن تیره‌تر برای کنتراست) */
+      --whatsapp-ink: #05240f;     /* متن روی دکمه سبز واتساپ */
+      /* رنگ نام فرستنده‌ها در پیام‌رسان */
+      --author-1: #3db7e4; --author-2: #34d399; --author-3: #ffbe4d; --author-4: #f472b6; --author-5: #a78bfa; --author-6: #fb923c; --author-7: #22d3ee;
       --info: #3db7e4;
       --success: #2ec27e;
       --whatsapp: #25d366;
@@ -65,15 +69,17 @@
       --text-strong: #0b1220;
       --text: #1b2433;
       --text-muted: #546178;
-      --text-dim: #74819a;
+      --text-dim: #5d697e;
       --accent: #e8950c;
+      --accent-fg: #8f5600;
+      --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
       --accent-ink: #1a1100;
       --accent-2: #c77700;
-      --info: #0a85b8;
-      --success: #138a52;
+      --info: #06709c;
+      --success: #0c7542;
       --whatsapp: #1fa855;
-      --warning: #b86e00;
-      --danger: #d2334f;
+      --warning: #8f5600;
+      --danger: #c22745;
       --danger-fg: #a3122e;
       --warning-fg: #7a4a00;
       --success-fg: #0d6b3f;
@@ -84,8 +90,9 @@
         color-scheme: light;
         --bg: #f3f5f8; --surface-1: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9eef5; --surface-elevated: #ffffff;
         --border: #dde3ec; --border-strong: #c5cfdc; --fg-mix: #0f172a; --shadow: #64748b;
-        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #74819a;
-        --accent: #e8950c; --accent-2: #c77700; --info: #0a85b8; --success: #138a52; --whatsapp: #1fa855;
-        --warning: #b86e00; --danger: #d2334f; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #5d697e;
+        --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
+        --accent: #e8950c; --accent-fg: #8f5600; --accent-2: #c77700; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
+        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
       }
     }

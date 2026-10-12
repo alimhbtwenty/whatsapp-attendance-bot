@@ -53,7 +53,7 @@
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length
-        ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف">✕</button></span>`).join('')
+        ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف" aria-label="حذف">✕</button></span>`).join('')
         : '<span style="color:var(--text-dim); font-size:11px;">ثبت نشده</span>';
     }
   }

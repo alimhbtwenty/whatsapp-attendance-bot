@@ -44,8 +44,8 @@
 
   // رنگ‌های تلگرامی داینامیک بر اساس نام فرستنده در گروه
   function getAuthorColor(name) {
-    const colors = ['var(--info)', '#34d399', 'var(--accent-2)', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
-    if (!name) return 'var(--info)';
+    const colors = ['var(--author-1)', 'var(--author-2)', 'var(--author-3)', 'var(--author-4)', 'var(--author-5)', 'var(--author-6)', 'var(--author-7)'];
+    if (!name) return 'var(--author-1)';
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];

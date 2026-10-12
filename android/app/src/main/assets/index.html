@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
   <title>Geo Team</title>
   
   <!-- PWA Meta Tags -->
@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Jik86/ArjQb9m/tnhORlUpGNtGr77iPo94dZslbsERc='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-co2Yov0FhgQp7kjNy9ylnw7CAYCqFHmVbCfNpB4sej0='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -34,11 +34,15 @@
       --text-strong: #ffffff;
       --text: #e6ebf2;
       --text-muted: #9aa6b8;
-      --text-dim: #6c7a8f;
+      --text-dim: #8592a6;
 
       --accent: #f5a623;           /* Geo Team amber */
       --accent-ink: #1a1100;       /* متن روی accent */
       --accent-2: #ffbe4d;
+      --accent-fg: #f5a623;        /* متن کهربایی روی سطح (در تم روشن تیره‌تر برای کنتراست) */
+      --whatsapp-ink: #05240f;     /* متن روی دکمه سبز واتساپ */
+      /* رنگ نام فرستنده‌ها در پیام‌رسان */
+      --author-1: #3db7e4; --author-2: #34d399; --author-3: #ffbe4d; --author-4: #f472b6; --author-5: #a78bfa; --author-6: #fb923c; --author-7: #22d3ee;
       --info: #3db7e4;
       --success: #2ec27e;
       --whatsapp: #25d366;
@@ -83,15 +87,17 @@
       --text-strong: #0b1220;
       --text: #1b2433;
       --text-muted: #546178;
-      --text-dim: #74819a;
+      --text-dim: #5d697e;
       --accent: #e8950c;
+      --accent-fg: #8f5600;
+      --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
       --accent-ink: #1a1100;
       --accent-2: #c77700;
-      --info: #0a85b8;
-      --success: #138a52;
+      --info: #06709c;
+      --success: #0c7542;
       --whatsapp: #1fa855;
-      --warning: #b86e00;
-      --danger: #d2334f;
+      --warning: #8f5600;
+      --danger: #c22745;
       --danger-fg: #a3122e;
       --warning-fg: #7a4a00;
       --success-fg: #0d6b3f;
@@ -102,9 +108,10 @@
         color-scheme: light;
         --bg: #f3f5f8; --surface-1: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9eef5; --surface-elevated: #ffffff;
         --border: #dde3ec; --border-strong: #c5cfdc; --fg-mix: #0f172a; --shadow: #64748b;
-        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #74819a;
-        --accent: #e8950c; --accent-2: #c77700; --info: #0a85b8; --success: #138a52; --whatsapp: #1fa855;
-        --warning: #b86e00; --danger: #d2334f; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #5d697e;
+        --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
+        --accent: #e8950c; --accent-fg: #8f5600; --accent-2: #c77700; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
+        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
       }
     }
     * {
@@ -230,7 +237,7 @@
       color: var(--text-strong);
     }
     .brand-word b {
-      color: var(--accent);
+      color: var(--accent-fg);
       font-weight: 800;
       margin-left: 3px;
     }
@@ -254,7 +261,7 @@
           }
     .hud-chip:active {
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
     }
     .live-dot {
       width: 6px;
@@ -300,7 +307,7 @@
     }
     .mode-tab-btn.active {
       background: var(--surface-3);
-      color: var(--gold);
+      color: var(--accent-fg);
       box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 50%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     }
@@ -429,7 +436,7 @@
     .add-comp-pill {
       background: transparent;
       border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       padding: 9px;
       border-radius: 13px;
       font-size: 12px;
@@ -500,7 +507,7 @@
     .date-q-btn.selected {
       background: var(--gold-dim);
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-weight: 700;
     }
     .date-display-tag {
@@ -540,7 +547,7 @@
     .time-now-pill {
       background: color-mix(in srgb, var(--accent) 8%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 11px;
       font-weight: 700;
       padding: 3px 8px;
@@ -566,7 +573,7 @@
       background: var(--surface-2);
       border: 1.5px solid color-mix(in srgb, var(--fg-mix) 10%, transparent);
       border-radius: 12px;
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 24px;
       font-weight: 900;
       text-align: center;
@@ -584,7 +591,7 @@
     .digital-colon {
       font-size: 24px;
       font-weight: 900;
-      color: var(--gold);
+      color: var(--accent-fg);
       text-shadow: 0 0 10px var(--gold-glow);
       user-select: none;
       line-height: 1;
@@ -632,7 +639,7 @@
       font-weight: 700;
     }
     .duration-badge-value {
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 13.5px;
       font-weight: 800;
       direction: rtl;
@@ -684,7 +691,7 @@
     .tag-bubble.selected {
       background: var(--gold-dim);
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-weight: 700;
     }
     .cyber-input {
@@ -741,7 +748,7 @@
     .whatsapp-action-btn {
       flex: 1;
       background: var(--whatsapp);
-      color: var(--text-strong);
+      color: var(--whatsapp-ink);
       border: none;
       border-radius: 14px;
       padding: 13px;
@@ -832,7 +839,7 @@
     .stat-number {
       font-size: 17px;
       font-weight: 800;
-      color: var(--gold);
+      color: var(--accent-fg);
     }
 
     .record-stream {
@@ -913,7 +920,7 @@
     .tg-chan-chip.active {
       background: color-mix(in srgb, var(--info) 16%, transparent);
       border-color: var(--info);
-      color: var(--info);
+      color: var(--info-fg);
       font-weight: 800;
     }
     .tg-chat-stream {
@@ -1007,7 +1014,7 @@
     }
     .tg-empty-state {
       margin: auto;
-      color: var(--text-dim);
+      color: var(--text-muted);
       font-size: 12px;
       text-align: center;
       padding: 35px 15px;
@@ -1127,7 +1134,7 @@
       justify-content: flex-end;
       gap: 4px;
       font-size: 10px;
-      color: color-mix(in srgb, var(--fg-mix) 55%, transparent);
+      color: var(--text-muted);
       margin-top: 3px;
       direction: ltr;
       user-select: none;
@@ -1151,7 +1158,7 @@
     .tg-attach-pill {
       background: color-mix(in srgb, var(--accent) 8%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       padding: 3px 9px;
       border-radius: 10px;
       font-size: 10.5px;
@@ -1368,7 +1375,7 @@
     }
     .jcal-day.today {
       border-color: var(--gold-border);
-      color: var(--gold);
+      color: var(--accent-fg);
     }
     .jcal-day.selected {
       background: var(--gold);
@@ -1471,7 +1478,7 @@
     .check-add-row button {
       background: var(--gold-dim);
       border: 1px solid var(--gold-border);
-      color: var(--gold);
+      color: var(--accent-fg);
       border-radius: 12px;
       padding: 0 14px;
       font-weight: 800;
@@ -1657,7 +1664,7 @@
     .inv-ver-head { display: flex; justify-content: space-between; gap: 6px; color: var(--text); font-weight: 700; flex-wrap: wrap; }
     .inv-diff { line-height: 1.8; overflow-wrap: anywhere; }
     .inv-diff del { color: var(--danger); }
-    .inv-diff ins { color: var(--whatsapp); text-decoration: none; }
+    .inv-diff ins { color: var(--success); text-decoration: none; }
     .inv-ver button, .inv-panel-body .inv-small-btn {
       background: var(--surface-hover); border: 1px solid var(--border-subtle); color: var(--text-muted);
       border-radius: 9px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit; align-self: flex-start;
@@ -1665,7 +1672,7 @@
     #supportReportView, #supportInventoryView { display: flex; flex-direction: column; gap: 14px; }
     .inv-filter-row { flex-wrap: wrap; }
     .inv-vault-btn, .inv-link-btn {
-      background: none; border: 1px solid var(--gold-border); color: var(--gold);
+      background: none; border: 1px solid var(--gold-border); color: var(--accent-fg);
       border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
     .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
@@ -1675,7 +1682,7 @@
       font-size: 13px; font-weight: 800; color: var(--text);
     }
     .inv-section summary::-webkit-details-marker { display: none; }
-    .inv-count { color: var(--gold); font-size: 11.5px; font-weight: 700; }
+    .inv-count { color: var(--accent-fg); font-size: 11.5px; font-weight: 700; }
     .inv-section[open] summary { margin-bottom: 10px; }
     .inv-items { display: flex; flex-direction: column; gap: 8px; }
     .inv-item {
@@ -1694,7 +1701,7 @@
     .inv-row span { overflow-wrap: anywhere; }
     .inv-ltr { direction: ltr; unicode-bidi: isolate; }
     .inv-secret { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .inv-secret code { direction: ltr; color: var(--gold); font-size: 12.5px; overflow-wrap: anywhere; }
+    .inv-secret code { direction: ltr; color: var(--accent-fg); font-size: 12.5px; overflow-wrap: anywhere; }
     .inv-empty { color: var(--text-dim); font-size: 12px; text-align: center; padding: 4px; }
     .inv-modal-box { max-height: 88vh; overflow-y: auto; }
     .inv-form { display: flex; flex-direction: column; gap: 10px; }
@@ -1747,7 +1754,7 @@
     .lock-link {
       background: none;
       border: none;
-      color: var(--accent);
+      color: var(--accent-fg);
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -1758,6 +1765,10 @@
     .lock-body .cyber-input { font-size: 14px; padding: 12px 14px; }
     /* متن راهنمای ورودی‌های چپ‌به‌راست (شماره، رمز) فارسی و راست‌چین بماند */
     input[dir="ltr"]::placeholder { direction: rtl; text-align: right; }
+
+    /* حلقه فوکوس صفحه‌کلید (لمس آن را نشان نمی‌دهد) */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:focus:not(:focus-visible), [role="button"]:focus:not(:focus-visible) { outline: none; }
   </style>
 </head>
 <body>
@@ -1846,7 +1857,7 @@
       <span id="openEntryText"></span>
       <div class="banner-actions">
         <button data-click='["startExitForOpenEntry"]'>🔴 ثبت خروج</button>
-        <button data-click='["discardOpenEntry"]' title="بستن بدون ثبت خروج">✕</button>
+        <button data-click='["discardOpenEntry"]' title="بستن بدون ثبت خروج" aria-label="بستن بدون ثبت خروج">✕</button>
       </div>
     </div>
 
@@ -1866,7 +1877,7 @@
     <div class="frost-card">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> محل پروژه یا کارگاه</div>
-        <button style="background:none; border:none; color:var(--gold); font-size:11px; cursor:pointer;" data-click='["toggleEditLocations"]'>
+        <button style="background:none; border:none; color:var(--accent-fg); font-size:11px; cursor:pointer;" data-click='["toggleEditLocations"]'>
           ⚙ مدیریت
         </button>
       </div>
@@ -1890,9 +1901,9 @@
           <button class="date-q-btn" data-click='["setDateOffset", -2]' id="chipDayBefore">پریروز</button>
         </div>
         <div style="display:flex; align-items:center; gap:6px;">
-          <button class="date-q-btn" data-click='["changeDateByDays", -1]' title="روز قبل">◀ روز قبل</button>
-          <button class="date-pick-btn" data-click='["openAttendanceCalendar"]' title="انتخاب از تقویم">📅 <span class="date-display-tag" id="dateDisplay">--/--/----</span></button>
-          <button class="date-q-btn" data-click='["changeDateByDays", 1]' title="روز بعد">روز بعد ▶</button>
+          <button class="date-q-btn" data-click='["changeDateByDays", -1]' title="روز قبل" aria-label="روز قبل">◀ روز قبل</button>
+          <button class="date-pick-btn" data-click='["openAttendanceCalendar"]' title="انتخاب از تقویم" aria-label="انتخاب از تقویم">📅 <span class="date-display-tag" id="dateDisplay">--/--/----</span></button>
+          <button class="date-q-btn" data-click='["changeDateByDays", 1]' title="روز بعد" aria-label="روز بعد">روز بعد ▶</button>
         </div>
       </div>
     </div>
@@ -1913,9 +1924,9 @@
             <button class="time-now-pill" data-click='["setSpecificNow", "in"]'>⏱ الان</button>
           </div>
           <div class="digital-digits-wrapper">
-            <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" value="09" data-input='["handleDigitInput", "$this", "inMin"]' data-paste='["handleDigitPaste", "$event", "inHour", "inMin"]' data-blur='["padZeroOnBlur", "$this"]'>
+            <input type="text" id="inHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="09" aria-label="09" value="09" data-input='["handleDigitInput", "$this", "inMin"]' data-paste='["handleDigitPaste", "$event", "inHour", "inMin"]' data-blur='["padZeroOnBlur", "$this"]'>
             <span class="digital-colon">:</span>
-            <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" data-input='["handleDigitInput", "$this", null]' data-keydown='["handleDigitKeydown", "$event", "inHour"]' data-blur='["padZeroOnBlur", "$this"]'>
+            <input type="text" id="inMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" aria-label="00" value="00" data-input='["handleDigitInput", "$this", null]' data-keydown='["handleDigitKeydown", "$event", "inHour"]' data-blur='["padZeroOnBlur", "$this"]'>
           </div>
         </div>
 
@@ -1927,9 +1938,9 @@
             <button class="time-now-pill" data-click='["setSpecificNow", "out"]'>⏱ الان</button>
           </div>
           <div class="digital-digits-wrapper">
-            <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" value="17" data-input='["handleDigitInput", "$this", "outMin"]' data-paste='["handleDigitPaste", "$event", "outHour", "outMin"]' data-blur='["padZeroOnBlur", "$this"]'>
+            <input type="text" id="outHour" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="17" aria-label="17" value="17" data-input='["handleDigitInput", "$this", "outMin"]' data-paste='["handleDigitPaste", "$event", "outHour", "outMin"]' data-blur='["padZeroOnBlur", "$this"]'>
             <span class="digital-colon">:</span>
-            <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" value="00" data-input='["handleDigitInput", "$this", null]' data-keydown='["handleDigitKeydown", "$event", "outHour"]' data-blur='["padZeroOnBlur", "$this"]'>
+            <input type="text" id="outMin" class="oled-square-digit" maxlength="2" inputmode="numeric" pattern="[0-9]*" placeholder="00" aria-label="00" value="00" data-input='["handleDigitInput", "$this", null]' data-keydown='["handleDigitKeydown", "$event", "outHour"]' data-blur='["padZeroOnBlur", "$this"]'>
           </div>
         </div>
 
@@ -1944,7 +1955,7 @@
           <span>⚡ مجموع ساعت کارکرد:</span>
           <span class="duration-badge-value" id="durationText">۸ ساعت و ۰ دقیقه</span>
         </div>
-        <div class="unpaired-exit-hint" id="unpairedExitHint" data-click='["setAttendanceAction", "both"]'>
+        <div class="unpaired-exit-hint" id="unpairedExitHint" role="button" tabindex="0" data-click='["setAttendanceAction", "both"]'>
           ورودی برای این محل در این روز ثبت نشده؛ برای محاسبه ساعت کارکرد «دوره کامل» را بزنید
         </div>
 
@@ -1992,7 +2003,7 @@
     <div class="frost-card">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> تاریخ گزارش</div>
-        <span id="supportDayName" style="color:var(--gold);">--</span>
+        <span id="supportDayName" style="color:var(--accent-fg);">--</span>
       </div>
       <div class="date-stepper-panel" style="flex-wrap:wrap; gap:6px;">
         <div class="date-chips-quick">
@@ -2000,7 +2011,7 @@
           <button class="date-q-btn" data-click='["setSupportDateOffset", -1]' id="supChipYesterday">دیروز</button>
           <button class="date-q-btn" data-click='["setSupportDateOffset", -2]' id="supChipDayBefore">پریروز</button>
         </div>
-        <button class="date-pick-btn" data-click='["openSupportCalendar"]' title="انتخاب از تقویم">📅 <span class="date-display-tag" id="supportDateDisplay">--/--/----</span></button>
+        <button class="date-pick-btn" data-click='["openSupportCalendar"]' title="انتخاب از تقویم" aria-label="انتخاب از تقویم">📅 <span class="date-display-tag" id="supportDateDisplay">--/--/----</span></button>
       </div>
     </div>
 
@@ -2018,26 +2029,26 @@
         <div class="title-tag"><span class="gold-marker"></span> اقدامات انجام‌شده</div>
       </div>
       <div class="quick-tags-scroll">
-        <div class="tag-bubble" data-click='["appendSupportTag", "تعویض و کانفیگ سوییچ"]'>سوییچ شبکه</div>
-        <div class="tag-bubble" data-click='["appendSupportTag", "کانفیگ سانترال و تلفن UCM"]'>سانترال UCM</div>
-        <div class="tag-bubble" data-click='["appendSupportTag", "سرکشی هفتگی و بکاپ‌گیری"]'>بکاپ‌گیری</div>
-        <div class="tag-bubble" data-click='["appendSupportTag", "رفع ایراد کاربر و اینترنت"]'>رفع ایراد اینترنت</div>
-        <div class="tag-bubble" data-click='["appendSupportTag", "نصب نود شبکه، ترانک و پریز"]'>ترانک و پسیو</div>
-        <div class="tag-bubble" data-click='["appendSupportTag", "حذف و نصب مجدد آنتی‌ویروس"]'>آنتی‌ویروس</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "تعویض و کانفیگ سوییچ"]'>سوییچ شبکه</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "کانفیگ سانترال و تلفن UCM"]'>سانترال UCM</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "سرکشی هفتگی و بکاپ‌گیری"]'>بکاپ‌گیری</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "رفع ایراد کاربر و اینترنت"]'>رفع ایراد اینترنت</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "نصب نود شبکه، ترانک و پریز"]'>ترانک و پسیو</div>
+        <div class="tag-bubble" role="button" tabindex="0" data-click='["appendSupportTag", "حذف و نصب مجدد آنتی‌ویروس"]'>آنتی‌ویروس</div>
       </div>
-      <textarea id="supportActionsText" class="cyber-input" style="min-height:75px; resize:vertical;" placeholder="شرح کارهای انجام شده..." data-input='["updateSupportPreview"]'></textarea>
+      <textarea id="supportActionsText" class="cyber-input" style="min-height:75px; resize:vertical;" placeholder="شرح کارهای انجام شده..." aria-label="شرح کارهای انجام شده..." data-input='["updateSupportPreview"]'></textarea>
     </div>
 
     <!-- چک‌لیست ثابت هر مشتری -->
     <div class="frost-card" id="checklistCard">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> <span id="checklistTitle">چک‌لیست</span></div>
-        <span id="checklistCount" style="color:var(--gold);"></span>
+        <span id="checklistCount" style="color:var(--accent-fg);"></span>
       </div>
       <div class="checklist" id="checklistItems"></div>
       <div class="check-add-row">
-        <input type="text" id="checklistNewItem" class="cyber-input" maxlength="120" placeholder="آیتم جدید، مثلاً: بکاپ سرور گرفته شد" data-keydown='["checklistKeydown","$event"]'>
-        <button data-click='["addChecklistItem"]' title="افزودن">➕</button>
+        <input type="text" id="checklistNewItem" class="cyber-input" maxlength="120" placeholder="آیتم جدید، مثلاً: بکاپ سرور گرفته شد" aria-label="آیتم جدید، مثلاً: بکاپ سرور گرفته شد" data-keydown='["checklistKeydown","$event"]'>
+        <button data-click='["addChecklistItem"]' title="افزودن" aria-label="افزودن">➕</button>
       </div>
     </div>
 
@@ -2046,7 +2057,7 @@
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> کارهای باقی‌مانده (اختیاری)</div>
       </div>
-      <textarea id="supportPendingText" class="cyber-input" style="min-height:55px; resize:vertical;" placeholder="مثال: برش درب ترانک‌ها، کابل‌کشی ۴ کاربر..." data-input='["updateSupportPreview"]'></textarea>
+      <textarea id="supportPendingText" class="cyber-input" style="min-height:55px; resize:vertical;" placeholder="مثال: برش درب ترانک‌ها، کابل‌کشی ۴ کاربر..." aria-label="مثال: برش درب ترانک‌ها، کابل‌کشی ۴ کاربر..." data-input='["updateSupportPreview"]'></textarea>
     </div>
 
     <!-- مشخصات دسترسی / سرور / دستگاه -->
@@ -2054,7 +2065,7 @@
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> اطلاعات دسترسی یا مدل دستگاه (اختیاری)</div>
       </div>
-      <input type="text" id="supportTechInfo" class="cyber-input" placeholder="مثال: IP: 192.168.18.25 | سوییچ TL-SG1024D" data-input='["updateSupportPreview"]'>
+      <input type="text" id="supportTechInfo" class="cyber-input" placeholder="مثال: IP: 192.168.18.25 | سوییچ TL-SG1024D" aria-label="مثال: IP: 192.168.18.25 | سوییچ TL-SG1024D" data-input='["updateSupportPreview"]'>
     </div>
 
     <!-- پیش‌نمایش گزارش ساپورت -->
@@ -2079,7 +2090,7 @@
           </div>
           <div class="date-chips-quick inv-filter-row" id="invFilterRow"></div>
           <div class="company-chips-grid" id="invCompaniesGrid"></div>
-          <input type="search" id="invSearchInput" class="cyber-input" maxlength="80" placeholder="🔍 جستجو در پرونده (نام، IP، یوزر...)" data-input='["renderInventory"]'>
+          <input type="search" id="invSearchInput" class="cyber-input" maxlength="80" placeholder="🔍 جستجو در پرونده (نام، IP، یوزر...)" aria-label="🔍 جستجو در پرونده (نام، IP، یوزر...)" data-input='["renderInventory"]'>
         </div>
         <div id="invSections"></div>
       </div>
@@ -2117,9 +2128,9 @@
         </button>
       </div>
       <div class="month-nav">
-        <button class="jcal-nav" data-click='["shiftReportMonth", -1]' title="ماه قبل">▶</button>
+        <button class="jcal-nav" data-click='["shiftReportMonth", -1]' title="ماه قبل" aria-label="ماه قبل">▶</button>
         <span class="month-title" id="reportMonthTitle"></span>
-        <button class="jcal-nav" data-click='["shiftReportMonth", 1]' title="ماه بعد">◀</button>
+        <button class="jcal-nav" data-click='["shiftReportMonth", 1]' title="ماه بعد" aria-label="ماه بعد">◀</button>
       </div>
       <div class="stats-hud-grid">
         <div class="hud-stat-box">
@@ -2217,7 +2228,7 @@
           <div>
             <div style="display:flex; align-items:center; gap:6px;">
               <span style="font-size:13px; font-weight:800; color:var(--text-strong);">گروه Geo Team</span>
-              <span style="font-size:10px; background:color-mix(in srgb, var(--info) 18%, transparent); color:var(--info); padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
+              <span style="font-size:10px; background:color-mix(in srgb, var(--info) 18%, transparent); color:var(--info-fg); padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
             </div>
             <div style="font-size:10.5px; color:var(--text-muted);" id="tgNetStatus"><span style="color:var(--success);">●</span> ذخیره فقط روی همین دستگاه</div>
           </div>
@@ -2240,7 +2251,7 @@
         <div class="tg-chat-stream" id="tgChatStream">
           <!-- پیام‌ها به صورت تلگرامی رندر می‌شوند -->
         </div>
-        <button class="tg-scroll-down" id="tgScrollDownBtn" data-click='["scrollChatToBottom", true]' title="رفتن به آخرین پیام">⌄</button>
+        <button class="tg-scroll-down" id="tgScrollDownBtn" data-click='["scrollChatToBottom", true]' title="رفتن به آخرین پیام" aria-label="رفتن به آخرین پیام">⌄</button>
       </div>
 
       <!-- اینپوت بار تلگرامی -->
@@ -2250,8 +2261,8 @@
           <div class="tg-attach-pill" data-click='["attachCurrentReportToChat", "support"]'>🛠 الصاق گزارش ساپورت</div>
         </div>
         <div class="tg-input-row">
-          <textarea id="tgMessageInput" class="tg-chat-input" rows="1" maxlength="4000" placeholder="پیام در کانال عمومی..."></textarea>
-          <button class="tg-send-btn" id="tgSendBtn" data-click='["sendChatMessage"]' title="ارسال پیام" disabled>
+          <textarea id="tgMessageInput" class="tg-chat-input" rows="1" maxlength="4000" placeholder="پیام در کانال عمومی..." aria-label="پیام در کانال عمومی..."></textarea>
+          <button class="tg-send-btn" id="tgSendBtn" data-click='["sendChatMessage"]' title="ارسال پیام" aria-label="ارسال پیام" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
@@ -2287,10 +2298,10 @@
 </div>
 
 <!-- Glass Modal: افزودن شرکت -->
-<div class="glass-modal-bg" id="addModal" data-click='["closeAddModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="addModal" data-click='["closeAddModal"]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">➕ افزودن محل جدید</div>
-    <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک...">
+    <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک..." aria-label="نام شرکت یا محل، مثلاً: صدف، ونک...">
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;">📍 موقعیت فعلی شما به‌عنوان موقعیت این محل ثبت می‌شود؛ داخل همان محل باشید و GPS روشن باشد.</div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="addProjectBtn" data-click='["saveNewProjectFromModal"]'>📍 ثبت محل و موقعیت</button>
@@ -2300,12 +2311,12 @@
 </div>
 
 <!-- Glass Modal: تقویم شمسی داخلی -->
-<div class="glass-modal-bg" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div class="jcal-head">
-      <button class="jcal-nav" data-click='["shiftCalendarMonth", -1]' title="ماه قبل">▶</button>
+      <button class="jcal-nav" data-click='["shiftCalendarMonth", -1]' title="ماه قبل" aria-label="ماه قبل">▶</button>
       <span class="jcal-title" id="jcalTitle"></span>
-      <button class="jcal-nav" data-click='["shiftCalendarMonth", 1]' title="ماه بعد">◀</button>
+      <button class="jcal-nav" data-click='["shiftCalendarMonth", 1]' title="ماه بعد" aria-label="ماه بعد">◀</button>
     </div>
     <div class="jcal-grid" id="jcalGrid"></div>
     <div style="display:flex; gap:8px;">
@@ -2316,7 +2327,7 @@
 </div>
 
 <!-- Glass Modal: صف ارسال -->
-<div class="glass-modal-bg" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">📤 گزارش‌های ارسال‌نشده</div>
     <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
@@ -2326,7 +2337,7 @@
 </div>
 
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
-<div class="glass-modal-bg" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:14px; font-weight:700; color:var(--text-strong); line-height:1.8;" id="confirmText"></div>
     <div style="display:flex; gap:8px;">
@@ -2337,7 +2348,7 @@
 </div>
 
 <!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
-<div class="glass-modal-bg" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
   <div class="glass-modal-box inv-modal-box">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle"></div>
     <div class="inv-form" id="invItemForm"></div>
@@ -2349,7 +2360,7 @@
 </div>
 
 <!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
-<div class="glass-modal-bg" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
   <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle"></div>
     <div class="inv-panel-body" id="invPanelBody"></div>
@@ -2358,7 +2369,7 @@
 </div>
 
 <!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
-<div class="glass-modal-bg" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle"></div>
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
@@ -2915,6 +2926,9 @@
       comps.forEach(c => {
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
+        btn.setAttribute('role', 'button');
+        btn.tabIndex = 0;
+        btn.setAttribute('aria-pressed', String(selectedCompany === c));
         const label = document.createElement('span');
         label.className = 'chip-label';
         label.textContent = c;
@@ -3034,6 +3048,7 @@
     WEEK_DAYS.forEach(d => {
       const pill = document.createElement('div');
       pill.className = `day-item-pill ${selectedDay === d ? 'selected' : ''}`;
+      pill.setAttribute('role', 'button'); pill.tabIndex = 0;
       pill.textContent = d;
       pill.onclick = () => {
         playTactileFeedback();
@@ -3618,7 +3633,7 @@
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length
-        ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف">✕</button></span>`).join('')
+        ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف" aria-label="حذف">✕</button></span>`).join('')
         : '<span style="color:var(--text-dim); font-size:11px;">ثبت نشده</span>';
     }
   }
@@ -4272,6 +4287,7 @@
     
     const allChip = document.createElement('div');
     allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
+    allChip.setAttribute('role', 'button'); allChip.tabIndex = 0;
     allChip.textContent = 'همه شرکت‌ها';
     allChip.onclick = () => { archiveCompanyFilter = 'all'; archiveVisible = 30; renderArchive(); };
     filterBar.appendChild(allChip);
@@ -4279,6 +4295,7 @@
     comps.forEach(c => {
       const chip = document.createElement('div');
       chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
+      chip.setAttribute('role', 'button'); chip.tabIndex = 0;
       chip.textContent = c;
       chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
       filterBar.appendChild(chip);
@@ -4290,6 +4307,7 @@
       [['all', 'همه افراد'], ...people].forEach(([id, name]) => {
         const chip = document.createElement('div');
         chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
+        chip.setAttribute('role', 'button'); chip.tabIndex = 0;
         chip.textContent = id === 'all' ? name : `👤 ${name}`;
         chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
         filterBar.appendChild(chip);
@@ -4317,7 +4335,7 @@
       <div class="record-card-item">
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
-            <span style="font-weight:800; color:var(--gold); font-size:13px;">${escapeHtml(item.company)}</span>
+            <span style="font-weight:800; color:var(--accent-fg); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
@@ -4328,7 +4346,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible
@@ -4564,7 +4582,7 @@
     wrap.innerHTML = `<table class="report-table">
       <tr><th>شرکت</th><th class="num">روز</th><th class="num">ساعت</th></tr>
       ${names.map(n => `<tr><td>${escapeHtml(n)}</td><td class="num">${toPersianDigits(d.perCompany[n].days.size)}</td><td class="num">${formatHM(d.perCompany[n].mins)}</td></tr>`).join('')}
-      <tr><td style="font-weight:800;">جمع (${toPersianDigits(d.days)} روز)</td><td class="num"></td><td class="num" style="font-weight:800; color:var(--gold);">${formatHM(d.total)}</td></tr>
+      <tr><td style="font-weight:800;">جمع (${toPersianDigits(d.days)} روز)</td><td class="num"></td><td class="num" style="font-weight:800; color:var(--accent-fg);">${formatHM(d.total)}</td></tr>
     </table>`;
   }
 
@@ -4804,8 +4822,8 @@
 
   // رنگ‌های تلگرامی داینامیک بر اساس نام فرستنده در گروه
   function getAuthorColor(name) {
-    const colors = ['var(--info)', '#34d399', 'var(--accent-2)', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
-    if (!name) return 'var(--info)';
+    const colors = ['var(--author-1)', 'var(--author-2)', 'var(--author-3)', 'var(--author-4)', 'var(--author-5)', 'var(--author-6)', 'var(--author-7)'];
+    if (!name) return 'var(--author-1)';
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
@@ -5502,10 +5520,10 @@
     if (!team) {
       box.innerHTML = `<div class="lock-title">راه‌اندازی Geo Team</div>
         <div class="lock-hint">اولین بار: حساب مدیر را بسازید. بعد از بخش «پرونده فنی ← کاربران» برای هر تکنسین حساب جدا بسازید و «فایل تیم» را به گوشی‌اش بدهید.</div>
-        <input type="text" class="cyber-input" id="lockName" maxlength="60" placeholder="نام و نام خانوادگی" autocomplete="name" value="${escapeHtml(localStorage.getItem('geomat_user_name') || '')}">
-        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel">
-        <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز (حداقل ۸ کاراکتر)" autocomplete="new-password">
-        <input type="password" class="cyber-input" id="lockPw2" dir="ltr" maxlength="128" placeholder="تکرار رمز" autocomplete="new-password">
+        <input type="text" class="cyber-input" id="lockName" maxlength="60" placeholder="نام و نام خانوادگی" aria-label="نام و نام خانوادگی" autocomplete="name" value="${escapeHtml(localStorage.getItem('geomat_user_name') || '')}">
+        <input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" aria-label="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel">
+        <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز (حداقل ۸ کاراکتر)" aria-label="رمز (حداقل ۸ کاراکتر)" autocomplete="new-password">
+        <input type="password" class="cyber-input" id="lockPw2" dir="ltr" maxlength="128" placeholder="تکرار رمز" aria-label="تکرار رمز" autocomplete="new-password">
         <button class="install-btn lock-main-btn" id="lockSubmit" data-click='["setupAdmin"]'>ساخت حساب مدیر</button>
         <div class="lock-err" id="lockErr" role="alert"></div>
         ${importLink}`;
@@ -5515,10 +5533,10 @@
     const lastPhone = localStorage.getItem(LAST_PHONE_KEY) || '';
     const who = lockLegacyMode
       ? `<select class="cyber-input" id="lockLegacyUser">${legacy.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)}</option>`).join('')}</select>`
-      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
+      : `<input type="tel" class="cyber-input" id="lockPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" aria-label="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" autocomplete="tel" inputmode="tel" value="${escapeHtml(lastPhone)}">`;
     box.innerHTML = `<div class="lock-title">ورود</div>
       ${who}
-      <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز" autocomplete="current-password">
+      <input type="password" class="cyber-input" id="lockPw" dir="ltr" maxlength="128" placeholder="رمز" aria-label="رمز" autocomplete="current-password">
       <button class="install-btn lock-main-btn" id="lockSubmit" data-click='["loginApp"]'>ورود</button>
       <button class="dock-copy-btn lock-bio-btn" id="lockBioBtn" style="display:none;" data-click='["loginWithBiometric"]'>👆 ورود با اثر انگشت / چهره</button>
       <div class="lock-err" id="lockErr" role="alert"></div>
@@ -5897,8 +5915,8 @@
         </div></div>`).join('')}
       <div class="inv-ver">
         <div class="inv-ver-head"><span>➕ حساب جدید</span></div>
-        <input type="text" class="cyber-input" id="newUserName" maxlength="60" placeholder="نام">
-        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" inputmode="tel">
+        <input type="text" class="cyber-input" id="newUserName" maxlength="60" placeholder="نام" aria-label="نام">
+        <input type="tel" class="cyber-input" id="newUserPhone" dir="ltr" maxlength="16" placeholder="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" aria-label="شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷" inputmode="tel">
         <select class="cyber-input" id="newUserRole"><option value="tech">تکنسین (دیدن، افزودن، ویرایش)</option><option value="admin">مدیر (کنترل کامل)</option></select>
         <button class="inv-small-btn" data-user-add="1">ساخت حساب و تعیین رمز</button>
       </div>
@@ -6204,7 +6222,7 @@
     const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
-      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" role="button" tabindex="0" aria-pressed="${c === selectedCompany}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
       : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');
@@ -6242,8 +6260,8 @@
     return `<div class="inv-item">
       <div class="inv-item-head">
         <span class="inv-item-title">${escapeHtml(it.data[sec.titleField] || '—')}</span>
-        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش">✏️</button>${isAdmin()
-          ? `<button data-history="${id}" title="تاریخچه">🕘</button><button data-del="${id}" title="حذف">🗑</button>` : ''}</span>
+        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش" aria-label="ویرایش">✏️</button>${isAdmin()
+          ? `<button data-history="${id}" title="تاریخچه" aria-label="تاریخچه">🕘</button><button data-del="${id}" title="حذف" aria-label="حذف">🗑</button>` : ''}</span>
       </div>${rows}${secrets}
       <div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div></div>`;
   }
@@ -6583,8 +6601,8 @@
     const people = [...new Set(events.map(e => (e.by && e.by.name) || 'نامشخص'))];
     const shown = events.filter(e => !who || ((e.by && e.by.name) || 'نامشخص') === who).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 300);
     openInvPanel('📜 گزارش تغییرات', `
-      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--gold);' : ''}">همه</button>${people.map(p =>
-        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--gold);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
+      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--accent-fg);' : ''}">همه</button>${people.map(p =>
+        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--accent-fg);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
       ${shown.map(e => `<div class="inv-ver"><div class="inv-ver-head"><span>${escapeHtml((e.by && e.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(e.at)}</span></div>
         <div>${escapeHtml(e.text)}</div>${e.id ? `<button data-history="${escapeHtml(e.id)}">🕘 جزئیات</button>` : ''}</div>`).join('') || '<div class="inv-empty">تغییری ثبت نشده</div>'}`);
   }
@@ -6605,6 +6623,14 @@
     if (!Array.isArray(spec) || !UI_ACTION_NAMES.includes(spec[0]) || typeof window[spec[0]] !== 'function') return;
     window[spec[0]](...spec.slice(1).map(a => a === '$this' ? el : a === '$event' ? e : a === '$value' ? el.value : a));
   }));
+  // عنصرهای غیر <button> با role="button" (چیپ‌ها، برچسب‌ها) با Enter و Space هم کار کنند
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target;
+    if (!el || el.getAttribute('role') !== 'button' || el.tagName === 'BUTTON') return;
+    e.preventDefault();
+    el.click();
+  });
   function uiAttr(type, fn, ...args) {
     return `data-${type}="${escapeHtml(JSON.stringify([fn, ...args]))}"`;
   }

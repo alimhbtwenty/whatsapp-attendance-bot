@@ -430,6 +430,9 @@
       comps.forEach(c => {
         const btn = document.createElement('div');
         btn.className = `comp-chip ${selectedCompany === c ? 'selected' : ''}`;
+        btn.setAttribute('role', 'button');
+        btn.tabIndex = 0;
+        btn.setAttribute('aria-pressed', String(selectedCompany === c));
         const label = document.createElement('span');
         label.className = 'chip-label';
         label.textContent = c;
@@ -549,6 +552,7 @@
     WEEK_DAYS.forEach(d => {
       const pill = document.createElement('div');
       pill.className = `day-item-pill ${selectedDay === d ? 'selected' : ''}`;
+      pill.setAttribute('role', 'button'); pill.tabIndex = 0;
       pill.textContent = d;
       pill.onclick = () => {
         playTactileFeedback();

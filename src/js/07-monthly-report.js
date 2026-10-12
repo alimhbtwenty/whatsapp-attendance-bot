@@ -174,7 +174,7 @@
     wrap.innerHTML = `<table class="report-table">
       <tr><th>شرکت</th><th class="num">روز</th><th class="num">ساعت</th></tr>
       ${names.map(n => `<tr><td>${escapeHtml(n)}</td><td class="num">${toPersianDigits(d.perCompany[n].days.size)}</td><td class="num">${formatHM(d.perCompany[n].mins)}</td></tr>`).join('')}
-      <tr><td style="font-weight:800;">جمع (${toPersianDigits(d.days)} روز)</td><td class="num"></td><td class="num" style="font-weight:800; color:var(--gold);">${formatHM(d.total)}</td></tr>
+      <tr><td style="font-weight:800;">جمع (${toPersianDigits(d.days)} روز)</td><td class="num"></td><td class="num" style="font-weight:800; color:var(--accent-fg);">${formatHM(d.total)}</td></tr>
     </table>`;
   }
 

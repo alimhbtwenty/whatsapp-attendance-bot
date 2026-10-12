@@ -121,7 +121,7 @@
       color: var(--text-strong);
     }
     .brand-word b {
-      color: var(--accent);
+      color: var(--accent-fg);
       font-weight: 800;
       margin-left: 3px;
     }
@@ -145,7 +145,7 @@
           }
     .hud-chip:active {
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
     }
     .live-dot {
       width: 6px;
@@ -191,7 +191,7 @@
     }
     .mode-tab-btn.active {
       background: var(--surface-3);
-      color: var(--gold);
+      color: var(--accent-fg);
       box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 50%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     }
@@ -320,7 +320,7 @@
     .add-comp-pill {
       background: transparent;
       border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       padding: 9px;
       border-radius: 13px;
       font-size: 12px;
@@ -391,7 +391,7 @@
     .date-q-btn.selected {
       background: var(--gold-dim);
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-weight: 700;
     }
     .date-display-tag {
@@ -431,7 +431,7 @@
     .time-now-pill {
       background: color-mix(in srgb, var(--accent) 8%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 11px;
       font-weight: 700;
       padding: 3px 8px;
@@ -457,7 +457,7 @@
       background: var(--surface-2);
       border: 1.5px solid color-mix(in srgb, var(--fg-mix) 10%, transparent);
       border-radius: 12px;
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 24px;
       font-weight: 900;
       text-align: center;
@@ -475,7 +475,7 @@
     .digital-colon {
       font-size: 24px;
       font-weight: 900;
-      color: var(--gold);
+      color: var(--accent-fg);
       text-shadow: 0 0 10px var(--gold-glow);
       user-select: none;
       line-height: 1;
@@ -523,7 +523,7 @@
       font-weight: 700;
     }
     .duration-badge-value {
-      color: var(--gold);
+      color: var(--accent-fg);
       font-size: 13.5px;
       font-weight: 800;
       direction: rtl;
@@ -575,7 +575,7 @@
     .tag-bubble.selected {
       background: var(--gold-dim);
       border-color: var(--gold);
-      color: var(--gold);
+      color: var(--accent-fg);
       font-weight: 700;
     }
     .cyber-input {
@@ -632,7 +632,7 @@
     .whatsapp-action-btn {
       flex: 1;
       background: var(--whatsapp);
-      color: var(--text-strong);
+      color: var(--whatsapp-ink);
       border: none;
       border-radius: 14px;
       padding: 13px;
@@ -723,7 +723,7 @@
     .stat-number {
       font-size: 17px;
       font-weight: 800;
-      color: var(--gold);
+      color: var(--accent-fg);
     }
 
     .record-stream {
@@ -804,7 +804,7 @@
     .tg-chan-chip.active {
       background: color-mix(in srgb, var(--info) 16%, transparent);
       border-color: var(--info);
-      color: var(--info);
+      color: var(--info-fg);
       font-weight: 800;
     }
     .tg-chat-stream {
@@ -898,7 +898,7 @@
     }
     .tg-empty-state {
       margin: auto;
-      color: var(--text-dim);
+      color: var(--text-muted);
       font-size: 12px;
       text-align: center;
       padding: 35px 15px;
@@ -1018,7 +1018,7 @@
       justify-content: flex-end;
       gap: 4px;
       font-size: 10px;
-      color: color-mix(in srgb, var(--fg-mix) 55%, transparent);
+      color: var(--text-muted);
       margin-top: 3px;
       direction: ltr;
       user-select: none;
@@ -1042,7 +1042,7 @@
     .tg-attach-pill {
       background: color-mix(in srgb, var(--accent) 8%, transparent);
       border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-      color: var(--gold);
+      color: var(--accent-fg);
       padding: 3px 9px;
       border-radius: 10px;
       font-size: 10.5px;
@@ -1259,7 +1259,7 @@
     }
     .jcal-day.today {
       border-color: var(--gold-border);
-      color: var(--gold);
+      color: var(--accent-fg);
     }
     .jcal-day.selected {
       background: var(--gold);
@@ -1362,7 +1362,7 @@
     .check-add-row button {
       background: var(--gold-dim);
       border: 1px solid var(--gold-border);
-      color: var(--gold);
+      color: var(--accent-fg);
       border-radius: 12px;
       padding: 0 14px;
       font-weight: 800;
@@ -1548,7 +1548,7 @@
     .inv-ver-head { display: flex; justify-content: space-between; gap: 6px; color: var(--text); font-weight: 700; flex-wrap: wrap; }
     .inv-diff { line-height: 1.8; overflow-wrap: anywhere; }
     .inv-diff del { color: var(--danger); }
-    .inv-diff ins { color: var(--whatsapp); text-decoration: none; }
+    .inv-diff ins { color: var(--success); text-decoration: none; }
     .inv-ver button, .inv-panel-body .inv-small-btn {
       background: var(--surface-hover); border: 1px solid var(--border-subtle); color: var(--text-muted);
       border-radius: 9px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit; align-self: flex-start;
@@ -1556,7 +1556,7 @@
     #supportReportView, #supportInventoryView { display: flex; flex-direction: column; gap: 14px; }
     .inv-filter-row { flex-wrap: wrap; }
     .inv-vault-btn, .inv-link-btn {
-      background: none; border: 1px solid var(--gold-border); color: var(--gold);
+      background: none; border: 1px solid var(--gold-border); color: var(--accent-fg);
       border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
     .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
@@ -1566,7 +1566,7 @@
       font-size: 13px; font-weight: 800; color: var(--text);
     }
     .inv-section summary::-webkit-details-marker { display: none; }
-    .inv-count { color: var(--gold); font-size: 11.5px; font-weight: 700; }
+    .inv-count { color: var(--accent-fg); font-size: 11.5px; font-weight: 700; }
     .inv-section[open] summary { margin-bottom: 10px; }
     .inv-items { display: flex; flex-direction: column; gap: 8px; }
     .inv-item {
@@ -1585,7 +1585,7 @@
     .inv-row span { overflow-wrap: anywhere; }
     .inv-ltr { direction: ltr; unicode-bidi: isolate; }
     .inv-secret { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .inv-secret code { direction: ltr; color: var(--gold); font-size: 12.5px; overflow-wrap: anywhere; }
+    .inv-secret code { direction: ltr; color: var(--accent-fg); font-size: 12.5px; overflow-wrap: anywhere; }
     .inv-empty { color: var(--text-dim); font-size: 12px; text-align: center; padding: 4px; }
     .inv-modal-box { max-height: 88vh; overflow-y: auto; }
     .inv-form { display: flex; flex-direction: column; gap: 10px; }
@@ -1638,7 +1638,7 @@
     .lock-link {
       background: none;
       border: none;
-      color: var(--accent);
+      color: var(--accent-fg);
       font-size: 12px;
       font-weight: 700;
       cursor: pointer;
@@ -1649,3 +1649,7 @@
     .lock-body .cyber-input { font-size: 14px; padding: 12px 14px; }
     /* متن راهنمای ورودی‌های چپ‌به‌راست (شماره، رمز) فارسی و راست‌چین بماند */
     input[dir="ltr"]::placeholder { direction: rtl; text-align: right; }
+
+    /* حلقه فوکوس صفحه‌کلید (لمس آن را نشان نمی‌دهد) */
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    button:focus:not(:focus-visible), [role="button"]:focus:not(:focus-visible) { outline: none; }

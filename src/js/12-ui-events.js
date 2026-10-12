@@ -13,6 +13,14 @@
     if (!Array.isArray(spec) || !UI_ACTION_NAMES.includes(spec[0]) || typeof window[spec[0]] !== 'function') return;
     window[spec[0]](...spec.slice(1).map(a => a === '$this' ? el : a === '$event' ? e : a === '$value' ? el.value : a));
   }));
+  // عنصرهای غیر <button> با role="button" (چیپ‌ها، برچسب‌ها) با Enter و Space هم کار کنند
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const el = e.target;
+    if (!el || el.getAttribute('role') !== 'button' || el.tagName === 'BUTTON') return;
+    e.preventDefault();
+    el.click();
+  });
   function uiAttr(type, fn, ...args) {
     return `data-${type}="${escapeHtml(JSON.stringify([fn, ...args]))}"`;
   }

@@ -230,7 +230,7 @@
     const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
     const grid = document.getElementById('invCompaniesGrid');
     grid.innerHTML = shown.length
-      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" role="button" tabindex="0" aria-pressed="${c === selectedCompany}" data-company="${escapeHtml(c)}" title="${escapeHtml(c)}"><span class="chip-label">${escapeHtml(c)}</span></div>`).join('')
       : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
 
     const box = document.getElementById('invSections');
@@ -268,8 +268,8 @@
     return `<div class="inv-item">
       <div class="inv-item-head">
         <span class="inv-item-title">${escapeHtml(it.data[sec.titleField] || '—')}</span>
-        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش">✏️</button>${isAdmin()
-          ? `<button data-history="${id}" title="تاریخچه">🕘</button><button data-del="${id}" title="حذف">🗑</button>` : ''}</span>
+        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش" aria-label="ویرایش">✏️</button>${isAdmin()
+          ? `<button data-history="${id}" title="تاریخچه" aria-label="تاریخچه">🕘</button><button data-del="${id}" title="حذف" aria-label="حذف">🗑</button>` : ''}</span>
       </div>${rows}${secrets}
       <div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div></div>`;
   }
@@ -609,8 +609,8 @@
     const people = [...new Set(events.map(e => (e.by && e.by.name) || 'نامشخص'))];
     const shown = events.filter(e => !who || ((e.by && e.by.name) || 'نامشخص') === who).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 300);
     openInvPanel('📜 گزارش تغییرات', `
-      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--gold);' : ''}">همه</button>${people.map(p =>
-        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--gold);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
+      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--accent-fg);' : ''}">همه</button>${people.map(p =>
+        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--accent-fg);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
       ${shown.map(e => `<div class="inv-ver"><div class="inv-ver-head"><span>${escapeHtml((e.by && e.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(e.at)}</span></div>
         <div>${escapeHtml(e.text)}</div>${e.id ? `<button data-history="${escapeHtml(e.id)}">🕘 جزئیات</button>` : ''}</div>`).join('') || '<div class="inv-empty">تغییری ثبت نشده</div>'}`);
   }
