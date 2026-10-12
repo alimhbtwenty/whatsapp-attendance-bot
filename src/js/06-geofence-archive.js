@@ -309,7 +309,7 @@
     if (logs.length > LOGS_MAX) logs.length = LOGS_MAX;
     for (;;) {
       try {
-        localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+        storeItem('geomat_logs_v2', JSON.stringify(logs));
         return true;
       } catch(e) {
         if (logs.length <= 50) {
@@ -448,6 +448,7 @@
     document.getElementById('archiveTotalHours').textContent = formatHM(totalMins);
     document.getElementById('archiveTotalCount').textContent = `${toPersianDigits(filtered.length)} گزارش`;
     renderMonthlyReport();
+    renderStorageUsage();
 
     // لیست لاگ‌ها
     const stream = document.getElementById('archiveStream');

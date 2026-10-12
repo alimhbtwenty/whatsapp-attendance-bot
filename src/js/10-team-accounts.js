@@ -74,7 +74,7 @@
   }
   function saveTeam(t) {
     try {
-      localStorage.setItem(TEAM_KEY, JSON.stringify(t));
+      storeItem(TEAM_KEY, JSON.stringify(t));
       return true;
     } catch(e) {
       showToast('⚠️ حافظه پر است؛ ذخیره نشد');

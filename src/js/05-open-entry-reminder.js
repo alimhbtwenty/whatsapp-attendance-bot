@@ -39,6 +39,14 @@
     if (typeof renderMonthlyReport === 'function') renderMonthlyReport();
     showToast('تنظیمات ذخیره شد');
   }
+  // مقدار فضای مصرف‌شده؛ نزدیک پر شدن، هشدار
+  function renderStorageUsage() {
+    const use = document.getElementById('storageUsage');
+    if (!use) return;
+    const pct = Math.min(100, Math.round(storageUsedChars() / STORAGE_QUOTA_CHARS * 100));
+    use.textContent = `فضای استفاده‌شده روی این گوشی: ${toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
+    use.classList.toggle('storage-warn', pct >= 80);
+  }
   function renderSettings() {
     const st = getSettings();
     applyTheme(st.theme);
@@ -50,6 +58,7 @@
     });
     const pre = document.getElementById('preUpdateRestoreBtn');
     if (pre) pre.style.display = localStorage.getItem(PRE_UPDATE_BACKUP_KEY) ? '' : 'none';
+    renderStorageUsage();
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length

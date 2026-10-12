@@ -131,10 +131,10 @@
 
   function saveInventory(inv) {
     try {
-      localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
+      storeItem(INVENTORY_KEY, JSON.stringify(inv));
       return true;
     } catch(e) {
-      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد');
+      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد (فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید)');
       return false;
     }
   }

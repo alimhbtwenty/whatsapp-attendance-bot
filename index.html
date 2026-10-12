@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zjEbplaTZYnR/aLOsy7B3Y/FUHaClK12ELPL8BOB834='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XOAn1l0rQIw+Khu45qwztS9Tn34IdwvmP5nc7m9KBU8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -1771,6 +1771,9 @@
     /* حلقه فوکوس صفحه‌کلید (لمس آن را نشان نمی‌دهد) */
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     button:focus:not(:focus-visible), [role="button"]:focus:not(:focus-visible) { outline: none; }
+
+    .storage-usage { font-size: 11px; color: var(--text-muted); line-height: 1.7; }
+    .storage-usage.storage-warn { color: var(--warning-fg); background: color-mix(in srgb, var(--warning) 14%, transparent); border-radius: var(--radius-s); padding: 6px 8px; }
   </style>
 </head>
 <body>
@@ -2213,6 +2216,7 @@
       </div>
       <button class="dock-copy-btn" id="preUpdateRestoreBtn" style="display:none; padding:9px; font-size:11.5px;" data-click='["restorePreUpdateBackup"]'>⏪ برگرداندن اطلاعات به قبل از به‌روزرسانی</button>
       <input type="file" id="restoreInput" accept=".json,application/json" style="display:none;" data-change='["restoreBackupFromInput", "$this"]'>
+      <div id="storageUsage" class="storage-usage" role="status"></div>
       <div style="font-size:11px; color:var(--text-dim); line-height:1.7;">همه اطلاعات (آرشیو، شرکت‌ها، موقعیت‌ها، چت، تنظیمات) فقط روی همین گوشی است؛ قبل از پاک کردن اپ یا عوض کردن گوشی فایل پشتیبان بگیرید.</div>
     </div>
   </div>
@@ -3621,6 +3625,14 @@
     if (typeof renderMonthlyReport === 'function') renderMonthlyReport();
     showToast('تنظیمات ذخیره شد');
   }
+  // مقدار فضای مصرف‌شده؛ نزدیک پر شدن، هشدار
+  function renderStorageUsage() {
+    const use = document.getElementById('storageUsage');
+    if (!use) return;
+    const pct = Math.min(100, Math.round(storageUsedChars() / STORAGE_QUOTA_CHARS * 100));
+    use.textContent = `فضای استفاده‌شده روی این گوشی: ${toPersianDigits(pct)}٪${pct >= 80 ? ' — نزدیک پر شدن است؛ فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید' : ''}`;
+    use.classList.toggle('storage-warn', pct >= 80);
+  }
   function renderSettings() {
     const st = getSettings();
     applyTheme(st.theme);
@@ -3632,6 +3644,7 @@
     });
     const pre = document.getElementById('preUpdateRestoreBtn');
     if (pre) pre.style.display = localStorage.getItem(PRE_UPDATE_BACKUP_KEY) ? '' : 'none';
+    renderStorageUsage();
     const list = document.getElementById('holidayList');
     if (list) {
       list.innerHTML = st.holidays.length
@@ -4193,7 +4206,7 @@
     if (logs.length > LOGS_MAX) logs.length = LOGS_MAX;
     for (;;) {
       try {
-        localStorage.setItem('geomat_logs_v2', JSON.stringify(logs));
+        storeItem('geomat_logs_v2', JSON.stringify(logs));
         return true;
       } catch(e) {
         if (logs.length <= 50) {
@@ -4332,6 +4345,7 @@
     document.getElementById('archiveTotalHours').textContent = formatHM(totalMins);
     document.getElementById('archiveTotalCount').textContent = `${toPersianDigits(filtered.length)} گزارش`;
     renderMonthlyReport();
+    renderStorageUsage();
 
     // لیست لاگ‌ها
     const stream = document.getElementById('archiveStream');
@@ -5409,7 +5423,7 @@
   }
   function saveTeam(t) {
     try {
-      localStorage.setItem(TEAM_KEY, JSON.stringify(t));
+      storeItem(TEAM_KEY, JSON.stringify(t));
       return true;
     } catch(e) {
       showToast('⚠️ حافظه پر است؛ ذخیره نشد');
@@ -6190,10 +6204,10 @@
 
   function saveInventory(inv) {
     try {
-      localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
+      storeItem(INVENTORY_KEY, JSON.stringify(inv));
       return true;
     } catch(e) {
-      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد');
+      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد (فایل پشتیبان بگیرید و رکوردهای قدیمی آرشیو را حذف کنید)');
       return false;
     }
   }
@@ -6749,6 +6763,41 @@
     return data;
   }
 
+  // فضای localStorage حدود ۵ میلیون نویسه است. کپی پیش از به‌روزرسانی یک نسخه دوم از همه داده است:
+  // ۳۰ روز بعد خودکار پاک می‌شود، و اگر زودتر جا تمام شد، پیش از هر رکورد واقعی همین پاک می‌شود.
+  const STORAGE_QUOTA_CHARS = 5200000;
+  const PRE_UPDATE_KEEP_MS = 30 * 86400000;
+  function dropPreUpdateBackup(reason) {
+    if (!localStorage.getItem(PRE_UPDATE_BACKUP_KEY)) return false;
+    localStorage.removeItem(PRE_UPDATE_BACKUP_KEY);
+    if (reason) showToast(reason);
+    if (typeof renderSettings === 'function') renderSettings();
+    return true;
+  }
+  // ذخیره با یک تلاش دوباره بعد از آزاد کردن کپی پیش از به‌روزرسانی؛ اگر باز جا نبود خطا می‌دهد
+  function storeItem(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch(e) {
+      if (!dropPreUpdateBackup('🧹 حافظه پر بود؛ کپی پیش از به‌روزرسانی پاک شد تا اطلاعات تازه ذخیره شود')) throw e;
+      localStorage.setItem(key, value);
+    }
+  }
+  function storageUsedChars() {
+    let n = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      n += k.length + (localStorage.getItem(k) || '').length;
+    }
+    return n;
+  }
+  function expirePreUpdateBackup() {
+    try {
+      const snap = JSON.parse(localStorage.getItem(PRE_UPDATE_BACKUP_KEY) || 'null');
+      if (snap && Date.now() - new Date(snap.at).getTime() > PRE_UPDATE_KEEP_MS) dropPreUpdateBackup('');
+    } catch(e) {}
+  }
+
   function runMigrations() {
     let from = 0;
     try { from = parseInt(localStorage.getItem(SCHEMA_VERSION_KEY) || '0', 10) || 0; } catch(e) {}
@@ -6768,6 +6817,7 @@
     // گام‌های تا 1.4 (هر کدام تکرارپذیر و بی‌اثر در اجرای دوباره)
     mergeLegacySplitStays();
     try { localStorage.setItem(SCHEMA_VERSION_KEY, String(SCHEMA_VERSION)); } catch(e) {}
+    expirePreUpdateBackup();
   }
 
   // برگرداندن کامل داده به لحظه پیش از به‌روزرسانی (از تنظیمات)
