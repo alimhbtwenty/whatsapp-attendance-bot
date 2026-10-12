@@ -133,6 +133,37 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   await p.reload(); await p.waitForTimeout(800);
   ok('work done after a failed restore survives the next start', await p.evaluate(() => localStorage.getItem('geomat_logs_v2')) === work && await p.evaluate(() => !mirrorRestored));
 
+  // بازبینی دور ۱۰: برگرداندن با حافظه پر باید «همه یا هیچ» بماند، حتی وقتی نسخه دوم کلیدی را حذف کرده بود
+  await p.evaluate(() => {
+    const NS = 'fake_native_store'; const st = JSON.parse(sessionStorage.getItem(NS));
+    nativeSetItem.call(localStorage, 'geomat_open_entry_v1', 'o'.repeat(100));
+    nativeSetItem.call(localStorage, 'geomat_zz_a', 'a'.repeat(10));
+    nativeSetItem.call(localStorage, 'geomat_zz_b', 'b'.repeat(10));
+    delete st.data.geomat_open_entry_v1; st.removed.geomat_open_entry_v1 = 1;
+    st.data.geomat_zz_a = 'A'.repeat(110); st.data.geomat_zz_b = 'B'.repeat(500); st.complete = true;
+    st.seq = Number(localStorage.getItem('geomat_mirror_seq')) + 10;
+    Storage.prototype.setItem.call(sessionStorage, NS, JSON.stringify(st));
+    Storage.prototype.setItem.call(sessionStorage, 'size_quota', '1');
+  });
+  await p.addInitScript(() => {
+    if (sessionStorage.getItem('size_quota') !== '1') return;
+    // سقف: همان مقدار فعلیِ داده + ۲۰ نویسه
+    const used = () => { let n = 0; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); n += k.length + localStorage.getItem(k).length; } return n; };
+    const limit = used() + 20;
+    const orig = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(k, v) {
+      if (this === localStorage && sessionStorage.getItem('size_quota') === '1') {
+        const cur = localStorage.getItem(k);
+        if (used() - (cur === null ? 0 : k.length + cur.length) + k.length + String(v).length > limit) throw new DOMException('full', 'QuotaExceededError');
+      }
+      return orig.call(this, k, v);
+    };
+  });
+  await p.reload(); await p.waitForTimeout(800);
+  const rb = await p.evaluate(() => ({ failed: mirrorRestoreFailed, open: (localStorage.getItem('geomat_open_entry_v1') || '').length, a: localStorage.getItem('geomat_zz_a').length, b: localStorage.getItem('geomat_zz_b').length }));
+  ok('a failed restore rolls back every key, including ones the mirror had deleted', rb.failed && rb.open === 100 && rb.a === 10 && rb.b === 10, JSON.stringify(rb));
+  await p.evaluate(() => { Storage.prototype.setItem.call(sessionStorage, 'size_quota', '0'); nativeRemoveItem.call(localStorage, 'geomat_zz_a'); nativeRemoveItem.call(localStorage, 'geomat_zz_b'); nativeRemoveItem.call(localStorage, 'geomat_open_entry_v1'); });
+
   // حذفی که وسطش برنامه کشته شد: هم داده و هم نشانه حذف → حذف برنده است
   await p.evaluate(() => {
     const NS = 'fake_native_store'; const st = JSON.parse(sessionStorage.getItem(NS));

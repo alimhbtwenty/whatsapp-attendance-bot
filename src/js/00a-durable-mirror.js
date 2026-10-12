@@ -86,12 +86,11 @@
     } catch(e) {
       // باز جا نیست: همه چیز به همان وضعی برمی‌گردد که کاربر می‌بیند، و نسخه دوم از همین وضع دوباره ساخته می‌شود.
       // تغییرهای گم‌شده برنمی‌گردند (به کاربر گفته می‌شود)، ولی هیچ کاری که از این به بعد انجام شود از دست نمی‌رود.
-      for (const k of touched) {
-        try {
-          if (before[k] === null) nativeRemoveItem.call(localStorage, k);
-          else if (localStorage.getItem(k) !== before[k]) nativeSetItem.call(localStorage, k, before[k]);
-        } catch(e2) {}
-      }
+      // دو مرحله: اول هر کلیدِ عوض‌شده پاک می‌شود تا جا آزاد شود، بعد مقدارهای قبلی نوشته می‌شوند
+      // (همه پیش از بازگردانی جا می‌شدند، پس دوباره جا می‌شوند)
+      const changed = touched.filter(k => localStorage.getItem(k) !== before[k]);
+      changed.forEach(k => { try { nativeRemoveItem.call(localStorage, k); } catch(e2) {} });
+      changed.forEach(k => { if (before[k] !== null) { try { nativeSetItem.call(localStorage, k, before[k]); } catch(e2) {} } });
       mirrorRestoreFailed = true;
     } finally {
       mirrorPaused = false;
