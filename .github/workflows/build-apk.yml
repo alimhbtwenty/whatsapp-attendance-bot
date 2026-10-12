@@ -18,6 +18,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # تست آپدیت وب‌اپ (pwa-update.js) نسخه منتشرشده main را لازم دارد
+      - name: Fetch main for the update test
+        run: git fetch --no-tags --depth=1 origin +refs/heads/main:refs/remotes/origin/main
+
       # تست‌ها قبل از هر APK: خروجی build باید با src یکی باشد و همه تست‌های مرورگری سبز باشند
       - name: Set up Node
         uses: actions/setup-node@v4

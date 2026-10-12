@@ -1,4 +1,4 @@
-# Geomat attendance app
+# Geo Team (Geomat attendance app)
 
 Persian (RTL) PWA for sending site entry/exit and support reports to WhatsApp, also shipped as an Android WebView APK.
 
