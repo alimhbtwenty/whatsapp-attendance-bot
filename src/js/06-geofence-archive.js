@@ -434,7 +434,7 @@
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-weight:800; color:var(--gold); font-size:13px;">${escapeHtml(item.company)}</span>
-            <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
+            <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
@@ -492,7 +492,7 @@
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? 'geomat-archive-all.csv' : `geomat-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const filename = targetComp === 'all' ? 'geoteam-archive-all.csv' : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }

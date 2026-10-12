@@ -1,11 +1,11 @@
-const CACHE_NAME = 'geomat-attendance-v14';
+const CACHE_NAME = 'geoteam-v14';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './logo-geomatco.png',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './icon-maskable-512.png'
 ];
 
 self.addEventListener('install', (event) => {

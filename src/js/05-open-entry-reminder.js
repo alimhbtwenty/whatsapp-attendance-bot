@@ -3,7 +3,7 @@
   // ساعت ورود را خودش پر می‌کند و مدت درست در آرشیو ثبت می‌شود
   const OPEN_ENTRY_KEY = 'geomat_open_entry_v1';
   const SETTINGS_KEY = 'geomat_settings_v1';
-  const DEFAULT_SETTINGS = { reminderTime: '18:00', workStart: '09:00', workEnd: '17:00', thuEnd: '14:00', holidays: [] };
+  const DEFAULT_SETTINGS = { reminderTime: '18:00', workStart: '09:00', workEnd: '17:00', thuEnd: '14:00', holidays: [], theme: 'dark' };
   const TIME_SETTINGS = ['reminderTime', 'workStart', 'workEnd', 'thuEnd'];
 
   function pad2(n) { return String(n).padStart(2, '0'); }
@@ -24,6 +24,7 @@
     if (parseHM(out.workEnd) <= parseHM(out.workStart)) { out.workStart = DEFAULT_SETTINGS.workStart; out.workEnd = DEFAULT_SETTINGS.workEnd; }
     if (parseHM(out.thuEnd) <= parseHM(out.workStart)) out.thuEnd = DEFAULT_SETTINGS.thuEnd;
     out.holidays = Array.isArray(out.holidays) ? out.holidays.filter(h => isoToDate(h)).sort() : [];
+    if (!['system', 'dark', 'light'].includes(out.theme)) out.theme = DEFAULT_SETTINGS.theme;
     delete out.overtimeHours; // تنظیم قدیمی «اضافه‌کار بعد از n ساعت»
     return out;
   }
@@ -39,6 +40,9 @@
   }
   function renderSettings() {
     const st = getSettings();
+    applyTheme(st.theme);
+    const themeSel = document.getElementById('themeInput');
+    if (themeSel) themeSel.value = st.theme;
     [['reminderTimeInput', 'reminderTime'], ['workStartInput', 'workStart'], ['workEndInput', 'workEnd'], ['thuEndInput', 'thuEnd']].forEach(([id, k]) => {
       const el = document.getElementById(id);
       if (el) el.value = st[k];
@@ -51,6 +55,11 @@
         ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف">✕</button></span>`).join('')
         : '<span style="color:var(--text-dim); font-size:11px;">ثبت نشده</span>';
     }
+  }
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0b1018';
   }
   function addHoliday() {
     openCalendar(new Date(), (date) => {

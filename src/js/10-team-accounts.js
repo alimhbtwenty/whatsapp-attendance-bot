@@ -330,7 +330,7 @@
     if (!isAdmin()) return;
     const team = getTeam();
     const payload = { app: BACKUP_APP_ID, kind: 'team', format: 1, exportedAt: new Date().toISOString(), team: { schema: 1, users: team.users, log: [] } };
-    if (downloadFile('geomat-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
+    if (downloadFile('geoteam-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
   }
   function importTeamFile(input) {
     const file = input.files && input.files[0];

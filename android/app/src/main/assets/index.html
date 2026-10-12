@@ -1,48 +1,112 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>سامانه دستیار کارگاهی گئومات</title>
+  <title>Geo Team</title>
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#07080a">
+  <meta name="theme-color" content="#0b1018">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="گئومات">
+  <meta name="apple-mobile-web-app-title" content="Geo Team">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-zARMZAE//R1fuqWs2UklojwzeiiXhZ7N4KVyc+UVl3I='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iyn17Fwn3AW4H1nO26HtR1h8qxVHwNGdApxNMEiZ35s='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
+    /* ==================== Geo Team: توکن‌های طراحی ====================
+       همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
+       نام‌های قدیمی (--gold، --surface-glass، ...) فقط نام مستعار همین توکن‌ها هستند تا style داخل HTML کار کند. */
     :root {
-      --bg: #07080b;
-      --surface-glass: rgba(18, 22, 30, 0.72);
-      --surface-solid: #11141b;
-      --surface-card: #151923;
-      --surface-hover: #1c212f;
-      --surface-active: #222838;
-      
-      --gold: #F3CB03;
-      --gold-glow: rgba(243, 203, 3, 0.35);
-      --gold-dim: rgba(243, 203, 3, 0.12);
-      --gold-border: rgba(243, 203, 3, 0.28);
-      
-      --whatsapp: #25D366;
-      --whatsapp-glow: rgba(37, 211, 102, 0.35);
-      
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      
-      --border-subtle: rgba(255, 255, 255, 0.06);
-      --border-highlight: rgba(255, 255, 255, 0.12);
-      
-      --danger: #f43f5e;
-      --blue: #38bdf8;
-    }
+      color-scheme: dark;
+      --bg: #0b1018;
+      --surface-1: #121925;        /* کارت */
+      --surface-2: #0e141e;        /* داخل کارت: ورودی، ردیف */
+      --surface-3: #1a2333;        /* حالت فعال / hover */
+      --surface-elevated: #151d2b; /* پنجره‌ها و منوها */
+      --border: #222c3d;
+      --border-strong: #2f3b51;
+      --fg-mix: #ffffff;           /* برای سایه‌روشن‌های خیلی کم‌رنگ روی سطح */
+      --shadow: #000000;
 
+      --text-strong: #ffffff;
+      --text: #e6ebf2;
+      --text-muted: #9aa6b8;
+      --text-dim: #6c7a8f;
+
+      --accent: #f5a623;           /* Geo Team amber */
+      --accent-ink: #1a1100;       /* متن روی accent */
+      --accent-2: #ffbe4d;
+      --info: #3db7e4;
+      --success: #2ec27e;
+      --whatsapp: #25d366;
+      --warning: #f59e0b;
+      --danger: #f0506e;
+      --danger-fg: #ffc7d1;
+      --warning-fg: #ffe1a8;
+      --success-fg: #b8f0d2;
+      --info-fg: #bfe8f7;
+
+      --radius-s: 8px;
+      --radius-m: 12px;
+      --radius-l: 16px;
+      --radius-pill: 999px;
+
+      /* نام‌های قدیمی */
+      --surface-glass: var(--surface-1);
+      --surface-solid: var(--surface-elevated);
+      --surface-card: var(--surface-1);
+      --surface-hover: var(--surface-3);
+      --surface-active: var(--surface-3);
+      --gold: var(--accent);
+      --gold-glow: color-mix(in srgb, var(--accent) 30%, transparent);
+      --gold-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+      --gold-border: color-mix(in srgb, var(--accent) 35%, transparent);
+      --whatsapp-glow: color-mix(in srgb, var(--whatsapp) 30%, transparent);
+      --border-subtle: var(--border);
+      --border-highlight: var(--border-strong);
+      --blue: var(--info);
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f3f5f8;
+      --surface-1: #ffffff;
+      --surface-2: #f5f7fa;
+      --surface-3: #e9eef5;
+      --surface-elevated: #ffffff;
+      --border: #dde3ec;
+      --border-strong: #c5cfdc;
+      --fg-mix: #0f172a;
+      --shadow: #64748b;
+      --text-strong: #0b1220;
+      --text: #1b2433;
+      --text-muted: #546178;
+      --text-dim: #74819a;
+      --accent: #e8950c;
+      --accent-ink: #1a1100;
+      --accent-2: #c77700;
+      --info: #0a85b8;
+      --success: #138a52;
+      --whatsapp: #1fa855;
+      --warning: #b86e00;
+      --danger: #d2334f;
+      --danger-fg: #a3122e;
+      --warning-fg: #7a4a00;
+      --success-fg: #0d6b3f;
+      --info-fg: #075f86;
+    }
+    @media (prefers-color-scheme: light) {
+      :root[data-theme="system"] {
+        color-scheme: light;
+        --bg: #f3f5f8; --surface-1: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9eef5; --surface-elevated: #ffffff;
+        --border: #dde3ec; --border-strong: #c5cfdc; --fg-mix: #0f172a; --shadow: #64748b;
+        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #74819a;
+        --accent: #e8950c; --accent-2: #c77700; --info: #0a85b8; --success: #138a52; --whatsapp: #1fa855;
+        --warning: #b86e00; --danger: #d2334f; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+      }
+    }
     * {
       box-sizing: border-box;
       margin: 0;
@@ -108,33 +172,6 @@
       gap: 0;
     }
 
-    /* Ambient Lighting Background Effects */
-    body::before {
-      content: "";
-      position: fixed;
-      top: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 380px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(243, 203, 3, 0.14) 0%, rgba(56, 189, 248, 0.05) 50%, transparent 70%);
-      filter: blur(50px);
-      z-index: -1;
-      pointer-events: none;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      bottom: -150px;
-      right: -80px;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle, rgba(37, 211, 102, 0.08) 0%, transparent 70%);
-      filter: blur(60px);
-      z-index: -1;
-      pointer-events: none;
-    }
 
     .container {
       width: 100%;
@@ -147,21 +184,20 @@
     /* PWA Banner */
     .install-bar {
       display: none;
-      background: linear-gradient(135deg, rgba(243, 203, 3, 0.16), rgba(18, 22, 30, 0.85));
+      background: color-mix(in srgb, var(--accent) 12%, var(--surface-1));
       border: 1px solid var(--gold-border);
       border-radius: 18px;
       padding: 10px 14px;
       align-items: center;
       justify-content: space-between;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 20px color-mix(in srgb, var(--shadow) 50%, transparent);
     }
     .install-bar.show {
       display: flex;
     }
     .install-btn {
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
       border: none;
       padding: 7px 14px;
       border-radius: 10px;
@@ -182,11 +218,21 @@
       align-items: center;
       gap: 10px;
     }
-    .brand-logo-img {
-      max-width: 110px;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+    }
+    .brand-word {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      color: var(--text-strong);
+    }
+    .brand-word b {
+      color: var(--accent);
+      font-weight: 800;
+      margin-left: 3px;
     }
     .hud-right {
       display: flex;
@@ -196,7 +242,6 @@
     .hud-chip {
       background: var(--surface-glass);
       border: 1px solid var(--border-subtle);
-      backdrop-filter: blur(10px);
       padding: 5px 12px;
       border-radius: 20px;
       font-size: 12px;
@@ -206,8 +251,7 @@
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      box-shadow: inset 0 1px 0 var(--border-highlight);
-    }
+          }
     .hud-chip:active {
       border-color: var(--gold);
       color: var(--gold);
@@ -216,8 +260,8 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
     }
     .clock-text {
       direction: ltr;
@@ -229,12 +273,11 @@
     /* Primary Dynamic Segmented Switcher */
     .mode-switcher-dock {
       display: flex;
-      background: rgba(14, 18, 25, 0.85);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 18px;
       padding: 4px;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.6);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--shadow) 25%, transparent);
       gap: 4px;
       position: relative;
     }
@@ -256,10 +299,10 @@
       position: relative;
     }
     .mode-tab-btn.active {
-      background: linear-gradient(180deg, #1e2433 0%, #151924 100%);
+      background: var(--surface-3);
       color: var(--gold);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(243, 203, 3, 0.3);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 50%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
     }
 
     /* Glass Surfaces */
@@ -268,8 +311,7 @@
       border: 1px solid var(--border-subtle);
       border-radius: 20px;
       padding: 16px;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 8px 26px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 var(--border-highlight);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--shadow) 25%, transparent);
       display: flex;
       flex-direction: column;
       gap: 12px;
@@ -301,7 +343,7 @@
     /* Segmented Options inside Card */
     .segmented-pill-row {
       display: flex;
-      background: rgba(10, 13, 18, 0.6);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 14px;
       padding: 3px;
@@ -322,9 +364,9 @@
     }
     .pill-opt-btn.selected {
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
       font-weight: 800;
-      box-shadow: 0 4px 14px var(--gold-glow);
+      box-shadow: none;
     }
 
     /* Grid of Company Chips */
@@ -334,7 +376,7 @@
       gap: 7px;
     }
     .comp-chip {
-      background: rgba(15, 19, 27, 0.75);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       padding: 10px 4px;
@@ -346,24 +388,23 @@
       transition: all 0.16s ease;
       position: relative;
       user-select: none;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
-    }
+          }
     .comp-chip:active {
       transform: scale(0.96);
     }
     .comp-chip.selected {
-      background: linear-gradient(135deg, var(--gold) 0%, #eab308 100%);
+      background: var(--accent);
       border-color: var(--gold);
-      color: #0a0c10;
+      color: var(--accent-ink);
       font-weight: 800;
-      box-shadow: 0 4px 16px var(--gold-glow);
+      box-shadow: none;
     }
     .del-badge {
       position: absolute;
       top: -4px;
       left: -4px;
       background: var(--danger);
-      color: #fff;
+      color: var(--text-strong);
       border-radius: 50%;
       width: 17px;
       height: 17px;
@@ -378,7 +419,7 @@
 
     .add-comp-pill {
       background: transparent;
-      border: 1px dashed rgba(243, 203, 3, 0.4);
+      border: 1px dashed color-mix(in srgb, var(--accent) 40%, transparent);
       color: var(--gold);
       padding: 9px;
       border-radius: 13px;
@@ -407,7 +448,7 @@
       flex: 1;
       min-width: 47px;
       padding: 9px 2px;
-      background: rgba(14, 18, 25, 0.65);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
       font-size: 11.5px;
@@ -419,9 +460,9 @@
     }
     .day-item-pill.selected {
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
       font-weight: 800;
-      box-shadow: 0 4px 12px var(--gold-glow);
+      box-shadow: none;
     }
 
     /* Date Stepper Bar */
@@ -429,7 +470,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(10, 13, 18, 0.6);
+      background: var(--surface-2);
       padding: 8px 12px;
       border-radius: 14px;
       border: 1px solid var(--border-subtle);
@@ -440,7 +481,7 @@
     }
     .date-q-btn {
       padding: 5px 9px;
-      background: rgba(255, 255, 255, 0.04);
+      background: color-mix(in srgb, var(--fg-mix) 4%, transparent);
       border: 1px solid var(--border-subtle);
       border-radius: 8px;
       font-size: 11px;
@@ -471,11 +512,11 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background: rgba(12, 15, 22, 0.8);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 16px;
       padding: 10px 14px;
-      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.5);
+      box-shadow: inset 0 2px 8px color-mix(in srgb, var(--shadow) 50%, transparent);
     }
     .time-row-meta {
       display: flex;
@@ -488,8 +529,8 @@
       color: var(--text);
     }
     .time-now-pill {
-      background: rgba(243, 203, 3, 0.08);
-      border: 1px solid rgba(243, 203, 3, 0.25);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
       color: var(--gold);
       font-size: 11px;
       font-weight: 700;
@@ -501,7 +542,7 @@
     .time-now-pill:active {
       transform: scale(0.92);
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
     }
 
     .digital-digits-wrapper {
@@ -513,8 +554,8 @@
     .oled-square-digit {
       width: 52px;
       height: 52px;
-      background: #090b10;
-      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      background: var(--surface-2);
+      border: 1.5px solid color-mix(in srgb, var(--fg-mix) 10%, transparent);
       border-radius: 12px;
       color: var(--gold);
       font-size: 24px;
@@ -524,12 +565,12 @@
       caret-color: var(--gold);
       transition: all 0.18s;
       direction: ltr;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+      box-shadow: inset 0 2px 6px color-mix(in srgb, var(--shadow) 80%, transparent);
     }
     .oled-square-digit:focus {
       border-color: var(--gold);
-      box-shadow: 0 0 16px var(--gold-glow), inset 0 0 10px rgba(243, 203, 3, 0.1);
-      background: #0e1118;
+      box-shadow: 0 0 16px var(--gold-glow), inset 0 0 10px color-mix(in srgb, var(--accent) 10%, transparent);
+      background: var(--surface-2);
     }
     .digital-colon {
       font-size: 24px;
@@ -571,8 +612,8 @@
 
     /* Duration Meter Gauge */
     .duration-meter-card {
-      background: linear-gradient(90deg, rgba(243, 203, 3, 0.09) 0%, rgba(56, 189, 248, 0.03) 100%);
-      border: 1px solid rgba(243, 203, 3, 0.2);
+      background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+      border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
       border-radius: 14px;
       padding: 9px 14px;
       display: flex;
@@ -622,7 +663,7 @@
     }
     .tag-bubble {
       padding: 6px 11px;
-      background: rgba(14, 18, 25, 0.65);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 10px;
       font-size: 11.5px;
@@ -638,9 +679,9 @@
       font-weight: 700;
     }
     .cyber-input {
-      background: rgba(10, 13, 18, 0.7);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
-      color: #fff;
+      color: var(--text-strong);
       padding: 11px 14px;
       border-radius: 14px;
       font-size: 13px;
@@ -654,7 +695,7 @@
 
     /* Preview Message Shell */
     .preview-chat-shell {
-      background: linear-gradient(180deg, #10131a 0%, #0c0e14 100%);
+      background: var(--surface-2);
       border-radius: 16px;
       padding: 15px;
       border-right: 4px solid var(--gold);
@@ -665,10 +706,10 @@
       font-size: 13.5px;
       line-height: 1.85;
       font-weight: 500;
-      color: #e2e8f0;
+      color: var(--text);
       min-height: 85px;
       user-select: all;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--shadow) 40%, transparent);
     }
 
     /* FLOATING BOTTOM ACTION DOCK */
@@ -679,20 +720,19 @@
       transform: translateX(-50%);
       width: calc(100% - 24px);
       max-width: 440px;
-      background: rgba(14, 17, 24, 0.92);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--surface-elevated);
+      border: 1px solid color-mix(in srgb, var(--fg-mix) 10%, transparent);
       border-radius: 20px;
       padding: 8px 10px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8), 0 0 1px rgba(255,255,255,0.2);
+      box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow) 80%, transparent), 0 0 1px color-mix(in srgb, var(--fg-mix) 20%, transparent);
       display: flex;
       gap: 8px;
       z-index: 999;
     }
     .whatsapp-action-btn {
       flex: 1;
-      background: linear-gradient(135deg, #25D366 0%, #16a34a 100%);
-      color: #fff;
+      background: var(--whatsapp);
+      color: var(--text-strong);
       border: none;
       border-radius: 14px;
       padding: 13px;
@@ -703,14 +743,14 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      box-shadow: 0 4px 18px var(--whatsapp-glow);
+      box-shadow: none;
       transition: all 0.18s ease;
     }
     .whatsapp-action-btn:active {
       transform: scale(0.97);
     }
     .dock-copy-btn {
-      background: rgba(255, 255, 255, 0.05);
+      background: color-mix(in srgb, var(--fg-mix) 5%, transparent);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       border-radius: 14px;
@@ -724,7 +764,7 @@
       gap: 6px;
     }
     .dock-copy-btn:active {
-      background: rgba(255, 255, 255, 0.1);
+      background: color-mix(in srgb, var(--fg-mix) 10%, transparent);
     }
 
     /* تب‌های مجزا */
@@ -747,7 +787,7 @@
     }
     .filter-chip {
       padding: 6px 12px;
-      background: rgba(14, 18, 25, 0.7);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
       font-size: 11.5px;
@@ -758,7 +798,7 @@
     }
     .filter-chip.active {
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
       font-weight: 800;
     }
 
@@ -768,7 +808,7 @@
       gap: 8px;
     }
     .hud-stat-box {
-      background: rgba(14, 18, 25, 0.6);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 16px;
       padding: 12px;
@@ -794,7 +834,7 @@
       overflow-y: auto;
     }
     .record-card-item {
-      background: rgba(12, 16, 23, 0.75);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 14px;
       padding: 12px 14px;
@@ -807,9 +847,9 @@
     .unpaired-exit-hint {
       display: none;
       font-size: 11.5px;
-      color: #fbbf24;
-      background: rgba(251, 191, 36, 0.08);
-      border: 1px dashed rgba(251, 191, 36, 0.35);
+      color: var(--accent-2);
+      background: color-mix(in srgb, var(--accent-2) 8%, transparent);
+      border: 1px dashed color-mix(in srgb, var(--accent-2) 35%, transparent);
       border-radius: 10px;
       padding: 7px 10px;
       cursor: pointer;
@@ -819,7 +859,7 @@
       display: block;
     }
     .tg-messenger-card {
-      background: rgba(14, 18, 26, 0.94);
+      background: var(--surface-elevated);
       border: 1px solid var(--border-subtle);
       border-radius: 20px;
       overflow: hidden;
@@ -827,13 +867,12 @@
       flex-direction: column;
       height: calc(100dvh - 120px);
       min-height: 480px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 8px 32px color-mix(in srgb, var(--shadow) 70%, transparent);
       position: relative;
     }
     .tg-header-bar {
       padding: 10px 14px;
-      background: rgba(18, 24, 34, 0.95);
+      background: var(--surface-elevated);
       border-bottom: 1px solid var(--border-subtle);
       display: flex;
       align-items: center;
@@ -846,14 +885,14 @@
       overflow-x: auto;
       scrollbar-width: none;
       padding: 7px 12px;
-      background: rgba(11, 14, 20, 0.85);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      background: var(--surface-2);
+      border-bottom: 1px solid color-mix(in srgb, var(--fg-mix) 5%, transparent);
       flex-shrink: 0;
     }
     .tg-chan-chip {
       padding: 4px 11px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
+      background: color-mix(in srgb, var(--fg-mix) 4%, transparent);
       border: 1px solid var(--border-subtle);
       font-size: 11px;
       font-weight: 700;
@@ -863,9 +902,9 @@
       transition: all 0.15s;
     }
     .tg-chan-chip.active {
-      background: rgba(56, 189, 248, 0.16);
-      border-color: #38bdf8;
-      color: #38bdf8;
+      background: color-mix(in srgb, var(--info) 16%, transparent);
+      border-color: var(--info);
+      color: var(--info);
       font-weight: 800;
     }
     .tg-chat-stream {
@@ -878,10 +917,10 @@
       display: flex;
       flex-direction: column;
       gap: 9px;
-      background-color: #0b111a;
+      background-color: var(--surface-2);
       background-image: 
-        radial-gradient(circle at 50% 30%, rgba(20, 32, 52, 0.45) 0%, rgba(8, 12, 18, 0.96) 100%),
-        radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        radial-gradient(circle at 50% 30%, var(--surface-2) 0%, var(--surface-elevated) 100%),
+        radial-gradient(color-mix(in srgb, var(--fg-mix) 3.5%, transparent) 1px, transparent 1px);
       background-size: 100% 100%, 22px 22px;
     }
     .tg-bubble-row {
@@ -906,7 +945,7 @@
       line-height: 1.6;
       position: relative;
       word-break: break-word;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 2px 10px color-mix(in srgb, var(--shadow) 35%, transparent);
       cursor: pointer;
       user-select: text;
       transition: transform 0.1s ease, filter 0.1s ease;
@@ -916,16 +955,16 @@
       filter: brightness(1.08);
     }
     .tg-bubble-row.mine .tg-msg-bubble {
-      background: linear-gradient(135deg, #1d446b 0%, #173756 100%);
-      border: 1px solid rgba(56, 189, 248, 0.28);
+      background: color-mix(in srgb, var(--info) 26%, var(--surface-1));
+      border: 1px solid color-mix(in srgb, var(--info) 28%, transparent);
       border-radius: 16px 16px 3px 16px;
-      color: #ffffff;
+      color: var(--text-strong);
     }
     .tg-bubble-row.other .tg-msg-bubble {
-      background: #182533;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--surface-elevated);
+      border: 1px solid color-mix(in srgb, var(--fg-mix) 8%, transparent);
       border-radius: 16px 16px 16px 3px;
-      color: #f1f5f9;
+      color: var(--text);
     }
     /* گروه‌بندی پیام‌های پشت‌سرهم یک فرستنده (دم حباب فقط روی آخرین پیام) */
     .tg-bubble-row.cont {
@@ -937,9 +976,9 @@
     .tg-bubble-row.other.cont .tg-msg-bubble { border-top-left-radius: 6px; }
     .tg-day-sep {
       align-self: center;
-      background: rgba(15, 23, 36, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #cbd5e1;
+      background: var(--surface-2);
+      border: 1px solid color-mix(in srgb, var(--fg-mix) 6%, transparent);
+      color: var(--text);
       font-size: 10.5px;
       font-weight: 700;
       padding: 3px 11px;
@@ -948,11 +987,11 @@
       user-select: none;
     }
     .tg-hashtag {
-      color: #38bdf8;
+      color: var(--info);
       font-weight: 800;
     }
     .tg-chan-tag {
-      background: rgba(255, 255, 255, 0.07);
+      background: color-mix(in srgb, var(--fg-mix) 7%, transparent);
       padding: 0 6px;
       border-radius: 8px;
       direction: rtl;
@@ -979,12 +1018,12 @@
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(24, 37, 51, 0.95);
-      color: #cbd5e1;
+      border: 1px solid color-mix(in srgb, var(--fg-mix) 10%, transparent);
+      background: var(--surface-elevated);
+      color: var(--text);
       font-size: 16px;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--shadow) 50%, transparent);
       opacity: 0;
       transform: translateY(8px);
       pointer-events: none;
@@ -999,7 +1038,7 @@
     .tg-sheet-bg {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.55);
+      background: color-mix(in srgb, var(--shadow) 55%, transparent);
       display: none;
       align-items: flex-end;
       z-index: 20;
@@ -1009,8 +1048,8 @@
     }
     .tg-sheet {
       width: 100%;
-      background: #131b26;
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--surface-elevated);
+      border-top: 1px solid color-mix(in srgb, var(--fg-mix) 8%, transparent);
       border-radius: 18px 18px 0 0;
       padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
       display: flex;
@@ -1030,11 +1069,11 @@
       word-break: break-word;
       max-height: 72px;
       overflow: hidden;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid color-mix(in srgb, var(--fg-mix) 6%, transparent);
       margin-bottom: 2px;
     }
     .tg-sheet-btn {
-      background: rgba(255, 255, 255, 0.04);
+      background: color-mix(in srgb, var(--fg-mix) 4%, transparent);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       font-size: 13px;
@@ -1045,7 +1084,7 @@
       cursor: pointer;
     }
     .tg-sheet-btn:active {
-      background: rgba(255, 255, 255, 0.09);
+      background: color-mix(in srgb, var(--fg-mix) 9%, transparent);
     }
     .tg-sheet-btn.danger {
       color: var(--danger);
@@ -1069,7 +1108,7 @@
     .tg-msg-text-content {
       font-size: 13px;
       line-height: 1.65;
-      color: #f8fafc;
+      color: var(--text);
       word-break: break-word;
       white-space: pre-wrap;
     }
@@ -1079,15 +1118,15 @@
       justify-content: flex-end;
       gap: 4px;
       font-size: 10px;
-      color: rgba(255, 255, 255, 0.55);
+      color: color-mix(in srgb, var(--fg-mix) 55%, transparent);
       margin-top: 3px;
       direction: ltr;
       user-select: none;
     }
     .tg-composer {
       padding: 7px 10px;
-      background: rgba(16, 22, 32, 0.97);
-      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--surface-elevated);
+      border-top: 1px solid color-mix(in srgb, var(--fg-mix) 7%, transparent);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -1101,8 +1140,8 @@
       padding-bottom: 1px;
     }
     .tg-attach-pill {
-      background: rgba(243, 203, 3, 0.08);
-      border: 1px solid rgba(243, 203, 3, 0.22);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
       color: var(--gold);
       padding: 3px 9px;
       border-radius: 10px;
@@ -1123,10 +1162,10 @@
     }
     .tg-chat-input {
       flex: 1;
-      background: rgba(10, 14, 20, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: var(--surface-2);
+      border: 1px solid color-mix(in srgb, var(--fg-mix) 9%, transparent);
       border-radius: 20px;
-      color: #fff;
+      color: var(--text-strong);
       padding: 9px 15px;
       font-size: 13px;
       line-height: 20px;
@@ -1139,11 +1178,11 @@
       transition: border-color 0.2s;
     }
     .tg-chat-input:focus {
-      border-color: #38bdf8;
+      border-color: var(--info);
     }
     .tg-send-btn {
-      background: linear-gradient(135deg, #2aabee 0%, #0284c7 100%);
-      color: #fff;
+      background: var(--info);
+      color: var(--text-strong);
       border: none;
       width: 40px;
       height: 40px;
@@ -1152,7 +1191,7 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(42, 171, 238, 0.35);
+      box-shadow: none;
       flex-shrink: 0;
       transition: transform 0.15s;
     }
@@ -1160,7 +1199,7 @@
       transform: scale(0.9);
     }
     .tg-send-btn:disabled {
-      background: rgba(255, 255, 255, 0.08);
+      background: color-mix(in srgb, var(--fg-mix) 8%, transparent);
       color: var(--text-dim);
       box-shadow: none;
       cursor: default;
@@ -1171,7 +1210,7 @@
     .glass-modal-bg {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: color-mix(in srgb, var(--shadow) 80%, transparent);
       backdrop-filter: blur(8px);
       display: none;
       align-items: center;
@@ -1183,7 +1222,7 @@
       display: flex;
     }
     .glass-modal-box {
-      background: #11141c;
+      background: var(--surface-elevated);
       border: 1px solid var(--gold-border);
       border-radius: 22px;
       padding: 24px;
@@ -1192,7 +1231,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.9);
+      box-shadow: 0 16px 40px color-mix(in srgb, var(--shadow) 90%, transparent);
     }
 
     /* Toast Notification (Floating Glass Pill at Top) */
@@ -1203,15 +1242,14 @@
       transform: translateX(-50%) translateY(-25px) scale(0.92);
       opacity: 0;
       visibility: hidden;
-      background: rgba(18, 22, 30, 0.95);
+      background: var(--surface-elevated);
       border: 1px solid var(--gold);
-      color: #fff;
+      color: var(--text-strong);
       padding: 10px 22px;
       border-radius: 20px;
       font-size: 13px;
       font-weight: 700;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px var(--gold-glow);
-      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow) 80%, transparent), 0 0 15px var(--gold-glow);
       transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 2000;
       pointer-events: none;
@@ -1260,7 +1298,7 @@
 
     /* تاریخ قابل لمس که تقویم داخلی را باز می‌کند */
     .date-pick-btn {
-      background: rgba(243, 203, 3, 0.06);
+      background: color-mix(in srgb, var(--accent) 6%, transparent);
       border: 1px solid var(--gold-border);
       border-radius: 10px;
       padding: 5px 10px;
@@ -1282,10 +1320,10 @@
     .jcal-title {
       font-size: 14.5px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-strong);
     }
     .jcal-nav {
-      background: rgba(255, 255, 255, 0.05);
+      background: color-mix(in srgb, var(--fg-mix) 5%, transparent);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       width: 34px;
@@ -1307,7 +1345,7 @@
       padding: 2px 0 4px;
     }
     .jcal-day {
-      background: rgba(255, 255, 255, 0.03);
+      background: color-mix(in srgb, var(--fg-mix) 3%, transparent);
       border: 1px solid transparent;
       color: var(--text);
       border-radius: 10px;
@@ -1325,7 +1363,7 @@
     }
     .jcal-day.selected {
       background: var(--gold);
-      color: #000;
+      color: var(--accent-ink);
       font-weight: 800;
     }
 
@@ -1335,21 +1373,21 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: color-mix(in srgb, var(--info) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--info) 35%, transparent);
       border-radius: 16px;
       padding: 9px 12px;
       font-size: 12.5px;
       font-weight: 700;
-      color: #bae6fd;
+      color: var(--info-fg);
     }
     .outbox-banner.show {
       display: flex;
     }
     .outbox-banner.offline {
-      background: rgba(245, 158, 11, 0.08);
-      border-color: rgba(245, 158, 11, 0.35);
-      color: #fde68a;
+      background: color-mix(in srgb, var(--warning) 8%, transparent);
+      border-color: color-mix(in srgb, var(--warning) 35%, transparent);
+      color: var(--warning-fg);
     }
     .outbox-list {
       display: flex;
@@ -1359,7 +1397,7 @@
       overflow-y: auto;
     }
     .outbox-item {
-      background: rgba(14, 18, 25, 0.7);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
       padding: 10px;
@@ -1388,7 +1426,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(14, 18, 25, 0.6);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
       border-radius: 12px;
       padding: 8px 10px;
@@ -1396,8 +1434,8 @@
       cursor: pointer;
     }
     .check-item.done {
-      border-color: rgba(34, 197, 94, 0.35);
-      background: rgba(34, 197, 94, 0.07);
+      border-color: color-mix(in srgb, var(--success) 35%, transparent);
+      background: color-mix(in srgb, var(--success) 7%, transparent);
     }
     .check-item input {
       accent-color: var(--gold);
@@ -1445,7 +1483,7 @@
     .month-title {
       font-size: 14px;
       font-weight: 800;
-      color: #fff;
+      color: var(--text-strong);
     }
     .report-table {
       width: 100%;
@@ -1461,7 +1499,7 @@
     }
     .report-table td {
       padding: 6px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid color-mix(in srgb, var(--fg-mix) 3%, transparent);
       color: var(--text);
     }
     .report-table td.num, .report-table th.num {
@@ -1476,21 +1514,21 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      background: rgba(34, 197, 94, 0.08);
-      border: 1px solid rgba(34, 197, 94, 0.32);
+      background: color-mix(in srgb, var(--success) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--success) 32%, transparent);
       border-radius: 16px;
       padding: 10px 12px;
       font-size: 12.5px;
       font-weight: 700;
-      color: #bbf7d0;
+      color: var(--success-fg);
     }
     .open-entry-banner.show {
       display: flex;
     }
     .open-entry-banner.overdue {
-      background: rgba(244, 63, 94, 0.1);
-      border-color: rgba(244, 63, 94, 0.4);
-      color: #fecdd3;
+      background: color-mix(in srgb, var(--danger) 10%, transparent);
+      border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+      color: var(--danger-fg);
     }
     .banner-actions {
       display: flex;
@@ -1498,7 +1536,7 @@
       flex-shrink: 0;
     }
     .banner-actions button {
-      background: rgba(255, 255, 255, 0.07);
+      background: color-mix(in srgb, var(--fg-mix) 7%, transparent);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       font-size: 11.5px;
@@ -1516,11 +1554,11 @@
       font-size: 12px;
       color: var(--text-muted);
     }
-    .settings-row input {
+    .settings-row input, .settings-row select {
       width: 124px;
-      background: rgba(10, 13, 18, 0.7);
+      background: var(--surface-2);
       border: 1px solid var(--border-subtle);
-      color: #fff;
+      color: var(--text-strong);
       border-radius: 10px;
       padding: 6px 8px;
       font-size: 12.5px;
@@ -1540,8 +1578,8 @@
       display: none;
       flex-direction: column;
       gap: 8px;
-      background: rgba(56, 189, 248, 0.05);
-      border: 1px dashed rgba(56, 189, 248, 0.3);
+      background: color-mix(in srgb, var(--info) 5%, transparent);
+      border: 1px dashed color-mix(in srgb, var(--info) 30%, transparent);
       border-radius: 14px;
       padding: 10px 12px;
       font-size: 12px;
@@ -1551,9 +1589,9 @@
       display: flex;
     }
     .geo-row.warn {
-      background: rgba(245, 158, 11, 0.08);
-      border-color: rgba(245, 158, 11, 0.35);
-      color: #fde68a;
+      background: color-mix(in srgb, var(--warning) 8%, transparent);
+      border-color: color-mix(in srgb, var(--warning) 35%, transparent);
+      color: var(--warning-fg);
     }
 
     /* لوکیشن ورود */
@@ -1562,8 +1600,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      background: rgba(56, 189, 248, 0.06);
-      border: 1px solid rgba(56, 189, 248, 0.22);
+      background: color-mix(in srgb, var(--info) 6%, transparent);
+      border: 1px solid color-mix(in srgb, var(--info) 22%, transparent);
       border-radius: 14px;
       padding: 8px 12px;
       font-size: 12px;
@@ -1571,17 +1609,17 @@
       color: var(--text-muted);
     }
     .geo-row.ok {
-      background: rgba(34, 197, 94, 0.07);
-      border-color: rgba(34, 197, 94, 0.3);
-      color: #bbf7d0;
+      background: color-mix(in srgb, var(--success) 7%, transparent);
+      border-color: color-mix(in srgb, var(--success) 30%, transparent);
+      color: var(--success-fg);
     }
     .geo-row.error {
-      background: rgba(244, 63, 94, 0.07);
-      border-color: rgba(244, 63, 94, 0.3);
-      color: #fecdd3;
+      background: color-mix(in srgb, var(--danger) 7%, transparent);
+      border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+      color: var(--danger-fg);
     }
     .geo-row button {
-      background: rgba(255, 255, 255, 0.06);
+      background: color-mix(in srgb, var(--fg-mix) 6%, transparent);
       border: 1px solid var(--border-subtle);
       color: var(--text);
       font-size: 11px;
@@ -1601,12 +1639,12 @@
     .inv-auth-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .inv-auth-row select, .inv-auth-row input { flex: 1; min-width: 120px; }
     .inv-who { font-size: 12.5px; font-weight: 800; color: var(--text); }
-    .inv-role { font-size: 10.5px; color: #000; background: var(--gold); border-radius: 7px; padding: 1px 7px; margin-inline-start: 6px; }
+    .inv-role { font-size: 10.5px; color: var(--accent-ink); background: var(--gold); border-radius: 7px; padding: 1px 7px; margin-inline-start: 6px; }
     .inv-role.tech { background: var(--blue); }
     .inv-tools { display: flex; gap: 6px; flex-wrap: wrap; }
     .inv-meta { font-size: 10.5px; color: var(--text-dim); }
     .inv-panel-body { display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: var(--text-muted); }
-    .inv-ver { background: rgba(10, 13, 18, 0.6); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 4px; }
+    .inv-ver { background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 9px 11px; display: flex; flex-direction: column; gap: 4px; }
     .inv-ver-head { display: flex; justify-content: space-between; gap: 6px; color: var(--text); font-weight: 700; flex-wrap: wrap; }
     .inv-diff { line-height: 1.8; overflow-wrap: anywhere; }
     .inv-diff del { color: var(--danger); }
@@ -1621,7 +1659,7 @@
       background: none; border: 1px solid var(--gold-border); color: var(--gold);
       border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
-    .inv-vault-btn.unlocked { border-color: rgba(37, 211, 102, 0.5); color: var(--whatsapp); }
+    .inv-vault-btn.unlocked { border-color: color-mix(in srgb, var(--whatsapp) 50%, transparent); color: var(--whatsapp); }
     .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
     .inv-footnote { font-size: 11px; color: var(--text-dim); line-height: 1.9; padding: 0 6px 90px; }
     .inv-section summary {
@@ -1633,7 +1671,7 @@
     .inv-section[open] summary { margin-bottom: 10px; }
     .inv-items { display: flex; flex-direction: column; gap: 8px; }
     .inv-item {
-      background: rgba(10, 13, 18, 0.6); border: 1px solid var(--border-subtle); border-radius: 14px;
+      background: var(--surface-2); border: 1px solid var(--border-subtle); border-radius: 14px;
       padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted);
     }
     .inv-item-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -1664,8 +1702,8 @@
   <!-- PWA Install Banner -->
   <div class="install-bar" id="installBanner">
     <div class="install-info" style="display:flex; align-items:center; gap:8px;">
-      <img src="icon-192.png" alt="Geomat" style="width:32px; height:32px; border-radius:8px;">
-      <span style="font-size:12.5px; font-weight:700;">نصب دستیار کارگاهی گئومات</span>
+      <img src="icon-192.png" alt="" style="width:32px; height:32px; border-radius:8px;">
+      <span style="font-size:12.5px; font-weight:700;">نصب Geo Team</span>
     </div>
     <button class="install-btn" id="installAppBtn">نصب اپ</button>
   </div>
@@ -1673,7 +1711,16 @@
   <!-- Top Status Bar / HUD -->
   <div class="hud-bar">
     <div class="brand-cluster">
-      <img src="logo-geomatco.png" alt="گئومات" class="brand-logo-img">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">  <!-- سنجاق نقشه -->
+  <path d="M32 4C20.4 4 11 13.2 11 24.6c0 15.3 18.3 33 20 34.6a1.4 1.4 0 0 0 2 0C34.7 57.6 53 39.9 53 24.6 53 13.2 43.6 4 32 4z" fill="#f5a623"/>
+  <!-- سه عضو تیم که به هم وصل‌اند -->
+  <circle cx="32" cy="24.5" r="12.5" fill="var(--bg)"/>
+  <path d="M32 18.2 25.6 29.2h12.8z" fill="none" stroke="#f5a623" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="32" cy="18.2" r="3.4" fill="#ffffff"/>
+  <circle cx="25.6" cy="29.2" r="3.4" fill="#ffffff"/>
+  <circle cx="38.4" cy="29.2" r="3.4" fill="#ffffff"/>
+</svg>
+      <span class="brand-word" dir="ltr">Geo<b>Team</b></span>
     </div>
     <div class="hud-right">
       <div class="hud-chip" data-click='["openUserModal"]'>
@@ -1974,6 +2021,14 @@
         <input type="time" id="reminderTimeInput" data-change='["saveSettingField", "reminderTime", "$value"]'>
       </label>
       <label class="settings-row">
+        <span>🎨 ظاهر</span>
+        <select id="themeInput" data-change='["saveSettingField","theme","$value"]'>
+          <option value="system">مثل گوشی</option>
+          <option value="dark">تیره</option>
+          <option value="light">روشن</option>
+        </select>
+      </label>
+      <label class="settings-row">
         <span>🕘 شروع ساعت اداری</span>
         <input type="time" id="workStartInput" data-change='["saveSettingField", "workStart", "$value"]'>
       </label>
@@ -2015,7 +2070,7 @@
     <div class="frost-card" id="monthlyCard">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> گزارش ماهانه</div>
-        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
           📥 اکسل این ماه
         </button>
       </div>
@@ -2049,7 +2104,7 @@
     <div class="frost-card">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
-        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
           📥 دانلود اکسل
         </button>
       </div>
@@ -2065,25 +2120,25 @@
 
   </div>
 
-  <!-- ==================== تب ۴: پیام‌رسان ابری تیم گئومات (نسخه بتا) ==================== -->
+  <!-- ==================== تب ۴: پیام‌رسان تیم (نسخه بتا) ==================== -->
   <div class="tab-section" id="secMessenger">
     <div class="tg-messenger-card">
       
       <!-- هدر تلگرامی هاردنینگ‌شده با نشانگر آنلاین/آفلاین -->
       <div class="tg-header-bar">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; box-shadow:0 2px 10px rgba(2,132,199,0.4);">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, var(--info) 0%, var(--info) 100%); display:flex; align-items:center; justify-content:center; color:var(--text-strong); font-weight:800; font-size:14px; box-shadow:0 2px 10px color-mix(in srgb, var(--info) 40%, transparent);">
             👥
           </div>
           <div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:13px; font-weight:800; color:#fff;">گروه فنی گئومات</span>
-              <span style="font-size:10px; background:rgba(56,189,248,0.18); color:#38bdf8; padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
+              <span style="font-size:13px; font-weight:800; color:var(--text-strong);">گروه Geo Team</span>
+              <span style="font-size:10px; background:color-mix(in srgb, var(--info) 18%, transparent); color:var(--info); padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
             </div>
-            <div style="font-size:10.5px; color:#94a3b8;" id="tgNetStatus"><span style="color:#22c55e;">●</span> ذخیره فقط روی همین دستگاه</div>
+            <div style="font-size:10.5px; color:var(--text-muted);" id="tgNetStatus"><span style="color:var(--success);">●</span> ذخیره فقط روی همین دستگاه</div>
           </div>
         </div>
-        <button style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" data-click='["clearChatHistory"]'>
+        <button style="background:color-mix(in srgb, var(--fg-mix) 6%, transparent); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" data-click='["clearChatHistory"]'>
           🗑 پاکسازی
         </button>
       </div>
@@ -2150,7 +2205,7 @@
 <!-- Glass Modal: افزودن شرکت -->
 <div class="glass-modal-bg" id="addModal" data-click='["closeAddModal"]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن محل جدید</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">➕ افزودن محل جدید</div>
     <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک...">
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;">📍 موقعیت فعلی شما به‌عنوان موقعیت این محل ثبت می‌شود؛ داخل همان محل باشید و GPS روشن باشد.</div>
     <div style="display:flex; gap:8px;">
@@ -2163,7 +2218,7 @@
 <!-- Glass Modal: نام پرسنل -->
 <div class="glass-modal-bg" id="userModal" data-click='["closeUserModal"]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;">👤 نام شما (ثبت‌کننده)</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">👤 نام شما (ثبت‌کننده)</div>
     <input type="text" id="userNameInput" class="cyber-input" placeholder="مثلاً: علی محبی">
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" data-click='["saveUserName"]'>ذخیره</button>
@@ -2191,7 +2246,7 @@
 <!-- Glass Modal: صف ارسال -->
 <div class="glass-modal-bg" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
-    <div style="font-size:15px; font-weight:800; color:#fff;">📤 گزارش‌های ارسال‌نشده</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">📤 گزارش‌های ارسال‌نشده</div>
     <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
     <div class="outbox-list" id="outboxList"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeOutbox"]'>بستن</button>
@@ -2201,9 +2256,9 @@
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
 <div class="glass-modal-bg" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:14px; font-weight:700; color:#fff; line-height:1.8;" id="confirmText"></div>
+    <div style="font-size:14px; font-weight:700; color:var(--text-strong); line-height:1.8;" id="confirmText"></div>
     <div style="display:flex; gap:8px;">
-      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:#fff;" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
+      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--text-strong);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveConfirm", false]'>انصراف</button>
     </div>
   </div>
@@ -2212,7 +2267,7 @@
 <!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
 <div class="glass-modal-bg" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
   <div class="glass-modal-box inv-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="invItemTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle"></div>
     <div class="inv-form" id="invItemForm"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="invItemSaveBtn" data-click='["saveInvItem"]'>ذخیره</button>
@@ -2224,7 +2279,7 @@
 <!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
 <div class="glass-modal-bg" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
   <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="invPanelTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle"></div>
     <div class="inv-panel-body" id="invPanelBody"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeInvPanel"]'>بستن</button>
   </div>
@@ -2233,7 +2288,7 @@
 <!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
 <div class="glass-modal-bg" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="vaultModalTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle"></div>
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
     <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
     <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
@@ -2582,6 +2637,7 @@
   }
 
   function init() {
+    applyTheme(getSettings().theme);
     runMigrations();
     document.getElementById('userNameHeader').textContent = getUserName();
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
@@ -3445,7 +3501,7 @@
   // ساعت ورود را خودش پر می‌کند و مدت درست در آرشیو ثبت می‌شود
   const OPEN_ENTRY_KEY = 'geomat_open_entry_v1';
   const SETTINGS_KEY = 'geomat_settings_v1';
-  const DEFAULT_SETTINGS = { reminderTime: '18:00', workStart: '09:00', workEnd: '17:00', thuEnd: '14:00', holidays: [] };
+  const DEFAULT_SETTINGS = { reminderTime: '18:00', workStart: '09:00', workEnd: '17:00', thuEnd: '14:00', holidays: [], theme: 'dark' };
   const TIME_SETTINGS = ['reminderTime', 'workStart', 'workEnd', 'thuEnd'];
 
   function pad2(n) { return String(n).padStart(2, '0'); }
@@ -3466,6 +3522,7 @@
     if (parseHM(out.workEnd) <= parseHM(out.workStart)) { out.workStart = DEFAULT_SETTINGS.workStart; out.workEnd = DEFAULT_SETTINGS.workEnd; }
     if (parseHM(out.thuEnd) <= parseHM(out.workStart)) out.thuEnd = DEFAULT_SETTINGS.thuEnd;
     out.holidays = Array.isArray(out.holidays) ? out.holidays.filter(h => isoToDate(h)).sort() : [];
+    if (!['system', 'dark', 'light'].includes(out.theme)) out.theme = DEFAULT_SETTINGS.theme;
     delete out.overtimeHours; // تنظیم قدیمی «اضافه‌کار بعد از n ساعت»
     return out;
   }
@@ -3481,6 +3538,9 @@
   }
   function renderSettings() {
     const st = getSettings();
+    applyTheme(st.theme);
+    const themeSel = document.getElementById('themeInput');
+    if (themeSel) themeSel.value = st.theme;
     [['reminderTimeInput', 'reminderTime'], ['workStartInput', 'workStart'], ['workEndInput', 'workEnd'], ['thuEndInput', 'thuEnd']].forEach(([id, k]) => {
       const el = document.getElementById(id);
       if (el) el.value = st[k];
@@ -3493,6 +3553,11 @@
         ? st.holidays.map(h => `<span class="holiday-chip">${escapeHtml(shortDateLabel(isoToDate(h)))} ${toPersianDigits(dateToJalali(isoToDate(h)).jy)}<button ${uiAttr('click', 'removeHoliday', h)} title="حذف">✕</button></span>`).join('')
         : '<span style="color:var(--text-dim); font-size:11px;">ثبت نشده</span>';
     }
+  }
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0b1018';
   }
   function addHoliday() {
     openCalendar(new Date(), (date) => {
@@ -4124,7 +4189,7 @@
         <div style="flex:1;">
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-weight:800; color:var(--gold); font-size:13px;">${escapeHtml(item.company)}</span>
-            <span style="font-size:10px; background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
+            <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
@@ -4182,7 +4247,7 @@
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? 'geomat-archive-all.csv' : `geomat-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const filename = targetComp === 'all' ? 'geoteam-archive-all.csv' : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }
@@ -4410,7 +4475,7 @@
     }
     const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
-    const name = `geomat-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
+    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
     if (downloadFile(name, csv, 'text/csv')) showToast(`📥 گزارش ${JALALI_MONTHS[reportJM - 1]} دانلود شد`);
   }
 
@@ -4428,7 +4493,7 @@
     }
     const payload = { app: BACKUP_APP_ID, format: 1, version: APP_VERSION, exportedAt: new Date().toISOString(), data };
     const t = dateToJalali(new Date());
-    const name = `geomat-backup-${t.jy}-${pad2(t.jm)}-${pad2(t.jd)}.json`;
+    const name = `geoteam-backup-${t.jy}-${pad2(t.jm)}-${pad2(t.jd)}.json`;
     if (downloadFile(name, JSON.stringify(payload), 'application/json')) {
       showToast(`💾 فایل پشتیبان (${toPersianDigits(Object.keys(data).length)} بخش) آماده شد`);
     }
@@ -4540,7 +4605,7 @@
     }, 2200);
   }
 
-  // ==================== پیام‌رسان اختصاصی تیم گئومات (BETA) ====================
+  // ==================== پیام‌رسان اختصاصی تیم (BETA) ====================
   // این پیام‌رسان فعلاً سرور ندارد؛ پیام‌ها فقط در localStorage همین دستگاه ذخیره می‌شوند.
   const CHAT_STORAGE_KEY = 'geomat_chat_messages_v1';
   const CHAT_MAX_MESSAGES = 100;
@@ -4556,7 +4621,7 @@
     return [
       {
         id: 'seed-1',
-        sender: "مدیریت مهندسی گئومات",
+        sender: "Geo Team",
         isMine: false,
         channel: "general",
         ts: now - 95 * 60000,
@@ -4604,8 +4669,8 @@
 
   // رنگ‌های تلگرامی داینامیک بر اساس نام فرستنده در گروه
   function getAuthorColor(name) {
-    const colors = ['#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
-    if (!name) return '#38bdf8';
+    const colors = ['var(--info)', '#34d399', 'var(--accent-2)', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
+    if (!name) return 'var(--info)';
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
@@ -4624,7 +4689,7 @@
     }
     return {
       id: m.id != null ? String(m.id) : '',
-      sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار گئومات',
+      sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار',
       isMine: m.isMine === true,
       channel: CHAT_CHANNELS[m.channel] ? m.channel : 'general',
       ts: ts,
@@ -5426,7 +5491,7 @@
     if (!isAdmin()) return;
     const team = getTeam();
     const payload = { app: BACKUP_APP_ID, kind: 'team', format: 1, exportedAt: new Date().toISOString(), team: { schema: 1, users: team.users, log: [] } };
-    if (downloadFile('geomat-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
+    if (downloadFile('geoteam-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
   }
   function importTeamFile(input) {
     const file = input.files && input.files[0];

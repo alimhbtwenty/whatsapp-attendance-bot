@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
-  <title>سامانه دستیار کارگاهی گئومات</title>
+  <title>Geo Team</title>
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#07080a">
+  <meta name="theme-color" content="#0b1018">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="گئومات">
+  <meta name="apple-mobile-web-app-title" content="Geo Team">
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -26,8 +26,8 @@
   <!-- PWA Install Banner -->
   <div class="install-bar" id="installBanner">
     <div class="install-info" style="display:flex; align-items:center; gap:8px;">
-      <img src="icon-192.png" alt="Geomat" style="width:32px; height:32px; border-radius:8px;">
-      <span style="font-size:12.5px; font-weight:700;">نصب دستیار کارگاهی گئومات</span>
+      <img src="icon-192.png" alt="" style="width:32px; height:32px; border-radius:8px;">
+      <span style="font-size:12.5px; font-weight:700;">نصب Geo Team</span>
     </div>
     <button class="install-btn" id="installAppBtn">نصب اپ</button>
   </div>
@@ -35,7 +35,16 @@
   <!-- Top Status Bar / HUD -->
   <div class="hud-bar">
     <div class="brand-cluster">
-      <img src="logo-geomatco.png" alt="گئومات" class="brand-logo-img">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">  <!-- سنجاق نقشه -->
+  <path d="M32 4C20.4 4 11 13.2 11 24.6c0 15.3 18.3 33 20 34.6a1.4 1.4 0 0 0 2 0C34.7 57.6 53 39.9 53 24.6 53 13.2 43.6 4 32 4z" fill="#f5a623"/>
+  <!-- سه عضو تیم که به هم وصل‌اند -->
+  <circle cx="32" cy="24.5" r="12.5" fill="var(--bg)"/>
+  <path d="M32 18.2 25.6 29.2h12.8z" fill="none" stroke="#f5a623" stroke-width="2" stroke-linejoin="round"/>
+  <circle cx="32" cy="18.2" r="3.4" fill="#ffffff"/>
+  <circle cx="25.6" cy="29.2" r="3.4" fill="#ffffff"/>
+  <circle cx="38.4" cy="29.2" r="3.4" fill="#ffffff"/>
+</svg>
+      <span class="brand-word" dir="ltr">Geo<b>Team</b></span>
     </div>
     <div class="hud-right">
       <div class="hud-chip" data-click='["openUserModal"]'>
@@ -336,6 +345,14 @@
         <input type="time" id="reminderTimeInput" data-change='["saveSettingField", "reminderTime", "$value"]'>
       </label>
       <label class="settings-row">
+        <span>🎨 ظاهر</span>
+        <select id="themeInput" data-change='["saveSettingField","theme","$value"]'>
+          <option value="system">مثل گوشی</option>
+          <option value="dark">تیره</option>
+          <option value="light">روشن</option>
+        </select>
+      </label>
+      <label class="settings-row">
         <span>🕘 شروع ساعت اداری</span>
         <input type="time" id="workStartInput" data-change='["saveSettingField", "workStart", "$value"]'>
       </label>
@@ -377,7 +394,7 @@
     <div class="frost-card" id="monthlyCard">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> گزارش ماهانه</div>
-        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportMonthlyCsv"]'>
           📥 اکسل این ماه
         </button>
       </div>
@@ -411,7 +428,7 @@
     <div class="frost-card">
       <div class="card-header-bar">
         <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
-        <button style="background:var(--gold); border:none; color:#000; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
+        <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
           📥 دانلود اکسل
         </button>
       </div>
@@ -427,25 +444,25 @@
 
   </div>
 
-  <!-- ==================== تب ۴: پیام‌رسان ابری تیم گئومات (نسخه بتا) ==================== -->
+  <!-- ==================== تب ۴: پیام‌رسان تیم (نسخه بتا) ==================== -->
   <div class="tab-section" id="secMessenger">
     <div class="tg-messenger-card">
       
       <!-- هدر تلگرامی هاردنینگ‌شده با نشانگر آنلاین/آفلاین -->
       <div class="tg-header-bar">
         <div style="display:flex; align-items:center; gap:8px;">
-          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, #0284c7 0%, #0369a1 100%); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; box-shadow:0 2px 10px rgba(2,132,199,0.4);">
+          <div style="width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg, var(--info) 0%, var(--info) 100%); display:flex; align-items:center; justify-content:center; color:var(--text-strong); font-weight:800; font-size:14px; box-shadow:0 2px 10px color-mix(in srgb, var(--info) 40%, transparent);">
             👥
           </div>
           <div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:13px; font-weight:800; color:#fff;">گروه فنی گئومات</span>
-              <span style="font-size:10px; background:rgba(56,189,248,0.18); color:#38bdf8; padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
+              <span style="font-size:13px; font-weight:800; color:var(--text-strong);">گروه Geo Team</span>
+              <span style="font-size:10px; background:color-mix(in srgb, var(--info) 18%, transparent); color:var(--info); padding:1px 6px; border-radius:10px; font-weight:700;" id="tgMsgCount">بتا</span>
             </div>
-            <div style="font-size:10.5px; color:#94a3b8;" id="tgNetStatus"><span style="color:#22c55e;">●</span> ذخیره فقط روی همین دستگاه</div>
+            <div style="font-size:10.5px; color:var(--text-muted);" id="tgNetStatus"><span style="color:var(--success);">●</span> ذخیره فقط روی همین دستگاه</div>
           </div>
         </div>
-        <button style="background:rgba(255,255,255,0.06); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" data-click='["clearChatHistory"]'>
+        <button style="background:color-mix(in srgb, var(--fg-mix) 6%, transparent); border:1px solid var(--border-subtle); color:var(--text-muted); font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;" data-click='["clearChatHistory"]'>
           🗑 پاکسازی
         </button>
       </div>
@@ -512,7 +529,7 @@
 <!-- Glass Modal: افزودن شرکت -->
 <div class="glass-modal-bg" id="addModal" data-click='["closeAddModal"]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;">➕ افزودن محل جدید</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">➕ افزودن محل جدید</div>
     <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک...">
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;">📍 موقعیت فعلی شما به‌عنوان موقعیت این محل ثبت می‌شود؛ داخل همان محل باشید و GPS روشن باشد.</div>
     <div style="display:flex; gap:8px;">
@@ -525,7 +542,7 @@
 <!-- Glass Modal: نام پرسنل -->
 <div class="glass-modal-bg" id="userModal" data-click='["closeUserModal"]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;">👤 نام شما (ثبت‌کننده)</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">👤 نام شما (ثبت‌کننده)</div>
     <input type="text" id="userNameInput" class="cyber-input" placeholder="مثلاً: علی محبی">
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" data-click='["saveUserName"]'>ذخیره</button>
@@ -553,7 +570,7 @@
 <!-- Glass Modal: صف ارسال -->
 <div class="glass-modal-bg" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
-    <div style="font-size:15px; font-weight:800; color:#fff;">📤 گزارش‌های ارسال‌نشده</div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);">📤 گزارش‌های ارسال‌نشده</div>
     <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
     <div class="outbox-list" id="outboxList"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeOutbox"]'>بستن</button>
@@ -563,9 +580,9 @@
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
 <div class="glass-modal-bg" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:14px; font-weight:700; color:#fff; line-height:1.8;" id="confirmText"></div>
+    <div style="font-size:14px; font-weight:700; color:var(--text-strong); line-height:1.8;" id="confirmText"></div>
     <div style="display:flex; gap:8px;">
-      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:#fff;" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
+      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--text-strong);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveConfirm", false]'>انصراف</button>
     </div>
   </div>
@@ -574,7 +591,7 @@
 <!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
 <div class="glass-modal-bg" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
   <div class="glass-modal-box inv-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="invItemTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle"></div>
     <div class="inv-form" id="invItemForm"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="invItemSaveBtn" data-click='["saveInvItem"]'>ذخیره</button>
@@ -586,7 +603,7 @@
 <!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
 <div class="glass-modal-bg" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
   <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="invPanelTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle"></div>
     <div class="inv-panel-body" id="invPanelBody"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeInvPanel"]'>بستن</button>
   </div>
@@ -595,7 +612,7 @@
 <!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
 <div class="glass-modal-bg" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:#fff;" id="vaultModalTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle"></div>
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
     <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
     <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">

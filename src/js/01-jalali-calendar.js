@@ -207,6 +207,7 @@
   }
 
   function init() {
+    applyTheme(getSettings().theme);
     runMigrations();
     document.getElementById('userNameHeader').textContent = getUserName();
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';

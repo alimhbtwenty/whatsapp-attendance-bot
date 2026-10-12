@@ -12,7 +12,7 @@
     }
     const payload = { app: BACKUP_APP_ID, format: 1, version: APP_VERSION, exportedAt: new Date().toISOString(), data };
     const t = dateToJalali(new Date());
-    const name = `geomat-backup-${t.jy}-${pad2(t.jm)}-${pad2(t.jd)}.json`;
+    const name = `geoteam-backup-${t.jy}-${pad2(t.jm)}-${pad2(t.jd)}.json`;
     if (downloadFile(name, JSON.stringify(payload), 'application/json')) {
       showToast(`💾 فایل پشتیبان (${toPersianDigits(Object.keys(data).length)} بخش) آماده شد`);
     }

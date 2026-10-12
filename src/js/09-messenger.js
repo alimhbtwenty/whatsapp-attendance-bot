@@ -1,4 +1,4 @@
-  // ==================== پیام‌رسان اختصاصی تیم گئومات (BETA) ====================
+  // ==================== پیام‌رسان اختصاصی تیم (BETA) ====================
   // این پیام‌رسان فعلاً سرور ندارد؛ پیام‌ها فقط در localStorage همین دستگاه ذخیره می‌شوند.
   const CHAT_STORAGE_KEY = 'geomat_chat_messages_v1';
   const CHAT_MAX_MESSAGES = 100;
@@ -14,7 +14,7 @@
     return [
       {
         id: 'seed-1',
-        sender: "مدیریت مهندسی گئومات",
+        sender: "Geo Team",
         isMine: false,
         channel: "general",
         ts: now - 95 * 60000,
@@ -62,8 +62,8 @@
 
   // رنگ‌های تلگرامی داینامیک بر اساس نام فرستنده در گروه
   function getAuthorColor(name) {
-    const colors = ['#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
-    if (!name) return '#38bdf8';
+    const colors = ['var(--info)', '#34d399', 'var(--accent-2)', '#f472b6', '#a78bfa', '#fb923c', '#22d3ee'];
+    if (!name) return 'var(--info)';
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return colors[Math.abs(hash) % colors.length];
@@ -82,7 +82,7 @@
     }
     return {
       id: m.id != null ? String(m.id) : '',
-      sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار گئومات',
+      sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار',
       isMine: m.isMine === true,
       channel: CHAT_CHANNELS[m.channel] ? m.channel : 'general',
       ts: ts,

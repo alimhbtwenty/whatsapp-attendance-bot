@@ -1,0 +1,91 @@
+    /* ==================== Geo Team: توکن‌های طراحی ====================
+       همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
+       نام‌های قدیمی (--gold، --surface-glass، ...) فقط نام مستعار همین توکن‌ها هستند تا style داخل HTML کار کند. */
+    :root {
+      color-scheme: dark;
+      --bg: #0b1018;
+      --surface-1: #121925;        /* کارت */
+      --surface-2: #0e141e;        /* داخل کارت: ورودی، ردیف */
+      --surface-3: #1a2333;        /* حالت فعال / hover */
+      --surface-elevated: #151d2b; /* پنجره‌ها و منوها */
+      --border: #222c3d;
+      --border-strong: #2f3b51;
+      --fg-mix: #ffffff;           /* برای سایه‌روشن‌های خیلی کم‌رنگ روی سطح */
+      --shadow: #000000;
+
+      --text-strong: #ffffff;
+      --text: #e6ebf2;
+      --text-muted: #9aa6b8;
+      --text-dim: #6c7a8f;
+
+      --accent: #f5a623;           /* Geo Team amber */
+      --accent-ink: #1a1100;       /* متن روی accent */
+      --accent-2: #ffbe4d;
+      --info: #3db7e4;
+      --success: #2ec27e;
+      --whatsapp: #25d366;
+      --warning: #f59e0b;
+      --danger: #f0506e;
+      --danger-fg: #ffc7d1;
+      --warning-fg: #ffe1a8;
+      --success-fg: #b8f0d2;
+      --info-fg: #bfe8f7;
+
+      --radius-s: 8px;
+      --radius-m: 12px;
+      --radius-l: 16px;
+      --radius-pill: 999px;
+
+      /* نام‌های قدیمی */
+      --surface-glass: var(--surface-1);
+      --surface-solid: var(--surface-elevated);
+      --surface-card: var(--surface-1);
+      --surface-hover: var(--surface-3);
+      --surface-active: var(--surface-3);
+      --gold: var(--accent);
+      --gold-glow: color-mix(in srgb, var(--accent) 30%, transparent);
+      --gold-dim: color-mix(in srgb, var(--accent) 12%, transparent);
+      --gold-border: color-mix(in srgb, var(--accent) 35%, transparent);
+      --whatsapp-glow: color-mix(in srgb, var(--whatsapp) 30%, transparent);
+      --border-subtle: var(--border);
+      --border-highlight: var(--border-strong);
+      --blue: var(--info);
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --bg: #f3f5f8;
+      --surface-1: #ffffff;
+      --surface-2: #f5f7fa;
+      --surface-3: #e9eef5;
+      --surface-elevated: #ffffff;
+      --border: #dde3ec;
+      --border-strong: #c5cfdc;
+      --fg-mix: #0f172a;
+      --shadow: #64748b;
+      --text-strong: #0b1220;
+      --text: #1b2433;
+      --text-muted: #546178;
+      --text-dim: #74819a;
+      --accent: #e8950c;
+      --accent-ink: #1a1100;
+      --accent-2: #c77700;
+      --info: #0a85b8;
+      --success: #138a52;
+      --whatsapp: #1fa855;
+      --warning: #b86e00;
+      --danger: #d2334f;
+      --danger-fg: #a3122e;
+      --warning-fg: #7a4a00;
+      --success-fg: #0d6b3f;
+      --info-fg: #075f86;
+    }
+    @media (prefers-color-scheme: light) {
+      :root[data-theme="system"] {
+        color-scheme: light;
+        --bg: #f3f5f8; --surface-1: #ffffff; --surface-2: #f5f7fa; --surface-3: #e9eef5; --surface-elevated: #ffffff;
+        --border: #dde3ec; --border-strong: #c5cfdc; --fg-mix: #0f172a; --shadow: #64748b;
+        --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #74819a;
+        --accent: #e8950c; --accent-2: #c77700; --info: #0a85b8; --success: #138a52; --whatsapp: #1fa855;
+        --warning: #b86e00; --danger: #d2334f; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+      }
+    }

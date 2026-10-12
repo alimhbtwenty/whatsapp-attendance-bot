@@ -36,7 +36,7 @@ const outputs = {
   'index.html': html,
   'android/app/src/main/assets/index.html': html,
 };
-const copies = ['sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'logo-geomatco.png'];
+const copies = ['sw.js', 'manifest.json', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 
 let stale = [];
 for (const [rel, content] of Object.entries(outputs)) {

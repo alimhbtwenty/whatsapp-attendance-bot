@@ -220,7 +220,7 @@
     }
     const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
-    const name = `geomat-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
+    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
     if (downloadFile(name, csv, 'text/csv')) showToast(`📥 گزارش ${JALALI_MONTHS[reportJM - 1]} دانلود شد`);
   }
 
