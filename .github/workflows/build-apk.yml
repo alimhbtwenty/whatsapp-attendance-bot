@@ -85,10 +85,10 @@ jobs:
             --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود."
 
       # فقط main ریلیز رسمی می‌سازد
-      - name: Attach APK to GitHub Release v1.3.0
+      - name: Attach APK to GitHub Release v1.4.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view v1.3.0 >/dev/null 2>&1 || gh release create v1.3.0 --title "v1.3.0" --notes "Greeting and date only on the first message of the day; no location in WhatsApp messages; entry and exit of a stay are one archive record, and an exit pairs with its entry from the archive; reports are posted to the in-app messenger; messenger fits the screen with the keyboard open. No default companies: each site is added on location with its GPS position; live entry needs the site location; location always on. Geofence per site, open entry + exit reminder, monthly report with overtime, backup/restore, support checklists, offline send queue, entry GPS location, in-app Jalali calendar, chat delete fix." || true
-          gh release upload v1.3.0 geomat-attendance.apk --clobber || true
+          gh release view v1.4.0 >/dev/null 2>&1 || gh release create v1.4.0 --title "v1.4.0" --notes "Support tab: per-company technical file (network/domain, accessible systems, AnyDesk/RustDesk remotes, ESXi hosts, servers/VMs, apps, users) with passwords encrypted under one master password (PBKDF2 + AES-GCM), auto-lock, domain/workgroup/ESXi filters and search; v1.2 split entry/exit records merged into one record per stay; staff-name checkbox removed. Greeting and date only on the first message of the day; no location in WhatsApp messages; entry and exit of a stay are one archive record, and an exit pairs with its entry from the archive; reports are posted to the in-app messenger; messenger fits the screen with the keyboard open. No default companies: each site is added on location with its GPS position; live entry needs the site location; location always on. Geofence per site, open entry + exit reminder, monthly report with overtime, backup/restore, support checklists, offline send queue, entry GPS location, in-app Jalali calendar, chat delete fix." || true
+          gh release upload v1.4.0 geomat-attendance.apk --clobber || true

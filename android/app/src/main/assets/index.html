@@ -1590,6 +1590,48 @@
       cursor: pointer;
       white-space: nowrap;
     }
+
+    /* پرونده فنی شرکت‌ها (ساپورت) */
+    #supportReportView, #supportInventoryView { display: flex; flex-direction: column; gap: 14px; }
+    .inv-filter-row { flex-wrap: wrap; }
+    .inv-vault-btn, .inv-link-btn {
+      background: none; border: 1px solid var(--gold-border); color: var(--gold);
+      border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .inv-vault-btn.unlocked { border-color: rgba(37, 211, 102, 0.5); color: var(--whatsapp); }
+    .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
+    .inv-footnote { font-size: 11px; color: var(--text-dim); line-height: 1.9; padding: 0 6px 90px; }
+    .inv-section summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 800; color: var(--text);
+    }
+    .inv-section summary::-webkit-details-marker { display: none; }
+    .inv-count { color: var(--gold); font-size: 11.5px; font-weight: 700; }
+    .inv-section[open] summary { margin-bottom: 10px; }
+    .inv-items { display: flex; flex-direction: column; gap: 8px; }
+    .inv-item {
+      background: rgba(10, 13, 18, 0.6); border: 1px solid var(--border-subtle); border-radius: 14px;
+      padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-muted);
+    }
+    .inv-item-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .inv-item-title { color: var(--text); font-weight: 800; font-size: 13px; overflow-wrap: anywhere; }
+    .inv-item-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .inv-item-actions button, .inv-secret button {
+      background: var(--surface-hover); border: 1px solid var(--border-subtle); color: var(--text-muted);
+      border-radius: 9px; padding: 4px 8px; font-size: 11px; cursor: pointer; font-family: inherit;
+    }
+    .inv-row { display: flex; gap: 6px; line-height: 1.7; }
+    .inv-row b { color: var(--text-dim); font-weight: 600; flex-shrink: 0; }
+    .inv-row span { overflow-wrap: anywhere; }
+    .inv-ltr { direction: ltr; unicode-bidi: isolate; }
+    .inv-secret { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .inv-secret code { direction: ltr; color: var(--gold); font-size: 12.5px; overflow-wrap: anywhere; }
+    .inv-empty { color: var(--text-dim); font-size: 12px; text-align: center; padding: 4px; }
+    .inv-modal-box { max-height: 88vh; overflow-y: auto; }
+    .inv-form { display: flex; flex-direction: column; gap: 10px; }
+    .inv-form label { display: flex; flex-direction: column; gap: 5px; font-size: 11.5px; color: var(--text-muted); font-weight: 600; }
+    .inv-form select.cyber-input { appearance: auto; }
+    .inv-form .inv-check { flex-direction: row; align-items: center; gap: 6px; }
   </style>
 </head>
 <body>
@@ -1766,9 +1808,6 @@
         <label class="toggle-chip-item">
           <input type="checkbox" id="includeDurationCheck" onchange="updatePreview()"> درج مدت کارکرد
         </label>
-        <label class="toggle-chip-item">
-          <input type="checkbox" id="includeUserCheck" onchange="updatePreview()"> نام پرسنل
-        </label>
       </div>
     </div>
 
@@ -1785,6 +1824,16 @@
 
   <!-- ==================== تب ۲: گزارش کار و پشتیبانی فنی (گروه ساپورت) ==================== -->
   <div class="tab-section" id="secSupport">
+
+    <!-- دو حالت ساپورت: گزارش کار روزانه، پرونده فنی ثابت هر شرکت -->
+    <div class="frost-card">
+      <div class="segmented-pill-row" id="supportViewRow">
+        <button class="pill-opt-btn selected" onclick="setSupportView('report')">📝 گزارش کار</button>
+        <button class="pill-opt-btn" onclick="setSupportView('inventory')">🗂 پرونده فنی</button>
+      </div>
+    </div>
+
+    <div id="supportReportView">
 
     <!-- تاریخ گزارش (بدون ساعت) با تقویم داخلی -->
     <div class="frost-card">
@@ -1861,6 +1910,26 @@
         <div class="title-tag"><span class="gold-marker"></span> پیش‌نمایش گزارش گروه ساپورت</div>
       </div>
       <div class="preview-chat-shell" id="supportPreview">در حال آماده‌سازی...</div>
+    </div>
+
+    </div>
+
+    <!-- پرونده فنی شرکت‌ها: هیچ بخشی از آن وارد واتساپ، پیام‌رسان یا اکسل نمی‌شود -->
+    <div id="supportInventoryView" style="display:none;">
+      <div class="frost-card">
+        <div class="card-header-bar">
+          <div class="title-tag"><span class="gold-marker"></span> شرکت</div>
+          <button class="inv-vault-btn" id="vaultStatusBtn" onclick="toggleVaultLock()">🔒 گاوصندوق قفل</button>
+        </div>
+        <div class="date-chips-quick inv-filter-row" id="invFilterRow"></div>
+        <div class="company-chips-grid" id="invCompaniesGrid"></div>
+        <input type="search" id="invSearchInput" class="cyber-input" maxlength="80" placeholder="🔍 جستجو در پرونده (نام، IP، یوزر...)" oninput="renderInventory()">
+      </div>
+      <div id="invSections"></div>
+      <div class="inv-footnote">
+        🔐 پسوردها با رمز اصلی گاوصندوق رمزنگاری می‌شوند و بدون آن قابل خواندن نیستند (حتی در فایل پشتیبان).
+        <button class="inv-link-btn" onclick="changeVaultPassword()">تغییر رمز اصلی</button>
+      </div>
     </div>
 
   </div>
@@ -2088,6 +2157,33 @@
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:#fff;" id="confirmOkBtn" onclick="resolveConfirm(true)">حذف</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="resolveConfirm(false)">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
+<div class="glass-modal-bg" id="invItemModal" onclick="if(event.target === this) closeInvItemModal()">
+  <div class="glass-modal-box inv-modal-box">
+    <div style="font-size:15px; font-weight:800; color:#fff;" id="invItemTitle"></div>
+    <div class="inv-form" id="invItemForm"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:11px;" id="invItemSaveBtn" onclick="saveInvItem()">ذخیره</button>
+      <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="closeInvItemModal()">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Glass Modal: رمز اصلی گاوصندوق -->
+<div class="glass-modal-bg" id="vaultModal" onclick="if(event.target === this) resolveVaultModal(null)">
+  <div class="glass-modal-box">
+    <div style="font-size:15px; font-weight:800; color:#fff;" id="vaultModalTitle"></div>
+    <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
+    <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
+    <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
+    <div style="font-size:11.5px; color:var(--danger); min-height:16px;" id="vaultModalError"></div>
+    <div style="display:flex; gap:8px;">
+      <button class="install-btn" style="flex:1; padding:11px;" id="vaultModalOk" onclick="submitVaultModal()">تأیید</button>
+      <button class="dock-copy-btn" style="flex:1; padding:11px;" onclick="resolveVaultModal(null)">انصراف</button>
     </div>
   </div>
 </div>
@@ -2390,7 +2486,47 @@
     updateSupportPreview();
   }
 
+  // نسخه 1.2 خروج را رکورد جدا (با ساعت ورود) ثبت می‌کرد و ورود «بی‌خروج» می‌ماند؛
+  // این‌جا هر خروجِ قدیمی در رکورد ورودش ادغام می‌شود تا هر حضور یک رکورد باشد (اجرای دوباره بی‌اثر است)
+  function mergeLegacySplitStays() {
+    const logs = getLogs();
+    const isAtt = l => l && l.type === 'attendance' && l.inTime && l.dateISO;
+    // ورودهای بی‌خروج بر اساس شرکت و ساعت ورود
+    const open = new Map();
+    for (const l of logs) {
+      if (!isAtt(l) || l.outTime) continue;
+      const k = `${l.company}|${l.inTime}`;
+      if (!open.has(k)) open.set(k, []);
+      open.get(k).push(l);
+    }
+    if (!open.size) return;
+    const drop = new Set();
+    for (const out of logs) {
+      if (!isAtt(out) || !out.outTime || (out.action !== 'out' && out.action !== 'both')) continue;
+      const cands = open.get(`${out.company}|${out.inTime}`);
+      if (!cands) continue;
+      const night = parseHM(out.outTime) < parseHM(out.inTime);
+      const idx = cands.findIndex(l => (Number(l.id) || 0) < (Number(out.id) || 0) &&
+        Math.round((isoToDate(out.dateISO) - isoToDate(l.dateISO)) / 86400000) === (night && out.dateISO !== l.dateISO ? 1 : 0));
+      if (idx < 0) continue;
+      const entry = cands.splice(idx, 1)[0];
+      drop.add(out);
+      entry.action = 'both';
+      entry.outTime = out.outTime;
+      entry.durationMins = out.durationMins;
+      entry.durationText = out.durationText;
+      entry.outText = out.text;
+      entry.closedAt = Number(out.id) || Date.now();
+      const o = getOpenEntry();
+      if (o && o.logId === entry.id) setOpenEntry(null);
+    }
+    if (!drop.size || !writeLogs(logs.filter(l => !drop.has(l)))) return;
+    showToast(`${toPersianDigits(drop.size)} حضور قدیمی در یک رکورد یکی شد`);
+  }
+
   function init() {
+    mergeLegacySplitStays();
+    purgeInventoryTombstones();
     document.getElementById('userNameHeader').textContent = getUserName();
     if (!getCompanies().includes(selectedCompany)) selectedCompany = getCompanies()[0] || '';
     renderDays();
@@ -2452,8 +2588,9 @@
     const dock = document.getElementById('floatingDock');
     const sendLabel = document.getElementById('sendBtnLabel');
 
-    if (mode === 'archive' || mode === 'messenger') {
+    if (mode === 'archive' || mode === 'messenger' || (mode === 'support' && supportView === 'inventory')) {
       dock.style.display = 'none';
+      if (mode === 'support') renderInventory();
       if (mode === 'archive') renderArchive();
       if (mode === 'messenger') renderChatMessages({ forceBottom: true });
     } else {
@@ -2806,8 +2943,6 @@
     const includeDate = document.getElementById('includeDateCheck').checked;
     const useHashtag = document.getElementById('hashtagCheck').checked;
     const includeDuration = document.getElementById('includeDurationCheck').checked;
-    const includeUser = document.getElementById('includeUserCheck').checked;
-    const userName = getUserName();
 
     let tag = selectedCompany;
     if (useHashtag) tag = `#${selectedCompany.replace(/\s+/g, '_')}`;
@@ -2823,7 +2958,6 @@
       lines.push(dateStr);
       lines.push(selectedDay);
     }
-    if (includeUser && userName) lines.push(`👤 ${userName}`);
     if (selectedCompany) lines.push(tag);
 
     if (attendanceAction === 'both') {
@@ -3666,7 +3800,7 @@
   function reportSignature(type) {
     if (type === 'attendance') {
       return [type, selectedCompany, toISODate(currentDateObj), selectedDay, attendanceAction, timeInputValue('in'), timeInputValue('out'),
-        ...['includeDateCheck', 'hashtagCheck', 'includeDurationCheck', 'includeUserCheck'].map(id => document.getElementById(id).checked)].join('|');
+        ...['includeDateCheck', 'hashtagCheck', 'includeDurationCheck'].map(id => document.getElementById(id).checked)].join('|');
     }
     return [type, selectedCompany, toISODate(supportDateObj),
       ...['supportActionsText', 'supportPendingText', 'supportTechInfo'].map(id => document.getElementById(id).value.trim())].join('|');
@@ -4141,7 +4275,7 @@
   }
 
   // ==================== پشتیبان‌گیری و بازگردانی ====================
-  const APP_VERSION = '1.2.0';
+  const APP_VERSION = '1.4.0';
   const BACKUP_APP_ID = 'geomat-attendance';
   const BACKUP_MAX_BYTES = 5 * 1024 * 1024;
 
@@ -4755,7 +4889,7 @@
   // مدیریت واکنش به باز شدن کیبورد مجازی در موبایل
   window.addEventListener('resize', () => {
     const dock = document.getElementById('floatingDock');
-    if (!dock || systemMode === 'archive' || systemMode === 'messenger') return;
+    if (!dock || systemMode === 'archive' || systemMode === 'messenger' || (systemMode === 'support' && supportView === 'inventory')) return;
     if (window.innerHeight < 520) {
       dock.style.transform = 'translateX(-50%) translateY(120px)';
       dock.style.opacity = '0';
@@ -4819,6 +4953,582 @@
     return false;
   }
   window.handleBack = handleBack;
+
+  // ==================== گاوصندوق پسوردها (یک رمز اصلی برای همه) ====================
+  // کلید با PBKDF2 از رمز اصلی ساخته می‌شود و فقط در حافظه می‌ماند؛ هر پسورد با AES-GCM و IV تازه رمز می‌شود.
+  // رمز اصلی و کلید هیچ‌جا ذخیره نمی‌شوند؛ فایل پشتیبان و (در آینده) سرور فقط متن رمزشده را می‌بینند.
+  const VAULT_META_KEY = 'geomat_vault_meta_v1';
+  const VAULT_FAIL_KEY = 'geomat_vault_fail_v1';
+  const VAULT_ITERATIONS = 310000;
+  const VAULT_CHECK_TEXT = 'geomat-vault-ok';
+  const VAULT_IDLE_MS = 5 * 60 * 1000;
+  const VAULT_MIN_LEN = 8;
+  let vaultKey = null;
+  let vaultIdleTimer = null;
+
+  const b64 = {
+    enc: (buf) => btoa(String.fromCharCode(...new Uint8Array(buf))),
+    dec: (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0))
+  };
+  function vaultSupported() {
+    return !!(window.crypto && crypto.subtle && window.isSecureContext !== false);
+  }
+  function getVaultMeta() {
+    try {
+      const m = JSON.parse(localStorage.getItem(VAULT_META_KEY) || 'null');
+      return m && m.v === 1 && m.salt && m.check ? m : null;
+    } catch(e) {
+      return null;
+    }
+  }
+  async function deriveVaultKey(password, saltB64, iterations) {
+    const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', hash: 'SHA-256', salt: b64.dec(saltB64), iterations },
+      base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  async function encryptWith(key, text) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+    return { v: 1, iv: b64.enc(iv), ct: b64.enc(ct) };
+  }
+  async function decryptWith(key, blob) {
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64.dec(blob.iv) }, key, b64.dec(blob.ct));
+    return new TextDecoder().decode(pt);
+  }
+
+  function getVaultFails() {
+    try { return JSON.parse(localStorage.getItem(VAULT_FAIL_KEY) || 'null') || { n: 0, until: 0 }; } catch(e) { return { n: 0, until: 0 }; }
+  }
+  function setVaultFails(f) {
+    try { localStorage.setItem(VAULT_FAIL_KEY, JSON.stringify(f)); } catch(e) {}
+  }
+
+  function lockVault(silent) {
+    vaultKey = null;
+    clearTimeout(vaultIdleTimer);
+    renderVaultStatus();
+    if (systemMode === 'support' && supportView === 'inventory') renderInventory();
+    if (!silent) showToast('🔒 گاوصندوق قفل شد');
+  }
+  function touchVault() {
+    if (!vaultKey) return;
+    clearTimeout(vaultIdleTimer);
+    vaultIdleTimer = setTimeout(() => lockVault(false), VAULT_IDLE_MS);
+  }
+  function renderVaultStatus() {
+    const btn = document.getElementById('vaultStatusBtn');
+    if (!btn) return;
+    btn.classList.toggle('unlocked', !!vaultKey);
+    btn.textContent = vaultKey ? '🔓 گاوصندوق باز (قفل کن)' : (getVaultMeta() ? '🔒 گاوصندوق قفل' : '🔐 ساخت گاوصندوق');
+  }
+  // برنامه به پس‌زمینه رفت: گاوصندوق قفل شود
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && vaultKey) lockVault(true);
+  });
+
+  // پنجره رمز: { pw } یا null (انصراف)
+  let vaultModalResolver = null;
+  let vaultModalOpts = null;
+  function askVaultPassword(opts) {
+    vaultModalOpts = opts;
+    document.getElementById('vaultModalTitle').textContent = opts.title;
+    document.getElementById('vaultModalHint').textContent = opts.hint || '';
+    const pw1 = document.getElementById('vaultPw1');
+    const pw2 = document.getElementById('vaultPw2');
+    pw1.value = '';
+    pw2.value = '';
+    pw1.placeholder = opts.placeholder || 'رمز اصلی';
+    pw2.placeholder = 'تکرار رمز';
+    pw2.style.display = opts.confirm ? '' : 'none';
+    document.getElementById('vaultModalError').textContent = '';
+    document.getElementById('vaultModalOk').textContent = opts.okLabel || 'تأیید';
+    document.getElementById('vaultModal').classList.add('open');
+    setTimeout(() => pw1.focus(), 100);
+    return new Promise(resolve => { vaultModalResolver = resolve; });
+  }
+  function resolveVaultModal(value) {
+    document.getElementById('vaultModal').classList.remove('open');
+    document.getElementById('vaultPw1').value = '';
+    document.getElementById('vaultPw2').value = '';
+    const r = vaultModalResolver;
+    vaultModalResolver = null;
+    if (r) r(value);
+  }
+  async function submitVaultModal() {
+    const pw = document.getElementById('vaultPw1').value;
+    const err = document.getElementById('vaultModalError');
+    if (vaultModalOpts.confirm) {
+      if (pw.length < VAULT_MIN_LEN) { err.textContent = `رمز اصلی حداقل ${toPersianDigits(VAULT_MIN_LEN)} کاراکتر باشد`; return; }
+      if (pw !== document.getElementById('vaultPw2').value) { err.textContent = 'تکرار رمز یکی نیست'; return; }
+    } else if (!pw) {
+      err.textContent = 'رمز را بنویسید';
+      return;
+    }
+    if (vaultModalOpts.check) {
+      const okBtn = document.getElementById('vaultModalOk');
+      okBtn.disabled = true;
+      const msg = await vaultModalOpts.check(pw);
+      okBtn.disabled = false;
+      if (msg) { err.textContent = msg; return; }
+    }
+    resolveVaultModal({ pw });
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.getElementById('vaultModal').classList.contains('open')) {
+      e.preventDefault();
+      submitVaultModal();
+    }
+  });
+
+  // رمز را امتحان کن؛ پیام خطا یا '' (و کلید در vaultKey)
+  async function tryUnlock(pw) {
+    const meta = getVaultMeta();
+    const fails = getVaultFails();
+    if (fails.until > Date.now()) {
+      return `چند بار اشتباه وارد شد؛ ${toPersianDigits(Math.ceil((fails.until - Date.now()) / 1000))} ثانیه صبر کنید`;
+    }
+    try {
+      const key = await deriveVaultKey(pw, meta.salt, meta.iter);
+      if (await decryptWith(key, meta.check) !== VAULT_CHECK_TEXT) throw new Error('bad');
+      setVaultFails({ n: 0, until: 0 });
+      vaultKey = key;
+      return '';
+    } catch(e) {
+      const n = fails.n + 1;
+      setVaultFails({ n: n >= 5 ? 0 : n, until: n >= 5 ? Date.now() + 30000 : 0 });
+      return n >= 5 ? 'رمز اشتباه است؛ ۳۰ ثانیه صبر کنید' : 'رمز اشتباه است';
+    }
+  }
+
+  // گاوصندوق را باز کن (یا اگر هنوز ساخته نشده، بساز)؛ true یعنی کلید آماده است
+  async function ensureVaultOpen() {
+    if (vaultKey) { touchVault(); return true; }
+    if (!vaultSupported()) {
+      showToast('⚠️ این دستگاه از رمزنگاری امن پشتیبانی نمی‌کند؛ پسورد ذخیره نمی‌شود');
+      return false;
+    }
+    if (!getVaultMeta()) {
+      const r = await askVaultPassword({
+        title: '🔐 ساخت گاوصندوق',
+        hint: 'یک رمز اصلی برای همه پسوردهای پرونده فنی. هر بار فقط همین یک رمز پرسیده می‌شود. اگر فراموش شود، پسوردهای ذخیره‌شده قابل بازیابی نیستند؛ جایی امن یادداشتش کنید.',
+        confirm: true,
+        okLabel: 'ساخت'
+      });
+      if (!r) return false;
+      const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16)));
+      const key = await deriveVaultKey(r.pw, salt, VAULT_ITERATIONS);
+      const meta = { v: 1, kdf: 'PBKDF2-SHA256', iter: VAULT_ITERATIONS, salt, check: await encryptWith(key, VAULT_CHECK_TEXT) };
+      try { localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta)); } catch(e) { showToast('⚠️ ذخیره ممکن نشد'); return false; }
+      vaultKey = key;
+      showToast('🔐 گاوصندوق ساخته شد');
+    } else {
+      const r = await askVaultPassword({ title: '🔒 باز کردن گاوصندوق', hint: 'رمز اصلی گاوصندوق را وارد کنید.', check: tryUnlock, okLabel: 'باز کن' });
+      if (!r || !vaultKey) return false;
+    }
+    renderVaultStatus();
+    touchVault();
+    return true;
+  }
+
+  async function toggleVaultLock() {
+    playTactileFeedback();
+    if (vaultKey) { lockVault(false); return; }
+    if (await ensureVaultOpen()) renderInventory();
+  }
+
+  async function changeVaultPassword() {
+    if (!getVaultMeta()) { showToast('هنوز گاوصندوقی ساخته نشده'); return; }
+    vaultKey = null;
+    const cur = await askVaultPassword({ title: '🔑 تغییر رمز اصلی', hint: 'اول رمز فعلی را وارد کنید.', check: tryUnlock, okLabel: 'ادامه' });
+    if (!cur || !vaultKey) { renderVaultStatus(); return; }
+    const next = await askVaultPassword({ title: '🔑 رمز اصلی جدید', hint: 'همه پسوردها با رمز جدید دوباره رمزنگاری می‌شوند.', confirm: true, okLabel: 'تغییر' });
+    if (!next) { renderVaultStatus(); return; }
+    try {
+      const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16)));
+      const newKey = await deriveVaultKey(next.pw, salt, VAULT_ITERATIONS);
+      const inv = getInventory();
+      for (const item of inv.items) {
+        for (const f of Object.keys(item.secrets || {})) {
+          item.secrets[f] = await encryptWith(newKey, await decryptWith(vaultKey, item.secrets[f]));
+        }
+      }
+      const meta = { v: 1, kdf: 'PBKDF2-SHA256', iter: VAULT_ITERATIONS, salt, check: await encryptWith(newKey, VAULT_CHECK_TEXT) };
+      // هر دو با هم: اگر پرونده ذخیره نشد، رمز قبلی دست نمی‌خورد
+      const oldInv = localStorage.getItem(INVENTORY_KEY);
+      if (!saveInventory(inv)) throw new Error('save');
+      try {
+        localStorage.setItem(VAULT_META_KEY, JSON.stringify(meta));
+      } catch(e) {
+        if (oldInv !== null) localStorage.setItem(INVENTORY_KEY, oldInv);
+        throw e;
+      }
+      vaultKey = newKey;
+      showToast('🔑 رمز اصلی عوض شد');
+    } catch(e) {
+      showToast('⚠️ تغییر رمز انجام نشد');
+    }
+    renderVaultStatus();
+    touchVault();
+    renderInventory();
+  }
+
+  // ==================== پرونده فنی شرکت‌ها ====================
+  // هر آیتم شناسه یکتا، زمان تغییر و حذفِ نرم دارد تا بعداً با پنل/سرور همگام شود (docs/data-model.md)
+  const INVENTORY_KEY = 'geomat_inventory_v1';
+  const INV_TOMBSTONE_DAYS = 90;
+  const ACCESS_METHODS = ['RDP', 'SSH', 'وب (HTTP/HTTPS)', 'VNC', 'SMB / اشتراک فایل', 'Winbox', 'Telnet', 'FTP/SFTP', 'سایر'];
+  const INV_SECTIONS = [
+    { key: 'network', title: '🌐 شبکه و دامین', titleField: 'name', fields: [
+      { k: 'kind', label: 'نوع', type: 'select', options: ['دامین', 'ورک‌گروپ'] },
+      { k: 'name', label: 'نام دامین یا ورک‌گروپ', required: true, ltr: true },
+      { k: 'range', label: 'رنج IP', ltr: true },
+      { k: 'gateway', label: 'گیت‌وی', ltr: true },
+      { k: 'dns', label: 'DNS', ltr: true },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'access', title: '🔌 سیستم‌های قابل دسترسی', titleField: 'title', fields: [
+      { k: 'title', label: 'عنوان', required: true },
+      { k: 'method', label: 'نحوه اتصال', type: 'select', options: ACCESS_METHODS },
+      { k: 'address', label: 'آدرس / پورت', ltr: true },
+      { k: 'username', label: 'یوزرنیم (اختیاری)', ltr: true },
+      { k: 'password', label: 'پسورد (اختیاری)', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'remotes', title: '🖥 ریموت (AnyDesk / RustDesk)', titleField: 'title', fields: [
+      { k: 'tool', label: 'برنامه', type: 'select', options: ['AnyDesk', 'RustDesk', 'TeamViewer', 'سایر'] },
+      { k: 'title', label: 'دستگاه / عنوان', required: true },
+      { k: 'remoteId', label: 'ID', required: true, ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'hosts', title: '🗄 سرورهای فیزیکی / ESXi', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'hypervisor', label: 'مجازی‌سازی', type: 'select', options: ['ESXi', 'Proxmox', 'Hyper-V', 'بدون مجازی‌سازی'] },
+      { k: 'version', label: 'نسخه', ltr: true },
+      { k: 'model', label: 'مدل سخت‌افزار', ltr: true },
+      { k: 'cpu', label: 'CPU', ltr: true },
+      { k: 'ram', label: 'RAM', ltr: true },
+      { k: 'disks', label: 'دیسک‌ها', ltr: true },
+      { k: 'ip', label: 'IP', ltr: true },
+      { k: 'mgmtIp', label: 'IP مدیریت (iLO / iDRAC)', ltr: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'servers', title: '💽 سرورها و ماشین‌های مجازی', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'role', label: 'نقش (DC، فایل، دیتابیس...)' },
+      { k: 'os', label: 'سیستم‌عامل', ltr: true },
+      { k: 'host', label: 'میزبان', type: 'ref', ref: ['hosts'], empty: 'فیزیکی مستقل / نامشخص' },
+      { k: 'cpu', label: 'CPU', ltr: true },
+      { k: 'ram', label: 'RAM', ltr: true },
+      { k: 'disk', label: 'دیسک', ltr: true },
+      { k: 'ip', label: 'IP', ltr: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'apps', title: '📦 برنامه‌ها', titleField: 'name', fields: [
+      { k: 'name', label: 'نام برنامه', required: true },
+      { k: 'version', label: 'نسخه', ltr: true },
+      { k: 'server', label: 'روی سرور', type: 'ref', ref: ['servers', 'hosts'], empty: 'نامشخص' },
+      { k: 'license', label: 'لایسنس', ltr: true },
+      { k: 'expiry', label: 'تاریخ انقضا' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'users', title: '👥 کاربرها', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'dept', label: 'سمت / بخش' },
+      { k: 'computer', label: 'سیستم / IP', ltr: true },
+      { k: 'email', label: 'ایمیل', ltr: true },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] }
+  ];
+  const INV_FILTERS = [
+    { key: 'all', label: 'همه' },
+    { key: 'domain', label: 'دامین' },
+    { key: 'workgroup', label: 'ورک‌گروپ' },
+    { key: 'esxi', label: 'دارای ESXi' }
+  ];
+  let supportView = 'report';
+  let invFilter = 'all';
+  let invEditing = null; // { section, id|null }
+  const invRevealTimers = {};
+
+  function newId() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+    return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+  }
+
+  function getInventory() {
+    try {
+      const o = JSON.parse(localStorage.getItem(INVENTORY_KEY) || 'null');
+      if (o && o.schema === 1 && Array.isArray(o.items)) {
+        o.items = o.items.filter(i => i && typeof i === 'object' && typeof i.id === 'string' && i.id && typeof i.company === 'string' &&
+          INV_SECTIONS.some(sec => sec.key === i.section) && i.data && typeof i.data === 'object');
+        return o;
+      }
+    } catch(e) {}
+    return { schema: 1, items: [] };
+  }
+  function saveInventory(inv) {
+    try {
+      localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
+      return true;
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد');
+      return false;
+    }
+  }
+  // رکوردهای حذف‌شده فقط برای همگام‌سازی نگه داشته می‌شوند؛ بعد از ۹۰ روز پاک شوند
+  function purgeInventoryTombstones() {
+    const inv = getInventory();
+    const limit = Date.now() - INV_TOMBSTONE_DAYS * 86400000;
+    const kept = inv.items.filter(i => !i.deleted || new Date(i.updatedAt).getTime() > limit);
+    if (kept.length !== inv.items.length) saveInventory({ ...inv, items: kept });
+  }
+  function liveItems(inv, company, section) {
+    return inv.items.filter(i => !i.deleted && i.company === company && (!section || i.section === section));
+  }
+  function companyTraits(inv, company) {
+    const items = liveItems(inv, company);
+    return {
+      domain: items.some(i => i.section === 'network' && i.data.kind === 'دامین'),
+      workgroup: items.some(i => i.section === 'network' && i.data.kind === 'ورک‌گروپ'),
+      esxi: items.some(i => i.section === 'hosts' && i.data.hypervisor === 'ESXi')
+    };
+  }
+
+  function setSupportView(view) {
+    playTactileFeedback();
+    supportView = view;
+    const btns = document.querySelectorAll('#supportViewRow .pill-opt-btn');
+    btns[0].classList.toggle('selected', view === 'report');
+    btns[1].classList.toggle('selected', view === 'inventory');
+    document.getElementById('supportReportView').style.display = view === 'report' ? '' : 'none';
+    document.getElementById('supportInventoryView').style.display = view === 'inventory' ? '' : 'none';
+    // دکمه‌های ارسال واتساپ برای پرونده فنی معنی ندارد
+    document.getElementById('floatingDock').style.display = view === 'inventory' ? 'none' : 'flex';
+    if (view === 'inventory') renderInventory();
+  }
+
+  function itemLabel(inv, id) {
+    const it = inv.items.find(i => i.id === id && !i.deleted);
+    if (!it) return '';
+    const sec = INV_SECTIONS.find(s => s.key === it.section);
+    return it.data[sec.titleField] || '';
+  }
+
+  function renderInventory() {
+    renderVaultStatus();
+    const inv = getInventory();
+    const comps = getCompanies();
+
+    document.getElementById('invFilterRow').innerHTML = INV_FILTERS.map(f =>
+      `<button class="date-q-btn ${invFilter === f.key ? 'selected' : ''}" data-filter="${f.key}">${f.label}</button>`).join('');
+
+    const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
+    const grid = document.getElementById('invCompaniesGrid');
+    grid.innerHTML = shown.length
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('')
+      : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : 'اول از تب تردد یک محل اضافه کنید'}</div>`;
+
+    const box = document.getElementById('invSections');
+    if (!selectedCompany) { box.innerHTML = ''; return; }
+    const q = document.getElementById('invSearchInput').value.trim().toLowerCase();
+    const openNow = new Set([...box.querySelectorAll('details[open]')].map(d => d.dataset.section));
+    box.innerHTML = INV_SECTIONS.map(sec => {
+      const all = liveItems(inv, selectedCompany, sec.key);
+      const items = q ? all.filter(i => Object.values(i.data).some(v => String(v).toLowerCase().includes(q))) : all;
+      const open = q ? items.length > 0 : openNow.has(sec.key);
+      return `<details class="frost-card inv-section" data-section="${sec.key}" ${open ? 'open' : ''}>
+        <summary><span>${sec.title}</span><span class="inv-count">${toPersianDigits(items.length)}${q ? ' / ' + toPersianDigits(all.length) : ''}</span></summary>
+        <div class="inv-items">
+          ${items.map(it => renderInvItem(inv, sec, it)).join('') || `<div class="inv-empty">${q ? 'موردی پیدا نشد' : 'چیزی ثبت نشده'}</div>`}
+          <button class="add-comp-pill" data-add="${sec.key}">➕ افزودن</button>
+        </div>
+      </details>`;
+    }).join('');
+  }
+
+  function renderInvItem(inv, sec, it) {
+    const rows = sec.fields.filter(f => f.k !== sec.titleField && f.type !== 'secret').map(f => {
+      let v = it.data[f.k];
+      if (f.type === 'ref') v = itemLabel(inv, v);
+      if (!v) return '';
+      return `<div class="inv-row"><b>${escapeHtml(f.label.replace(/ \(.*\)/, ''))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
+    }).join('');
+    const secrets = sec.fields.filter(f => f.type === 'secret' && it.secrets && it.secrets[f.k]).map(f =>
+      `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(f.label.replace(/ \(.*\)/, ''))}:</b>
+        <code data-secret-view="${escapeHtml(it.id)}|${f.k}">••••••</code>
+        <button data-reveal="${escapeHtml(it.id)}|${f.k}">👁 نمایش</button>
+        <button data-copy="${escapeHtml(it.id)}|${f.k}">📋 کپی</button></div>`).join('');
+    return `<div class="inv-item">
+      <div class="inv-item-head">
+        <span class="inv-item-title">${escapeHtml(it.data[sec.titleField] || '—')}</span>
+        <span class="inv-item-actions"><button data-edit="${escapeHtml(it.id)}">✏️</button><button data-del="${escapeHtml(it.id)}">🗑</button></span>
+      </div>${rows}${secrets}</div>`;
+  }
+
+  // همه کلیک‌های پرونده فنی از یک‌جا (بدون onclick داخل متن HTML)
+  document.addEventListener('click', (e) => {
+    const view = document.getElementById('supportInventoryView');
+    if (!view || !view.contains(e.target)) return;
+    touchVault();
+    const t = e.target.closest('[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-reveal],[data-copy]');
+    if (!t) return;
+    const d = t.dataset;
+    if (d.filter) { invFilter = d.filter; renderInventory(); }
+    else if (d.company !== undefined) { selectedCompany = d.company; renderCompanies(); updatePreview(); updateSupportPreview(); renderInventory(); }
+    else if (d.add) openInvItemModal(d.add, null);
+    else if (d.edit) { const it = getInventory().items.find(i => i.id === d.edit); if (it) openInvItemModal(it.section, it.id); }
+    else if (d.del) deleteInvItem(d.del);
+    else if (d.reveal) revealSecret(d.reveal);
+    else if (d.copy) copySecret(d.copy);
+  });
+
+  async function readSecret(ref) {
+    const [id, field] = ref.split('|');
+    const it = getInventory().items.find(i => i.id === id);
+    if (!it || !it.secrets || !it.secrets[field]) return null;
+    if (!await ensureVaultOpen()) return null;
+    try {
+      return await decryptWith(vaultKey, it.secrets[field]);
+    } catch(e) {
+      showToast('⚠️ این پسورد با رمز اصلی فعلی باز نمی‌شود');
+      return null;
+    }
+  }
+  async function revealSecret(ref) {
+    const pw = await readSecret(ref);
+    if (pw === null) return;
+    const el = document.querySelector(`[data-secret-view="${CSS.escape(ref)}"]`);
+    if (!el) return;
+    el.textContent = pw;
+    clearTimeout(invRevealTimers[ref]);
+    invRevealTimers[ref] = setTimeout(() => { if (el.isConnected) el.textContent = '••••••'; }, 10000);
+  }
+  async function copySecret(ref) {
+    const pw = await readSecret(ref);
+    if (pw === null) return;
+    try {
+      await navigator.clipboard.writeText(pw);
+    } catch(e) {
+      showToast('⚠️ کپی ممکن نشد');
+      return;
+    }
+    showToast('📋 پسورد کپی شد (۳۰ ثانیه بعد از کلیپ‌بورد پاک می‌شود)');
+    setTimeout(async () => {
+      try {
+        if (await navigator.clipboard.readText() !== pw) return;
+      } catch(e) {}
+      navigator.clipboard.writeText('').catch(() => {});
+    }, 30000);
+  }
+
+  function openInvItemModal(sectionKey, id) {
+    if (!selectedCompany) { showToast('اول شرکت را انتخاب کنید'); return; }
+    const sec = INV_SECTIONS.find(s => s.key === sectionKey);
+    const inv = getInventory();
+    const it = id ? inv.items.find(i => i.id === id) : null;
+    invEditing = { section: sectionKey, id };
+    document.getElementById('invItemTitle').textContent = `${it ? '✏️ ویرایش' : '➕ افزودن'} — ${sec.title.replace(/^\S+\s/, '')} (${selectedCompany})`;
+    const form = document.getElementById('invItemForm');
+    form.innerHTML = sec.fields.map(f => {
+      const v = it ? (it.data[f.k] || '') : '';
+      const name = `inv_${f.k}`;
+      if (f.type === 'select') {
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}">${f.options.map(o =>
+          `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select></label>`;
+      }
+      if (f.type === 'ref') {
+        const opts = inv.items.filter(i => !i.deleted && i.company === selectedCompany && f.ref.includes(i.section) && i.id !== id);
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${opts.map(o =>
+          `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
+      }
+      if (f.type === 'textarea') {
+        return `<label>${escapeHtml(f.label)}<textarea class="cyber-input" name="${name}" maxlength="1000" style="min-height:60px; resize:vertical;">${escapeHtml(v)}</textarea></label>`;
+      }
+      if (f.type === 'secret') {
+        const has = it && it.secrets && it.secrets[f.k];
+        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="256" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
+          (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد ذخیره‌شده</label>` : '');
+      }
+      return `<label>${escapeHtml(f.label)}${f.required ? ' *' : ''}<input type="text" class="cyber-input" name="${name}" maxlength="200" ${f.ltr ? 'dir="ltr"' : ''} value="${escapeHtml(v)}"></label>`;
+    }).join('');
+    document.getElementById('invItemModal').classList.add('open');
+  }
+  function closeInvItemModal() {
+    document.getElementById('invItemModal').classList.remove('open');
+    document.getElementById('invItemForm').innerHTML = ''; // پسورد تایپ‌شده در DOM نماند
+    invEditing = null;
+  }
+
+  let invSaving = false;
+  async function saveInvItem() {
+    if (!invEditing || invSaving) return;
+    const sec = INV_SECTIONS.find(s => s.key === invEditing.section);
+    const form = document.getElementById('invItemForm');
+    const val = (k) => { const el = form.querySelector(`[name="inv_${k}"]`); return el ? el.value : ''; };
+    const data = {};
+    const newSecrets = {};
+    const clearSecrets = [];
+    for (const f of sec.fields) {
+      if (f.type === 'secret') {
+        const pw = val(f.k);
+        if (pw) newSecrets[f.k] = pw;
+        const clr = form.querySelector(`[name="inv_${f.k}_clear"]`);
+        if (clr && clr.checked) clearSecrets.push(f.k);
+        continue;
+      }
+      const v = val(f.k).replace(f.type === 'textarea' ? /[^\S\n]+/g : /\s+/g, ' ').trim();
+      if (f.required && !v) { showToast(`«${f.label}» را بنویسید`); return; }
+      if (v) data[f.k] = v;
+    }
+    invSaving = true;
+    try {
+      const encrypted = {};
+      if (Object.keys(newSecrets).length) {
+        if (!await ensureVaultOpen()) return;
+        for (const k of Object.keys(newSecrets)) encrypted[k] = await encryptWith(vaultKey, newSecrets[k]);
+      }
+      const inv = getInventory();
+      const now = new Date().toISOString();
+      let it = invEditing.id ? inv.items.find(i => i.id === invEditing.id) : null;
+      if (!it) {
+        it = { id: newId(), company: selectedCompany, section: sec.key, data: {}, secrets: {}, createdAt: now };
+        inv.items.push(it);
+      }
+      it.data = data;
+      it.secrets = { ...(it.secrets || {}) };
+      clearSecrets.forEach(k => delete it.secrets[k]);
+      Object.assign(it.secrets, encrypted);
+      it.updatedAt = now;
+      it.updatedBy = getUserName();
+      if (!saveInventory(inv)) return;
+      closeInvItemModal();
+      renderInventory();
+      const det = document.querySelector(`#invSections details[data-section="${sec.key}"]`);
+      if (det) det.open = true;
+      showToast('✅ ذخیره شد');
+    } finally {
+      invSaving = false;
+    }
+  }
+
+  async function deleteInvItem(id) {
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    if (!it) return;
+    const sec = INV_SECTIONS.find(s => s.key === it.section);
+    if (!await appConfirm(`«${it.data[sec.titleField] || ''}» از پرونده ${it.company} حذف شود؟`)) return;
+    // حذف نرم: محتوا و پسورد پاک می‌شود، فقط شناسه برای همگام‌سازی می‌ماند
+    it.deleted = true;
+    it.data = {};
+    it.secrets = {};
+    it.updatedAt = new Date().toISOString();
+    it.updatedBy = getUserName();
+    if (saveInventory(inv)) renderInventory();
+  }
 
   window.onload = init;
 </script>
