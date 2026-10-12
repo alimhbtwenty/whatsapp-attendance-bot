@@ -9,7 +9,7 @@
     const data = {};
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY) data[k] = localStorage.getItem(k);
+      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY && k !== MIRROR_SEQ_KEY) data[k] = localStorage.getItem(k);
     }
     return data;
   }

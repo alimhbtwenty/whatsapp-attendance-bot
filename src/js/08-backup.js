@@ -67,11 +67,12 @@
   // جایگزینی کل داده با پشتیبان، به‌صورت همه یا هیچ (اگر وسط کار حافظه پر شد، داده قبلی برمی‌گردد).
   // پرونده فنی جایگزین نمی‌شود بلکه ادغام می‌شود تا با بازگرداندن یک پشتیبان قدیمی هیچ نسخه‌ای از تاریخچه گم نشود؛
   // حساب‌های تیم و تنظیمات امنیتی خود گوشی (بیومتریک، شمارنده رمز اشتباه) هم دست نمی‌خورند.
-  const DEVICE_LOCAL_KEYS = ['geomat_mirror_seq', 'geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
+  const DEVICE_LOCAL_KEYS = ['geomat_bio_v1', 'geomat_vault_fail_v1', 'geomat_last_phone', 'geomat_bio_offered_v1', 'geomat_notif_asked_v1'];
   function replaceAppData(incoming) {
     const current = snapshotAppData();
     const next = { ...incoming };
     delete next[PRE_UPDATE_BACKUP_KEY];
+    delete next[MIRROR_SEQ_KEY]; // شمارنده نسخه دوم مال خود گوشی است و فقط با نوشتن‌ها بالا می‌رود
     if (current[TEAM_KEY]) next[TEAM_KEY] = current[TEAM_KEY];
     DEVICE_LOCAL_KEYS.forEach(k => { if (current[k] !== undefined) next[k] = current[k]; else delete next[k]; });
     const merged = mergeInventoryData(current[INVENTORY_KEY], incoming[INVENTORY_KEY], { admin: isAdmin() });

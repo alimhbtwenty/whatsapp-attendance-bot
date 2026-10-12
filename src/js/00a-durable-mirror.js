@@ -30,22 +30,30 @@
     };
   })();
 
-  // اول init، پیش از مهاجرت و هر خواندن داده
+  // اول init، پیش از مهاجرت و هر خواندن داده.
+  // نسخه دوم فقط وقتی «کامل» است (همه داده یک بار بی‌خطا نوشته شده و از آن به بعد هیچ نوشتنی شکست نخورده) مرجع است؛
+  // و بازگردانی فقط کلیدهایی را پاک می‌کند که نسخه دوم صریحاً «حذف‌شده» ثبت کرده، نه هر کلیدی که در آن نیست.
   function restoreFromMirror() {
     const br = mirrorBridge();
     if (!br) return;
     let snap = null;
     try { snap = JSON.parse(br.storeSnapshot() || 'null'); } catch(e) { return; }
     if (!snap || !snap.data || typeof snap.data !== 'object') return;
-    const keys = Object.keys(snap.data).filter(k => MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY && typeof snap.data[k] === 'string');
+    const valid = (k) => MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY;
+    const keys = Object.keys(snap.data).filter(k => valid(k) && typeof snap.data[k] === 'string');
+    const removed = Array.isArray(snap.removed) ? snap.removed.filter(k => typeof k === 'string' && valid(k) && !keys.includes(k)) : [];
     const local = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && MIRROR_KEY_RE.test(k) && k !== MIRROR_SEQ_KEY) local.push(k);
+      if (k && valid(k)) local.push(k);
     }
-    // نسخه دوم خالی است (اولین اجرای این نسخه): یک بار همه داده فعلی در آن نوشته می‌شود
-    if (!keys.length) {
-      local.forEach(k => { const v = localStorage.getItem(k); if (v !== null) noteMirrorSeq(br.storeSet(k, v)); });
+    if (snap.complete !== true) {
+      // نسخه دوم ناقص یا خالی (اولین اجرا بعد از آپدیت، یا یک نوشتنِ ناموفق): از داده فعلی دوباره ساخته می‌شود؛
+      // هیچ چیزی در localStorage عوض نمی‌شود
+      let allOk = true;
+      for (const k of local) { const v = localStorage.getItem(k); const seq = Number(br.storeSet(k, v)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
+      for (const k of keys) if (!local.includes(k)) { const seq = Number(br.storeRemove(k)); if (seq > 0) noteMirrorSeq(seq); else allOk = false; }
+      if (allOk && typeof br.storeMarkComplete === 'function') br.storeMarkComplete();
       return;
     }
     const localSeq = Number(localStorage.getItem(MIRROR_SEQ_KEY)) || 0;
@@ -53,7 +61,7 @@
     // localStorage از نسخه دوم عقب است: نوشته‌های آخر گم شده‌اند؛ همان وضع نسخه دوم برمی‌گردد
     mirrorPaused = true;
     try {
-      local.filter(k => !keys.includes(k)).forEach(k => nativeRemoveItem.call(localStorage, k));
+      removed.forEach(k => nativeRemoveItem.call(localStorage, k));
       keys.forEach(k => nativeSetItem.call(localStorage, k, snap.data[k]));
       nativeSetItem.call(localStorage, MIRROR_SEQ_KEY, String(Number(snap.seq)));
       mirrorRestored = true;

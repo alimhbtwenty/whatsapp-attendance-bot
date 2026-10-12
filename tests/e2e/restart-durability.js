@@ -16,15 +16,22 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   await p.addInitScript(() => {
     // «فایل‌های برنامه» در sessionStorage همین تب: با بارگذاری دوباره می‌مانند، مثل دیسک گوشی
     const NS = 'fake_native_store';
-    const load = () => JSON.parse(sessionStorage.getItem(NS) || '{"seq":0,"data":{}}');
+    // مثل MainActivity: seq، نشانه «کامل»، نشانه حذف هر کلید؛ هر نوشتنِ ناموفق «کامل» را پاک می‌کند.
+    // sessionStorage['fail_key'] = نوشتنِ همین کلید شکست بخورد (دیسک پر)
+    const load = () => JSON.parse(sessionStorage.getItem(NS) || '{"seq":0,"complete":false,"data":{},"removed":{}}');
     const save = (s) => Storage.prototype.setItem.call(sessionStorage, NS, JSON.stringify(s));
     window.__nativeCalls = [];
     window.AndroidBridge = {
       saveFile() {}, bioStatus: () => 'unavailable', bioEnrolled: () => false,
       scheduleExitReminder() {}, cancelExitReminder() {}, notificationPermission: () => 'granted', requestNotificationPermission() {},
-      storeSet(k, v) { window.__nativeCalls.push(k); const s = load(); s.data[k] = v; s.seq++; save(s); return String(s.seq); },
-      storeRemove(k) { window.__nativeCalls.push('-' + k); const s = load(); delete s.data[k]; s.seq++; save(s); return String(s.seq); },
-      storeSnapshot() { return JSON.stringify(load()); }
+      storeSet(k, v) {
+        window.__nativeCalls.push(k); const s = load();
+        if (sessionStorage.getItem('fail_key') === k) { s.complete = false; save(s); return '0'; }
+        s.data[k] = v; delete s.removed[k]; s.seq++; save(s); return String(s.seq);
+      },
+      storeRemove(k) { window.__nativeCalls.push('-' + k); const s = load(); delete s.data[k]; s.removed[k] = 1; s.seq++; save(s); return String(s.seq); },
+      storeMarkComplete() { const s = load(); s.complete = true; save(s); return true; },
+      storeSnapshot() { const s = load(); return JSON.stringify({ seq: s.seq, complete: s.complete, data: s.data, removed: Object.keys(s.removed) }); }
     };
     if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded', '1'); localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه'])); }
   });
@@ -79,7 +86,25 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   // فقط کلیدهای geomat_* به نسخه دوم می‌روند
   await p.evaluate(() => { window.__nativeCalls.length = 0; localStorage.setItem('other_key', 'x'); localStorage.setItem('geomat_user_name', 'نام'); });
   ok('only geomat_* keys are mirrored', await p.evaluate(() => JSON.stringify(window.__nativeCalls)) === JSON.stringify(['geomat_user_name']));
-  ok('the backup file does not carry the mirror counter', await p.evaluate(() => !DEVICE_LOCAL_KEYS.includes('x') && DEVICE_LOCAL_KEYS.includes('geomat_mirror_seq')));
+  ok('the backup file does not carry the mirror counter', await p.evaluate(() => { let data = null; const orig = window.downloadFile; window.downloadFile = (n, c) => { data = JSON.parse(c).data; return true; }; exportBackup(); window.downloadFile = orig; return data && !('geomat_mirror_seq' in data) && 'geomat_logs_v2' in data; }));
+
+  // ---------- بازبینی دور ۷: نسخه دوم ناقص هرگز داده را پاک نمی‌کند ----------
+  // نوشتنِ آرشیو در نسخه دوم شکست می‌خورد (دیسک پر) → «کامل» نیست؛ بعد یک نوشته دیگر گم می‌شود و برنامه دوباره باز می‌شود
+  await p.evaluate(() => Storage.prototype.setItem.call(sessionStorage, 'fail_key', 'geomat_logs_v2'));
+  await rec('out', 'out', '17', '00');
+  const logsNow = await p.evaluate(() => getLogs().length);
+  await rawSet();
+  await p.evaluate(() => { const s = Number(localStorage.getItem('geomat_mirror_seq')); window.__rawSet.call(localStorage, 'geomat_mirror_seq', String(s - 1)); });
+  await p.evaluate(() => Storage.prototype.setItem.call(sessionStorage, 'fail_key', ''));
+  await p.reload(); await p.waitForTimeout(800); await login(p);
+  ok('an incomplete mirror never removes or rolls back data', await p.evaluate(() => getLogs().length) === logsNow && await p.evaluate(() => !mirrorRestored && !!localStorage.getItem('geomat_team_v1')));
+  ok('an incomplete mirror is rebuilt from current data on the next start', await p.evaluate(() => JSON.parse(AndroidBridge.storeSnapshot()).complete === true && JSON.parse(AndroidBridge.storeSnapshot()).data.geomat_logs_v2 === localStorage.getItem('geomat_logs_v2')));
+
+  // بازگردانی فایل پشتیبان → شروع بعدی پیام «تغییرها برگردانده شد» نمی‌دهد (شمارنده جابه‌جا نمی‌شود)
+  await p.evaluate(() => { const d = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('geomat_')) d[k] = localStorage.getItem(k); } replaceAppData(d); });
+  await p.reload(); await p.waitForTimeout(800);
+  ok('restoring a backup does not trigger a false recovery on the next start', await p.evaluate(() => mirrorRestored === false));
+  ok('the counter is not in snapshots or restores', await p.evaluate(() => !('geomat_mirror_seq' in snapshotAppData())));
 
   ok('no page errors', !errs.length, errs.join(';'));
   await b.close();

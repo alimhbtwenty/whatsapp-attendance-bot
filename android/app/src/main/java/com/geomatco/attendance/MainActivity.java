@@ -56,6 +56,10 @@ public class MainActivity extends AppCompatActivity {
     // نسخه دوم داده روی دیسک: WebView نوشته‌های localStorage را با تأخیر ذخیره می‌کند و با ری‌استارت گوشی گم می‌شدند
     private static final Pattern STORE_KEY = Pattern.compile("^geomat_[a-z0-9_]+$");
     private static final String STORE_SEQ = ".seq";
+    // فقط وقتی همه داده یک بار کامل نوشته شده باشد؛ هر نوشتنِ ناموفق آن را پاک می‌کند (بازگردانی فقط از نسخه کامل)
+    private static final String STORE_COMPLETE = ".complete";
+    // نشانه حذف هر کلید (key.del)؛ بازگردانی فقط کلیدهایی را پاک می‌کند که واقعاً حذف شده‌اند
+    private static final String STORE_DEL = ".del";
     private final Object storeLock = new Object();
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -245,8 +249,11 @@ public class MainActivity extends AppCompatActivity {
             synchronized (storeLock) {
                 try {
                     writeAtomic(new File(storeDir(), key), value);
+                    File del = new File(storeDir(), key + STORE_DEL);
+                    if (del.exists() && !del.delete()) throw new IOException("tombstone");
                     return Long.toString(bumpStoreSeq());
                 } catch (Exception e) {
+                    clearStoreComplete();
                     return "0";
                 }
             }
@@ -257,10 +264,12 @@ public class MainActivity extends AppCompatActivity {
             if (!pageIsApp || key == null || !STORE_KEY.matcher(key).matches()) return "0";
             synchronized (storeLock) {
                 try {
+                    writeAtomic(new File(storeDir(), key + STORE_DEL), "1");
                     File f = new File(storeDir(), key);
-                    if (f.exists() && !f.delete()) return "0";
+                    if (f.exists() && !f.delete()) throw new IOException("delete");
                     return Long.toString(bumpStoreSeq());
                 } catch (Exception e) {
+                    clearStoreComplete();
                     return "0";
                 }
             }
@@ -272,18 +281,39 @@ public class MainActivity extends AppCompatActivity {
             synchronized (storeLock) {
                 try {
                     JSONObject data = new JSONObject();
+                    org.json.JSONArray removed = new org.json.JSONArray();
                     File[] files = storeDir().listFiles();
                     if (files != null) {
                         for (File f : files) {
-                            if (STORE_KEY.matcher(f.getName()).matches()) data.put(f.getName(), readText(f));
+                            String n = f.getName();
+                            if (STORE_KEY.matcher(n).matches()) data.put(n, readText(f));
+                            else if (n.endsWith(STORE_DEL) && STORE_KEY.matcher(n.substring(0, n.length() - STORE_DEL.length())).matches()) {
+                                removed.put(n.substring(0, n.length() - STORE_DEL.length()));
+                            }
                         }
                     }
                     JSONObject out = new JSONObject();
                     out.put("seq", readSeq());
+                    out.put("complete", new File(storeDir(), STORE_COMPLETE).exists());
                     out.put("data", data);
+                    out.put("removed", removed);
                     return out.toString();
                 } catch (Exception e) {
                     return "null";
+                }
+            }
+        }
+
+        // صفحه بعد از نوشتن کامل همه داده (بدون هیچ خطا) این را صدا می‌زند
+        @JavascriptInterface
+        public boolean storeMarkComplete() {
+            if (!pageIsApp) return false;
+            synchronized (storeLock) {
+                try {
+                    writeAtomic(new File(storeDir(), STORE_COMPLETE), "1");
+                    return true;
+                } catch (Exception e) {
+                    return false;
                 }
             }
         }
@@ -332,6 +362,11 @@ public class MainActivity extends AppCompatActivity {
             while ((n = in.read(chunk)) > 0) buf.write(chunk, 0, n);
             return new String(buf.toByteArray(), StandardCharsets.UTF_8);
         }
+    }
+
+    private void clearStoreComplete() {
+        File c = new File(storeDir(), STORE_COMPLETE);
+        if (c.exists()) c.delete();
     }
 
     private long readSeq() {
