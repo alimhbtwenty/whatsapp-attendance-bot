@@ -9,7 +9,10 @@ Read `docs/HANDOFF.md` (current state, open work, the owner's preferences), `doc
 Use the skills in `.claude/skills` for every task. Start with `using-agent-skills` to pick the right one for the phase of work (spec, implementation, `frontend-ui-engineering`, `browser-testing-with-devtools`, `debugging-and-error-recovery`, `code-review-and-quality`, `security-and-hardening`, ...), and review every change with `code-review-and-quality` before pushing.
 
 ## Project facts
-- The whole app is `index.html` (inline CSS/JS). `android/app/src/main/assets/index.html` and `assets/sw.js` must be byte-identical copies of the root files.
+- Source lives in `src/` (`index.template.html`, `styles/*.css`, `js/NN-*.js` concatenated in order into one classic script). `index.html` and `android/app/src/main/assets/*` are **generated**: edit `src/`, then run `npm run build`. CI fails if they are stale (`npm run check`).
+- No inline `on*=` handlers: use `data-click='["fn", args...]'` (also data-input/change/keydown/paste/blur) and add `fn` to `UI_ACTION_NAMES` in `src/js/12-ui-events.js`; in JS templates use `uiAttr('click', 'fn', ...args)`. The CSP allows only the bundled script (by hash), so inline handlers are blocked.
+- Tests: `npm test` (build check + every `tests/e2e/*.js` via `tools/test.mjs`). A test prints `PASS …`/`FAIL …`; any FAIL or non-zero exit fails CI and blocks the APK. Locally: `NODE_PATH=/opt/node22/lib/node_modules node tools/test.mjs [name]`.
+- Updates must never break stored data: keep the `geomat_*` keys and record shapes; add schema changes as idempotent steps in `runMigrations()` (`src/js/13-migrations.js`). `tests/e2e/upgrade-from-old-versions.js` opens data made by real 1.1–1.4 builds (`tests/fixtures`).
 - A release bumps together: `versionCode`/`versionName` in `android/app/build.gradle`, `CACHE_NAME` in both `sw.js` files, the release tag and notes in `.github/workflows/build-apk.yml`, and the version line in `README.md`.
 - `confirm()`/`alert()` do not show in the Android WebView; use `appConfirm()`. File downloads go through `downloadFile()` (`AndroidBridge.saveFile` in the APK).
 - Escape everything that goes into `innerHTML` with `escapeHtml()`.

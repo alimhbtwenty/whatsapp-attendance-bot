@@ -1,0 +1,14 @@
+{
+  "name": "geo-team",
+  "version": "1.4.0",
+  "private": true,
+  "description": "Geo Team: offline attendance, WhatsApp reports and team technical files (PWA + Android WebView)",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "check": "node tools/build.mjs --check",
+    "test": "node tools/build.mjs --check && node tools/test.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

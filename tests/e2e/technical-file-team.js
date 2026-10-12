@@ -1,0 +1,133 @@
+const { chromium } = require('playwright');
+const BASE = process.env.BASE_URL || 'http://localhost:8765';
+const OUT = process.env.TEST_OUT || require('path').join(__dirname, '..', 'output');
+require('fs').mkdirSync(OUT, { recursive: true });
+const fs = require('fs');
+const R=[]; const ok=(n,c,x='')=>{const l=(c?'PASS ':'FAIL ')+n+' '+x; console.log(l); R.push(l);};
+async function mkPage(b, seed) {
+  const ctx = await b.newContext({ viewport:{width:390,height:844}, isMobile:true, hasTouch:true, timezoneId:'Asia/Tehran', permissions:['clipboard-read','clipboard-write'], acceptDownloads:true });
+  const p = await ctx.newPage(); p.setDefaultTimeout(6000);
+  p.errs = []; p.on('pageerror', e=>p.errs.push(e.message)); p.on('dialog', d=>{ p.errs.push('native dialog'); d.dismiss(); });
+  await p.addInitScript((seed) => { if (!localStorage.getItem('seeded')) { localStorage.setItem('seeded','1'); localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه'])); localStorage.setItem('geomat_user_name','نام‌تایپی'); for (const k in seed) localStorage.setItem(k, seed[k]); } window.__xss = 0; }, seed || {});
+  await p.goto(BASE + '/index.html'); await p.waitForTimeout(600);
+  await p.click('#tabSupportBtn'); await p.click('#supportViewRow button:nth-child(2)'); await p.waitForTimeout(200);
+  return p;
+}
+const pw = async (p, a, b) => { await p.fill('#vaultPw1', a); if (b !== undefined) await p.fill('#vaultPw2', b); await p.click('#vaultModalOk'); await p.waitForTimeout(1800); };
+const login = async (p, name, pass) => { await p.selectOption('#invLoginUser', { label: new RegExp(name) ? undefined : name }).catch(()=>{});
+  const id = await p.evaluate((n) => getTeam().users.find(u=>u.name===n).id, name); await p.selectOption('#invLoginUser', id);
+  await p.fill('#invLoginPw', pass); await p.click('#invLoginBtn'); await p.waitForTimeout(1800); };
+const openAll = (p) => p.evaluate(() => document.querySelectorAll('#invSections details').forEach(d => d.open = true));
+const add = async (p, sec, fields, secret) => {
+  await p.evaluate((s) => { document.querySelector(`#invSections details[data-section="${s}"]`).open = true; }, sec); await p.click(`[data-add="${sec}"]`);
+  for (const [k,v] of Object.entries(fields)) { const el = p.locator(`#invItemForm [name="inv_${k}"]`); if (await el.evaluate(e=>e.tagName)==='SELECT') await el.selectOption({label:v}); else await el.fill(v); }
+  if (secret) await p.fill('#invItemForm [name="inv_password"]', secret);
+  await p.click('#invItemSaveBtn'); await p.waitForTimeout(500);
+};
+(async () => {
+  const b = await chromium.launch();
+  // ---- legacy v1 data (preview build) to migrate
+  const legacy = await (async () => { const p = await b.newPage(); await p.goto(BASE + '/index.html'); const r = await p.evaluate(async () => {
+      const salt = b64.enc(crypto.getRandomValues(new Uint8Array(16))); const k = await derivePasswordKey('old-master-1', salt, 310000);
+      const meta = { v:1, kdf:'PBKDF2-SHA256', iter:310000, salt, check: await encryptWith(k, 'geomat-vault-ok') };
+      const inv = { schema:1, items:[{ id:'11111111-1111-4111-8111-111111111111', company:'کرانه', section:'remotes', data:{tool:'AnyDesk', title:'قدیمی', remoteId:'999'}, secrets:{ password: await encryptWith(k, 'legacy-pass') }, createdAt:'2026-10-10T08:00:00Z', updatedAt:'2026-10-10T08:00:00Z', updatedBy:'علی' }] };
+      return { 'geomat_vault_meta_v1': JSON.stringify(meta), 'geomat_inventory_v1': JSON.stringify(inv) }; }); await p.close(); return r; })();
+
+  // ===== Admin phone
+  const A = await mkPage(b, legacy);
+  ok('locked: nothing shown before login', !(await A.locator('#invMain').isVisible()));
+  await A.fill('#invSetupName', 'مدیر'); await A.click('[data-act="setup"]');
+  await pw(A, 'admin-pass-1', 'admin-pass-1');
+  ok('migration prompt shown', await A.locator('#vaultModal.open').isVisible());
+  await pw(A, 'wrong-old'); ok('wrong old master rejected', (await A.locator('#vaultModalError').innerText()).includes('اشتباه'));
+  await pw(A, 'old-master-1');
+  ok('legacy meta removed', await A.evaluate(() => localStorage.getItem('geomat_vault_meta_v1') === null));
+  await A.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(A);
+  await A.click('[data-reveal$="|password"] >> nth=0'); await A.waitForTimeout(400);
+  ok('legacy password readable after migration', (await A.locator('[data-secret-view] >> nth=0').innerText()) === 'legacy-pass');
+  // admin adds tech
+  await A.click('[data-act="users"]'); await A.fill('#newUserName', 'رضا'); await A.click('[data-user-add]'); await pw(A, 'tech-pass-1', 'tech-pass-1');
+  ok('tech account created', await A.evaluate(() => getTeam().users.some(u => u.name === 'رضا' && u.role === 'tech')));
+  await A.click('#invPanelModal .dock-copy-btn');
+  await add(A, 'hosts', { name:'ESX01', hypervisor:'ESXi', ip:'10.0.0.10' }, 'esx-root');
+  // new company file
+  await A.click('text=➕ پرونده فنی جدید'); await A.fill('#invAskText', 'مشتری دور'); await A.click('#invAskOk'); await A.waitForTimeout(300);
+  ok('new company file', (await A.locator('#invCompaniesGrid').innerText()).includes('مشتری دور'));
+  await add(A, 'network', { kind:'ورک‌گروپ', name:'WORKGROUP' });
+  // export team file + backup data
+  const [dl] = await Promise.all([A.waitForEvent('download'), A.click('[data-act="export-team"]')]);
+  const teamPath = OUT + '/team-file.json'; await dl.saveAs(teamPath);
+  const teamFile = fs.readFileSync(teamPath, 'utf8');
+  ok('team file has no plaintext', !teamFile.includes('admin-pass') && !teamFile.includes('tech-pass'));
+  const store = await A.evaluate(() => { const d={}; for (let i=0;i<localStorage.length;i++){const k=localStorage.key(i); if(k.startsWith('geomat_')) d[k]=localStorage.getItem(k);} return d; });
+  ok('no plaintext secrets stored', !JSON.stringify(store).match(/esx-root|legacy-pass|admin-pass|tech-pass/));
+
+  // ===== Technician phone: same data (via backup) + team file
+  const T = await mkPage(b, { 'geomat_inventory_v1': store['geomat_inventory_v1'] });
+  ok('tech phone: setup screen until team file', (await T.locator('#invAuthCard').innerText()).includes('ورود فایل تیم'));
+  await T.setInputFiles('#teamFileInput', teamPath); await T.waitForTimeout(400);
+  await login(T, 'رضا', 'bad-pass'); ok('tech wrong pw rejected', (await T.locator('#invLoginErr').innerText()).includes('اشتباه'));
+  await login(T, 'رضا', 'tech-pass-1');
+  ok('tech logged in as tech', (await T.locator('#invAuthCard').innerText()).includes('تکنسین'));
+  ok('tech has no admin tools', await T.locator('[data-act="users"],[data-act="audit"],[data-act="deleted"]').count() === 0);
+  await T.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(T);
+  await T.screenshot({ path: OUT + '/tech-view.png' });
+  ok('tech has no delete/history buttons', await T.locator('[data-del],[data-history]').count() === 0);
+  await T.click('details[data-section="hosts"] [data-reveal]'); await T.waitForTimeout(300);
+  ok('tech can see password', (await T.locator('details[data-section="hosts"] [data-secret-view]').innerText()) === 'esx-root');
+  // tech edits: change IP and password, and tries to blank a field
+  await T.click('details[data-section="hosts"] [data-edit]');
+  await T.fill('#invItemForm [name="inv_ip"]', '10.0.0.99'); await T.fill('#invItemForm [name="inv_password"]', 'tech-changed');
+  await T.click('#invItemSaveBtn'); await T.waitForTimeout(400);
+  const xssName = '<img src=x onerror="window.__xss=1">';
+  await add(T, 'users', { name: xssName, username:'u1' });
+  ok('xss not executed', await T.evaluate(() => window.__xss) === 0);
+  // tech creates new company file
+  await T.click('text=➕ پرونده فنی جدید'); await T.fill('#invAskText', 'شرکت تکنسین'); await T.click('#invAskOk'); await T.waitForTimeout(300);
+  ok('tech can create company file', (await T.locator('#invCompaniesGrid').innerText()).includes('شرکت تکنسین'));
+  ok('tech cannot delete via code', await T.evaluate(async () => { const id = getInventory().items[0].id; await deleteInvItem(id); return !getInventory().items[0].deleted; }));
+  const techStore = await T.evaluate(() => localStorage.getItem('geomat_inventory_v1'));
+
+  // ===== Back on admin phone with tech's data
+  await A.evaluate((inv) => { localStorage.setItem('geomat_inventory_v1', inv); renderInventory(); }, techStore);
+  await A.click('#invCompaniesGrid [data-company="کرانه"]'); await openAll(A);
+  await A.click('details[data-section="hosts"] [data-history]'); await A.waitForTimeout(300);
+  const hist = await A.locator('#invPanelBody').innerText(); await A.screenshot({ path: OUT + '/history.png' });
+  ok('history shows tech name + change', hist.includes('رضا') && hist.includes('10.0.0.10') && hist.includes('10.0.0.99') && hist.includes('عوض شد'), '');
+  // reveal old password in history (oldest version index 0)
+  await A.click('[data-ver-reveal$="|0"]'); await A.waitForTimeout(300);
+  ok('admin sees previous password', (await A.locator('[data-ver-view$="|0"]').innerText()) === 'esx-root');
+  // restore the first version
+  await A.click('[data-restore$="|0"]'); await A.click('#confirmOkBtn'); await A.waitForTimeout(500);
+  const host = await A.evaluate(() => getInventory().items.find(i => i.section === 'hosts'));
+  ok('restore creates new version, keeps all', host.data.ip === '10.0.0.10' && host.history.length === 3 && host.history[2].action === 'restore');
+  await A.click('#invPanelModal .dock-copy-btn');
+  // audit log filter by person
+  await A.click('[data-act="audit"]'); await A.click('[data-audit-who="رضا"]'); await A.waitForTimeout(200);
+  const audit = await A.locator('#invPanelBody').innerText();
+  ok('audit filtered by tech', audit.includes('ویرایش') && audit.includes('رضا') && !audit.includes('ساخت حساب مدیر'));
+  await A.click('#invPanelModal .dock-copy-btn');
+  // delete + restore from deleted list
+  await openAll(A);
+  await A.click('details[data-section="hosts"] [data-del]'); await A.click('#confirmOkBtn'); await A.waitForTimeout(300);
+  ok('soft delete keeps data+history', await A.evaluate(() => { const h = getInventory().items.find(i => i.section === 'hosts'); return h.deleted && h.data.name === 'ESX01' && h.history.length === 4; }));
+  await A.click('[data-act="deleted"]'); await A.click('[data-undelete^="item|"]'); await A.waitForTimeout(300);
+  ok('undelete works', await A.evaluate(() => !getInventory().items.find(i => i.section === 'hosts').deleted));
+  await A.click('#invPanelModal .dock-copy-btn');
+  // deactivate tech -> tech login refused
+  await A.click('[data-act="users"]'); await A.click('[data-user-toggle]'); await A.waitForTimeout(200);
+  const teamNow = await A.evaluate(() => localStorage.getItem('geomat_team_v1'));
+  await T.evaluate((t) => { localStorage.setItem('geomat_team_v1', t); endSession(true); }, teamNow); await T.waitForTimeout(200);
+  ok('disabled tech not in login list', !(await T.locator('#invLoginUser').innerText()).includes('رضا'));
+  // auto-lock on background
+  await A.evaluate(() => { Object.defineProperty(document, 'hidden', { value: true, configurable: true }); document.dispatchEvent(new Event('visibilitychange')); Object.defineProperty(document, 'hidden', { value: false, configurable: true }); });
+  ok('locked after background', await A.evaluate(() => session === null) && !(await A.locator('#invMain').isVisible()));
+  // 5 wrong attempts throttle
+  for (let i = 0; i < 5; i++) await login(A, 'مدیر', 'nope' + i);
+  ok('throttled', (await A.locator('#invLoginErr').innerText()).includes('۳۰'));
+  await A.screenshot({ path: OUT + '/team-admin.png', fullPage: true });
+  await T.screenshot({ path: OUT + '/team-tech.png', fullPage: true });
+  ok('no errors', !A.errs.length && !T.errs.length, [...A.errs, ...T.errs].join(';'));
+  console.log('\n' + R.filter(r => r.startsWith('FAIL')).length + ' failures');
+  await b.close();
+})();

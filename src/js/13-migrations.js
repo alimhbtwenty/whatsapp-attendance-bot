@@ -1,0 +1,49 @@
+  // ==================== به‌روزرسانی امن داده ====================
+  // نام کلیدهای geomat_* و ساختار رکوردها عوض نمی‌شود؛ هر تغییر ساختار یک گام نسخه‌دار و فقط-افزودنی است.
+  // قبل از اولین اجرای 1.4، یک کپی کامل از همه داده گرفته می‌شود تا هر خرابی برگشت‌پذیر باشد.
+  const SCHEMA_VERSION_KEY = 'geomat_schema_version';
+  const PRE_UPDATE_BACKUP_KEY = 'geomat_backup_pre_1_4';
+  const SCHEMA_VERSION = 14;
+
+  function snapshotAppData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('geomat_') && k !== PRE_UPDATE_BACKUP_KEY) data[k] = localStorage.getItem(k);
+    }
+    return data;
+  }
+
+  function runMigrations() {
+    let from = 0;
+    try { from = parseInt(localStorage.getItem(SCHEMA_VERSION_KEY) || '0', 10) || 0; } catch(e) {}
+    if (from < 14) {
+      const data = snapshotAppData();
+      // نصب تازه (داده‌ای نیست) کپی لازم ندارد
+      if (Object.keys(data).length && !localStorage.getItem(PRE_UPDATE_BACKUP_KEY)) {
+        try {
+          localStorage.setItem(PRE_UPDATE_BACKUP_KEY, JSON.stringify({ at: new Date().toISOString(), from, data }));
+        } catch(e) {
+          // حافظه برای کپی کافی نیست: مهاجرتی که داده را تغییر می‌دهد انجام نمی‌شود تا چیزی از دست نرود
+          showToast('⚠️ حافظه برای پشتیبان پیش از به‌روزرسانی کافی نیست؛ لطفاً از تنظیمات فایل پشتیبان بگیرید');
+          return;
+        }
+      }
+    }
+    // گام‌های تا 1.4 (هر کدام تکرارپذیر و بی‌اثر در اجرای دوباره)
+    mergeLegacySplitStays();
+    try { localStorage.setItem(SCHEMA_VERSION_KEY, String(SCHEMA_VERSION)); } catch(e) {}
+  }
+
+  // برگرداندن کامل داده به لحظه پیش از به‌روزرسانی (از تنظیمات)
+  async function restorePreUpdateBackup() {
+    let snap = null;
+    try { snap = JSON.parse(localStorage.getItem(PRE_UPDATE_BACKUP_KEY) || 'null'); } catch(e) {}
+    if (!snap || !snap.data) { showToast('پشتیبان پیش از به‌روزرسانی وجود ندارد'); return; }
+    if (!await appConfirm('همه اطلاعات به لحظه پیش از نصب این نسخه برگردد؟ تغییرات بعد از آن از بین می‌رود.', 'برگرداندن')) return;
+    Object.keys(snapshotAppData()).forEach(k => localStorage.removeItem(k));
+    Object.entries(snap.data).forEach(([k, v]) => localStorage.setItem(k, v));
+    localStorage.setItem(SCHEMA_VERSION_KEY, String(SCHEMA_VERSION)); // دوباره مهاجرت و کپی نشود
+    showToast('♻️ اطلاعات پیش از به‌روزرسانی برگردانده شد');
+    setTimeout(() => location.reload(), 700);
+  }

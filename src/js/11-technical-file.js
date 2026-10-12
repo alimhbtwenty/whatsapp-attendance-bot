@@ -1,0 +1,601 @@
+  // ==================== پرونده فنی شرکت‌ها ====================
+  const ACCESS_METHODS = ['RDP', 'SSH', 'وب (HTTP/HTTPS)', 'VNC', 'SMB / اشتراک فایل', 'Winbox', 'Telnet', 'FTP/SFTP', 'سایر'];
+  const INV_SECTIONS = [
+    { key: 'network', title: '🌐 شبکه و دامین', titleField: 'name', fields: [
+      { k: 'kind', label: 'نوع', type: 'select', options: ['دامین', 'ورک‌گروپ'] },
+      { k: 'name', label: 'نام دامین یا ورک‌گروپ', required: true, ltr: true },
+      { k: 'range', label: 'رنج IP', ltr: true },
+      { k: 'gateway', label: 'گیت‌وی', ltr: true },
+      { k: 'dns', label: 'DNS', ltr: true },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'access', title: '🔌 سیستم‌های قابل دسترسی', titleField: 'title', fields: [
+      { k: 'title', label: 'عنوان', required: true },
+      { k: 'method', label: 'نحوه اتصال', type: 'select', options: ACCESS_METHODS },
+      { k: 'address', label: 'آدرس / پورت', ltr: true },
+      { k: 'username', label: 'یوزرنیم (اختیاری)', ltr: true },
+      { k: 'password', label: 'پسورد (اختیاری)', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'remotes', title: '🖥 ریموت (AnyDesk / RustDesk)', titleField: 'title', fields: [
+      { k: 'tool', label: 'برنامه', type: 'select', options: ['AnyDesk', 'RustDesk', 'TeamViewer', 'سایر'] },
+      { k: 'title', label: 'دستگاه / عنوان', required: true },
+      { k: 'remoteId', label: 'ID', required: true, ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'hosts', title: '🗄 سرورهای فیزیکی / ESXi', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'hypervisor', label: 'مجازی‌سازی', type: 'select', options: ['ESXi', 'Proxmox', 'Hyper-V', 'بدون مجازی‌سازی'] },
+      { k: 'version', label: 'نسخه', ltr: true },
+      { k: 'model', label: 'مدل سخت‌افزار', ltr: true },
+      { k: 'cpu', label: 'CPU', ltr: true },
+      { k: 'ram', label: 'RAM', ltr: true },
+      { k: 'disks', label: 'دیسک‌ها', ltr: true },
+      { k: 'ip', label: 'IP', ltr: true },
+      { k: 'mgmtIp', label: 'IP مدیریت (iLO / iDRAC)', ltr: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'servers', title: '💽 سرورها و ماشین‌های مجازی', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'role', label: 'نقش (DC، فایل، دیتابیس...)' },
+      { k: 'os', label: 'سیستم‌عامل', ltr: true },
+      { k: 'host', label: 'میزبان', type: 'ref', ref: ['hosts'], empty: 'فیزیکی مستقل / نامشخص' },
+      { k: 'cpu', label: 'CPU', ltr: true },
+      { k: 'ram', label: 'RAM', ltr: true },
+      { k: 'disk', label: 'دیسک', ltr: true },
+      { k: 'ip', label: 'IP', ltr: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'password', label: 'پسورد', type: 'secret' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'apps', title: '📦 برنامه‌ها', titleField: 'name', fields: [
+      { k: 'name', label: 'نام برنامه', required: true },
+      { k: 'version', label: 'نسخه', ltr: true },
+      { k: 'server', label: 'روی سرور', type: 'ref', ref: ['servers', 'hosts'], empty: 'نامشخص' },
+      { k: 'license', label: 'لایسنس', ltr: true },
+      { k: 'expiry', label: 'تاریخ انقضا' },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] },
+    { key: 'users', title: '👥 کاربرها', titleField: 'name', fields: [
+      { k: 'name', label: 'نام', required: true },
+      { k: 'username', label: 'یوزرنیم', ltr: true },
+      { k: 'dept', label: 'سمت / بخش' },
+      { k: 'computer', label: 'سیستم / IP', ltr: true },
+      { k: 'email', label: 'ایمیل', ltr: true },
+      { k: 'note', label: 'توضیح', type: 'textarea' } ] }
+  ];
+  const INV_FILTERS = [
+    { key: 'all', label: 'همه' },
+    { key: 'domain', label: 'دامین' },
+    { key: 'workgroup', label: 'ورک‌گروپ' },
+    { key: 'esxi', label: 'دارای ESXi' }
+  ];
+  const ACTION_LABELS = { create: 'افزودن', edit: 'ویرایش', delete: 'حذف', restore: 'برگرداندن' };
+  let supportView = 'report';
+  let invFilter = 'all';
+  let invEditing = null; // { section, id|null }
+  const invRevealTimers = {};
+  const sectionOf = (key) => INV_SECTIONS.find(s => s.key === key);
+  const fieldLabel = (f) => f.label.replace(/ \(.*\)/, '');
+
+  function getInventory() {
+    try {
+      const o = JSON.parse(localStorage.getItem(INVENTORY_KEY) || 'null');
+      if (o && (o.schema === 1 || o.schema === 2) && Array.isArray(o.items)) {
+        o.items = o.items.filter(i => i && typeof i === 'object' && typeof i.id === 'string' && i.id && typeof i.company === 'string' &&
+          INV_SECTIONS.some(sec => sec.key === i.section) && i.data && typeof i.data === 'object');
+        // پیش‌نمایش 1.4 تاریخچه نداشت: وضع فعلی اولین نسخه می‌شود
+        o.items.forEach(i => {
+          if (Array.isArray(i.history)) i.history = i.history.filter(h => h && typeof h === 'object' && h.data && typeof h.data === 'object');
+          if (!Array.isArray(i.history) || !i.history.length) {
+            const by = i.updatedBy && typeof i.updatedBy === 'object' ? i.updatedBy : { id: null, name: String(i.updatedBy || '') };
+            i.history = [{ at: i.updatedAt || i.createdAt || new Date().toISOString(), by, action: i.deleted ? 'delete' : 'create', data: { ...i.data }, secrets: { ...(i.secrets || {}) } }];
+          }
+          if (i.updatedBy && typeof i.updatedBy !== 'object') i.updatedBy = { id: null, name: String(i.updatedBy) };
+        });
+        o.companies = Array.isArray(o.companies) ? o.companies.filter(c => c && typeof c.id === 'string' && typeof c.name === 'string') : [];
+        o.companies.forEach(c => { c.history = Array.isArray(c.history) ? c.history.filter(h => h && typeof h === 'object') : []; });
+        o.schema = 2;
+        return o;
+      }
+    } catch(e) {}
+    return { schema: 2, companies: [], items: [] };
+  }
+  function saveInventory(inv) {
+    try {
+      localStorage.setItem(INVENTORY_KEY, JSON.stringify(inv));
+      return true;
+    } catch(e) {
+      showToast('⚠️ حافظه پر است؛ پرونده ذخیره نشد');
+      return false;
+    }
+  }
+  // نسخه تازه؛ هیچ نسخه قبلی پاک یا بازنویسی نمی‌شود
+  function pushVersion(it, action) {
+    const now = new Date().toISOString();
+    it.history = it.history || [];
+    it.history.push({ at: now, by: sessionWho(), action, data: { ...it.data }, secrets: { ...(it.secrets || {}) } });
+    it.updatedAt = now;
+    it.updatedBy = sessionWho();
+  }
+
+  function invCompanyNames(inv) {
+    const names = [...getCompanies()];
+    inv.companies.filter(c => !c.deleted).forEach(c => { if (!names.includes(c.name)) names.push(c.name); });
+    return names;
+  }
+  function liveItems(inv, company, section) {
+    return inv.items.filter(i => !i.deleted && i.company === company && (!section || i.section === section));
+  }
+  function companyTraits(inv, company) {
+    const items = liveItems(inv, company);
+    return {
+      domain: items.some(i => i.section === 'network' && i.data.kind === 'دامین'),
+      workgroup: items.some(i => i.section === 'network' && i.data.kind === 'ورک‌گروپ'),
+      esxi: items.some(i => i.section === 'hosts' && i.data.hypervisor === 'ESXi')
+    };
+  }
+
+  function setSupportView(view) {
+    playTactileFeedback();
+    supportView = view;
+    const btns = document.querySelectorAll('#supportViewRow .pill-opt-btn');
+    btns[0].classList.toggle('selected', view === 'report');
+    btns[1].classList.toggle('selected', view === 'inventory');
+    document.getElementById('supportReportView').style.display = view === 'report' ? '' : 'none';
+    document.getElementById('supportInventoryView').style.display = view === 'inventory' ? '' : 'none';
+    // دکمه‌های ارسال واتساپ برای پرونده فنی معنی ندارد
+    document.getElementById('floatingDock').style.display = view === 'inventory' ? 'none' : 'flex';
+    if (view === 'inventory') renderInventory();
+  }
+
+  function itemLabel(inv, id) {
+    const it = inv.items.find(i => i.id === id && !i.deleted);
+    return it ? (it.data[sectionOf(it.section).titleField] || '') : '';
+  }
+  function whenLabel(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    const j = dateToJalali(d);
+    return toPersianDigits(`${j.jy}/${pad2(j.jm)}/${pad2(j.jd)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`);
+  }
+
+  function renderAuthCard() {
+    const card = document.getElementById('invAuthCard');
+    const team = getTeam();
+    if (session) {
+      card.innerHTML = `<div class="card-header-bar">
+          <span class="inv-who">👤 ${escapeHtml(session.user.name)}<span class="inv-role ${isAdmin() ? '' : 'tech'}">${ROLE_LABELS[session.user.role]}</span></span>
+          <button class="inv-vault-btn" data-act="logout">🔒 خروج</button>
+        </div>
+        <div class="inv-tools">
+          <button class="inv-vault-btn" data-act="mypw">🔑 تغییر رمز من</button>
+          ${isAdmin() ? `<button class="inv-vault-btn" data-act="users">👥 کاربران</button>
+          <button class="inv-vault-btn" data-act="audit">📜 گزارش تغییرات</button>
+          <button class="inv-vault-btn" data-act="deleted">🗑 حذف‌شده‌ها</button>
+          <button class="inv-vault-btn" data-act="export-team">📤 فایل تیم</button>` : ''}
+        </div>`;
+      return;
+    }
+    const importBtn = `<button class="inv-link-btn" data-act="import-team">📥 ورود فایل تیم</button>
+      <input type="file" id="teamFileInput" accept=".json,application/json" style="display:none;" data-change='["importTeamFile", "$this"]'>`;
+    if (!team) {
+      card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🛡 راه‌اندازی پرونده فنی</div></div>
+        <div style="font-size:11.5px; color:var(--text-muted); line-height:1.9;">مدیر اینجا حساب خودش را می‌سازد و بعد برای هر تکنسین حساب جدا. تکنسین‌ها «فایل تیم» را از مدیر می‌گیرند.</div>
+        <div class="inv-auth-row"><input type="text" class="cyber-input" id="invSetupName" maxlength="60" placeholder="نام مدیر"><button class="install-btn" style="padding:10px 14px;" data-act="setup">ساخت حساب مدیر</button></div>
+        <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
+        <div>${importBtn}</div>`;
+      return;
+    }
+    const users = team.users.filter(u => u.active);
+    card.innerHTML = `<div class="card-header-bar"><div class="title-tag"><span class="gold-marker"></span> 🔑 ورود به پرونده فنی</div></div>
+      <div class="inv-auth-row">
+        <select class="cyber-input" id="invLoginUser">${users.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.name)} (${ROLE_LABELS[u.role]})</option>`).join('')}</select>
+        <input type="password" class="cyber-input" id="invLoginPw" dir="ltr" maxlength="128" autocomplete="current-password" placeholder="رمز">
+      </div>
+      <button class="install-btn" style="padding:10px;" id="invLoginBtn" data-act="login">ورود</button>
+      <div style="font-size:11.5px; color:var(--danger); min-height:14px;" id="invLoginErr"></div>
+      <div>${importBtn}</div>`;
+  }
+
+  function renderInventory() {
+    renderAuthCard();
+    const main = document.getElementById('invMain');
+    main.style.display = session ? 'flex' : 'none';
+    if (!session) {
+      document.getElementById('invSections').innerHTML = '';
+      return;
+    }
+    const inv = getInventory();
+    const comps = invCompanyNames(inv);
+
+    document.getElementById('invFilterRow').innerHTML = INV_FILTERS.map(f =>
+      `<button class="date-q-btn ${invFilter === f.key ? 'selected' : ''}" data-filter="${f.key}">${f.label}</button>`).join('');
+
+    const shown = comps.filter(c => invFilter === 'all' || companyTraits(inv, c)[invFilter]);
+    const grid = document.getElementById('invCompaniesGrid');
+    grid.innerHTML = shown.length
+      ? shown.map(c => `<div class="comp-chip ${c === selectedCompany ? 'selected' : ''}" data-company="${escapeHtml(c)}">${escapeHtml(c)}</div>`).join('')
+      : `<div class="inv-empty" style="grid-column:1/-1;">${comps.length ? 'شرکتی با این فیلتر نیست' : '«➕ پرونده فنی جدید» را بزنید'}</div>`;
+
+    const box = document.getElementById('invSections');
+    if (!selectedCompany || !comps.includes(selectedCompany)) { box.innerHTML = ''; return; }
+    const q = document.getElementById('invSearchInput').value.trim().toLowerCase();
+    const openNow = new Set([...box.querySelectorAll('details[open]')].map(d => d.dataset.section));
+    box.innerHTML = INV_SECTIONS.map(sec => {
+      const all = liveItems(inv, selectedCompany, sec.key);
+      const items = q ? all.filter(i => Object.values(i.data).some(v => String(v).toLowerCase().includes(q))) : all;
+      const open = q ? items.length > 0 : openNow.has(sec.key);
+      return `<details class="frost-card inv-section" data-section="${sec.key}" ${open ? 'open' : ''}>
+        <summary><span>${sec.title}</span><span class="inv-count">${toPersianDigits(items.length)}${q ? ' / ' + toPersianDigits(all.length) : ''}</span></summary>
+        <div class="inv-items">
+          ${items.map(it => renderInvItem(inv, sec, it)).join('') || `<div class="inv-empty">${q ? 'موردی پیدا نشد' : 'چیزی ثبت نشده'}</div>`}
+          <button class="add-comp-pill" data-add="${sec.key}">➕ افزودن</button>
+        </div>
+      </details>`;
+    }).join('');
+  }
+
+  function renderInvItem(inv, sec, it) {
+    const id = escapeHtml(it.id);
+    const rows = sec.fields.filter(f => f.k !== sec.titleField && f.type !== 'secret').map(f => {
+      let v = it.data[f.k];
+      if (f.type === 'ref') v = itemLabel(inv, v);
+      if (!v) return '';
+      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
+    }).join('');
+    const secrets = sec.fields.filter(f => f.type === 'secret' && it.secrets && it.secrets[f.k]).map(f =>
+      `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(fieldLabel(f))}:</b>
+        <code data-secret-view="${id}|${f.k}">••••••</code>
+        <button data-reveal="${id}|${f.k}">👁 نمایش</button>
+        <button data-copy="${id}|${f.k}">📋 کپی</button></div>`).join('');
+    const by = it.updatedBy && it.updatedBy.name ? `${escapeHtml(it.updatedBy.name)} · ` : '';
+    return `<div class="inv-item">
+      <div class="inv-item-head">
+        <span class="inv-item-title">${escapeHtml(it.data[sec.titleField] || '—')}</span>
+        <span class="inv-item-actions"><button data-edit="${id}" title="ویرایش">✏️</button>${isAdmin()
+          ? `<button data-history="${id}" title="تاریخچه">🕘</button><button data-del="${id}" title="حذف">🗑</button>` : ''}</span>
+      </div>${rows}${secrets}
+      <div class="inv-meta">آخرین تغییر: ${by}${whenLabel(it.updatedAt)}</div></div>`;
+  }
+
+  // همه کلیک‌های پرونده فنی و پنل‌ها از یک‌جا (بدون onclick داخل متن HTML)
+  document.addEventListener('click', (e) => {
+    const view = document.getElementById('supportInventoryView');
+    const panel = document.getElementById('invPanelModal');
+    if (!view || (!view.contains(e.target) && !panel.contains(e.target))) return;
+    touchSession();
+    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who]');
+    if (!t) return;
+    const d = t.dataset;
+    const acts = {
+      login: loginInventory, setup: setupAdmin, logout: () => endSession(false), mypw: changeMyPassword,
+      users: openUsersPanel, audit: () => openAuditPanel(''), deleted: openDeletedPanel, 'export-team': exportTeamFile,
+      'import-team': () => document.getElementById('teamFileInput').click()
+    };
+    if (d.act) { if (acts[d.act]) acts[d.act](); return; }
+    if (d.filter) { invFilter = d.filter; renderInventory(); }
+    else if (d.company !== undefined) { selectedCompany = d.company; renderCompanies(); updatePreview(); updateSupportPreview(); renderInventory(); }
+    else if (!session) return;
+    else if (d.add) openInvItemModal(d.add, null);
+    else if (d.edit) { const it = getInventory().items.find(i => i.id === d.edit); if (it) openInvItemModal(it.section, it.id); }
+    else if (d.del) deleteInvItem(d.del);
+    else if (d.history) openHistoryPanel(d.history);
+    else if (d.reveal) revealSecret(d.reveal, `[data-secret-view="${CSS.escape(d.reveal)}"]`);
+    else if (d.copy) copySecret(d.copy);
+    else if (d.restore) restoreVersion(d.restore);
+    else if (d.undelete) restoreDeleted(d.undelete);
+    else if (d.verReveal) revealSecret(d.verReveal, `[data-ver-view="${CSS.escape(d.verReveal)}"]`);
+    else if (d.userPw) resetUserPassword(d.userPw);
+    else if (d.userToggle) toggleUserActive(d.userToggle);
+    else if (d.userAdd) addTeamUser();
+    else if (d.auditWho !== undefined) openAuditPanel(d.auditWho);
+  });
+
+  // ref: «id|field» برای پسورد فعلی، یا «id|field|index» برای پسوردِ یک نسخه قدیمی (فقط مدیر)
+  async function readSecret(ref) {
+    if (!session) return null;
+    const [id, field, ver] = ref.split('|');
+    const it = getInventory().items.find(i => i.id === id);
+    if (!it) return null;
+    let src = it.secrets;
+    if (ver !== undefined) {
+      if (!isAdmin()) return null;
+      src = (it.history[Number(ver)] || {}).secrets;
+    }
+    if (!src || !src[field]) return null;
+    try {
+      return await decryptWith(session.key, src[field]);
+    } catch(e) {
+      showToast('⚠️ این پسورد با کلید این تیم باز نمی‌شود');
+      return null;
+    }
+  }
+  async function revealSecret(ref, selector) {
+    const pw = await readSecret(ref);
+    if (pw === null) return;
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.textContent = pw;
+    clearTimeout(invRevealTimers[ref]);
+    invRevealTimers[ref] = setTimeout(() => { if (el.isConnected) el.textContent = '••••••'; }, 10000);
+  }
+  async function copySecret(ref) {
+    const pw = await readSecret(ref);
+    if (pw === null) return;
+    try {
+      await navigator.clipboard.writeText(pw);
+    } catch(e) {
+      showToast('⚠️ کپی ممکن نشد');
+      return;
+    }
+    showToast('📋 پسورد کپی شد (۳۰ ثانیه بعد از کلیپ‌بورد پاک می‌شود)');
+    setTimeout(async () => {
+      try {
+        if (await navigator.clipboard.readText() !== pw) return;
+      } catch(e) {}
+      navigator.clipboard.writeText('').catch(() => {});
+    }, 30000);
+  }
+
+  async function createInvCompany() {
+    if (!session) return;
+    const r = await askText('➕ پرونده فنی جدید', 'نام شرکت یا مشتری');
+    if (!r || !session) return;
+    const inv = getInventory();
+    if (invCompanyNames(inv).includes(r)) { selectedCompany = r; renderInventory(); showToast('این شرکت از قبل هست'); return; }
+    const old = inv.companies.find(c => c.name === r && c.deleted);
+    const now = new Date().toISOString();
+    if (old) {
+      old.deleted = false;
+      old.history.push({ at: now, by: sessionWho(), action: 'restore', name: r });
+    } else {
+      inv.companies.push({ id: newId(), name: r, createdAt: now, createdBy: sessionWho(), history: [{ at: now, by: sessionWho(), action: 'create', name: r }] });
+    }
+    if (!saveInventory(inv)) return;
+    selectedCompany = r;
+    renderInventory();
+    showToast('✅ پرونده فنی ساخته شد');
+  }
+  // پرسش یک متن کوتاه (prompt در اپ اندروید کار نمی‌کند)
+  function askText(title, placeholder) {
+    return new Promise(resolve => {
+      openInvPanel(title, `<input type="text" class="cyber-input" id="invAskText" maxlength="80" placeholder="${escapeHtml(placeholder)}">
+        <button class="install-btn" style="padding:10px;" id="invAskOk">تأیید</button>`);
+      const input = document.getElementById('invAskText');
+      setTimeout(() => input.focus(), 100);
+      const done = (v) => { panelOnClose = null; closeInvPanel(); resolve(v); };
+      panelOnClose = () => resolve(null);
+      document.getElementById('invAskOk').onclick = () => {
+        const v = input.value.replace(/\s+/g, ' ').trim();
+        if (v) done(v);
+      };
+      input.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('invAskOk').click(); } };
+    });
+  }
+
+  function openInvItemModal(sectionKey, id) {
+    if (!session) return;
+    if (!selectedCompany) { showToast('اول شرکت را انتخاب کنید'); return; }
+    const sec = sectionOf(sectionKey);
+    const inv = getInventory();
+    const it = id ? inv.items.find(i => i.id === id) : null;
+    invEditing = { section: sectionKey, id };
+    document.getElementById('invItemTitle').textContent = `${it ? '✏️ ویرایش' : '➕ افزودن'} — ${sec.title.replace(/^\S+\s/, '')} (${it ? it.company : selectedCompany})`;
+    const form = document.getElementById('invItemForm');
+    form.innerHTML = sec.fields.map(f => {
+      const v = it ? (it.data[f.k] || '') : '';
+      const name = `inv_${f.k}`;
+      if (f.type === 'select') {
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}">${f.options.map(o =>
+          `<option ${o === v ? 'selected' : ''}>${escapeHtml(o)}</option>`).join('')}</select></label>`;
+      }
+      if (f.type === 'ref') {
+        const opts = inv.items.filter(i => !i.deleted && i.company === (it ? it.company : selectedCompany) && f.ref.includes(i.section) && i.id !== id);
+        return `<label>${escapeHtml(f.label)}<select class="cyber-input" name="${name}"><option value="">${escapeHtml(f.empty)}</option>${opts.map(o =>
+          `<option value="${escapeHtml(o.id)}" ${o.id === v ? 'selected' : ''}>${escapeHtml(itemLabel(inv, o.id))}</option>`).join('')}</select></label>`;
+      }
+      if (f.type === 'textarea') {
+        return `<label>${escapeHtml(f.label)}<textarea class="cyber-input" name="${name}" maxlength="1000" style="min-height:60px; resize:vertical;">${escapeHtml(v)}</textarea></label>`;
+      }
+      if (f.type === 'secret') {
+        const has = it && it.secrets && it.secrets[f.k];
+        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
+          (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد (نسخه قبلی در تاریخچه می‌ماند)</label>` : '');
+      }
+      return `<label>${escapeHtml(f.label)}${f.required ? ' *' : ''}<input type="text" class="cyber-input" name="${name}" maxlength="200" ${f.ltr ? 'dir="ltr"' : ''} value="${escapeHtml(v)}"></label>`;
+    }).join('');
+    document.getElementById('invItemModal').classList.add('open');
+  }
+  function closeInvItemModal() {
+    document.getElementById('invItemModal').classList.remove('open');
+    document.getElementById('invItemForm').innerHTML = ''; // پسورد تایپ‌شده در DOM نماند
+    invEditing = null;
+  }
+
+  let invSaving = false;
+  async function saveInvItem() {
+    if (!invEditing || invSaving || !session) return;
+    const sec = sectionOf(invEditing.section);
+    const form = document.getElementById('invItemForm');
+    const val = (k) => { const el = form.querySelector(`[name="inv_${k}"]`); return el ? el.value : ''; };
+    const data = {};
+    const newSecrets = {};
+    const clearSecrets = [];
+    for (const f of sec.fields) {
+      if (f.type === 'secret') {
+        const pw = val(f.k);
+        if (pw) newSecrets[f.k] = pw;
+        const clr = form.querySelector(`[name="inv_${f.k}_clear"]`);
+        if (clr && clr.checked) clearSecrets.push(f.k);
+        continue;
+      }
+      const v = val(f.k).replace(f.type === 'textarea' ? /[^\S\n]+/g : /\s+/g, ' ').trim();
+      if (f.required && !v) { showToast(`«${f.label}» را بنویسید`); return; }
+      if (v) data[f.k] = v;
+    }
+    invSaving = true;
+    try {
+      const encrypted = {};
+      for (const k of Object.keys(newSecrets)) encrypted[k] = await encryptWith(session.key, newSecrets[k]);
+      const inv = getInventory();
+      let it = invEditing.id ? inv.items.find(i => i.id === invEditing.id) : null;
+      const isNew = !it;
+      if (isNew) {
+        it = { id: newId(), company: selectedCompany, section: sec.key, data: {}, secrets: {}, createdAt: new Date().toISOString(), history: [] };
+        inv.items.push(it);
+      }
+      const secrets = { ...(it.secrets || {}) };
+      clearSecrets.forEach(k => delete secrets[k]);
+      Object.assign(secrets, encrypted);
+      if (!isNew && JSON.stringify(it.data) === JSON.stringify(data) && !Object.keys(encrypted).length && !clearSecrets.length) {
+        closeInvItemModal();
+        return;
+      }
+      it.data = data;
+      it.secrets = secrets;
+      pushVersion(it, isNew ? 'create' : 'edit');
+      if (!saveInventory(inv)) return;
+      closeInvItemModal();
+      renderInventory();
+      const det = document.querySelector(`#invSections details[data-section="${sec.key}"]`);
+      if (det) det.open = true;
+      showToast('✅ ذخیره شد');
+    } finally {
+      invSaving = false;
+    }
+  }
+
+  // فقط مدیر؛ حذف نرم: داده و تاریخچه می‌ماند و از «حذف‌شده‌ها» برمی‌گردد
+  async function deleteInvItem(id) {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    if (!it) return;
+    if (!await appConfirm(`«${it.data[sectionOf(it.section).titleField] || ''}» از پرونده ${it.company} حذف شود؟ (در «حذف‌شده‌ها» قابل برگشت است)`)) return;
+    it.deleted = true;
+    pushVersion(it, 'delete');
+    if (saveInventory(inv)) renderInventory();
+  }
+
+  // ---------- پنل‌ها (مدیر) ----------
+  let panelOnClose = null;
+  function openInvPanel(title, html) {
+    document.getElementById('invPanelTitle').textContent = title;
+    document.getElementById('invPanelBody').innerHTML = html;
+    document.getElementById('invPanelModal').classList.add('open');
+  }
+  function closeInvPanel() {
+    document.getElementById('invPanelModal').classList.remove('open');
+    document.getElementById('invPanelBody').innerHTML = '';
+    const cb = panelOnClose;
+    panelOnClose = null;
+    if (cb) cb();
+  }
+
+  // فیلدهای عوض‌شده بین دو نسخه، به‌صورت «قبلی ← جدید»
+  function versionDiff(inv, sec, prev, cur, id, index) {
+    const out = [];
+    sec.fields.forEach(f => {
+      if (f.type === 'secret') {
+        const a = prev && prev.secrets && prev.secrets[f.k];
+        const b = cur.secrets && cur.secrets[f.k];
+        if (JSON.stringify(a || null) === JSON.stringify(b || null)) return;
+        const what = !a ? 'ثبت شد' : !b ? 'پاک شد' : 'عوض شد';
+        out.push(`<div><b>${escapeHtml(fieldLabel(f))}:</b> ${what}${b ? ` <code data-ver-view="${escapeHtml(id)}|${f.k}|${index}">••••••</code> <button data-ver-reveal="${escapeHtml(id)}|${f.k}|${index}">👁</button>` : ''}</div>`);
+        return;
+      }
+      const show = (v) => f.type === 'ref' ? (itemLabel(inv, v) || (v ? '(حذف‌شده)' : '')) : (v || '');
+      const a = prev ? (prev.data || {})[f.k] : undefined;
+      const b = (cur.data || {})[f.k];
+      if ((a || '') === (b || '')) return;
+      out.push(`<div><b>${escapeHtml(fieldLabel(f))}:</b> ${a ? `<del>${escapeHtml(show(a))}</del> ← ` : ''}${b ? `<ins>${escapeHtml(show(b))}</ins>` : '<del>(خالی شد)</del>'}</div>`);
+    });
+    return out.join('') || '<div>بدون تغییر در فیلدها</div>';
+  }
+
+  function openHistoryPanel(id) {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    if (!it) return;
+    const sec = sectionOf(it.section);
+    const last = it.history.length - 1;
+    const html = it.history.map((v, i) => ({ v, i })).reverse().map(({ v, i }) => `<div class="inv-ver">
+        <div class="inv-ver-head"><span>${escapeHtml(ACTION_LABELS[v.action] || v.action)} — ${escapeHtml((v.by && v.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(v.at)}</span></div>
+        <div class="inv-diff">${versionDiff(inv, sec, i > 0 ? it.history[i - 1] : null, v, it.id, i)}</div>
+        ${i < last && v.action !== 'delete' ? `<button data-restore="${escapeHtml(it.id)}|${i}">↩️ برگرداندن این نسخه</button>` : ''}
+      </div>`).join('');
+    openInvPanel(`🕘 تاریخچه «${it.data[sec.titleField] || ''}» (${it.company})`, html);
+  }
+
+  async function restoreVersion(ref) {
+    if (!isAdmin()) return;
+    const [id, idx] = ref.split('|');
+    const inv = getInventory();
+    const it = inv.items.find(i => i.id === id);
+    const v = it && it.history[Number(idx)];
+    if (!v || !await appConfirm(`نسخه ${whenLabel(v.at)} برگردانده شود؟ (نسخه فعلی در تاریخچه می‌ماند)`, 'برگرداندن')) return;
+    it.data = { ...v.data };
+    it.secrets = { ...(v.secrets || {}) };
+    it.deleted = false;
+    pushVersion(it, 'restore');
+    if (!saveInventory(inv)) return;
+    showToast('↩️ برگردانده شد');
+    renderInventory();
+    openHistoryPanel(id);
+  }
+
+  function openDeletedPanel() {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const items = inv.items.filter(i => i.deleted).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+    const comps = inv.companies.filter(c => c.deleted);
+    const html = [
+      ...comps.map(c => `<div class="inv-ver"><div class="inv-ver-head"><span>🏢 پرونده «${escapeHtml(c.name)}»</span></div><button data-undelete="company|${escapeHtml(c.id)}">↩️ برگرداندن</button></div>`),
+      ...items.map(it => {
+        const sec = sectionOf(it.section);
+        return `<div class="inv-ver"><div class="inv-ver-head"><span>${sec.title.split(' ')[0]} ${escapeHtml(it.data[sec.titleField] || '')} — ${escapeHtml(it.company)}</span>
+          <span class="inv-meta">${escapeHtml((it.updatedBy && it.updatedBy.name) || '')} · ${whenLabel(it.updatedAt)}</span></div>
+          <div class="inv-tools"><button data-undelete="item|${escapeHtml(it.id)}">↩️ برگرداندن</button><button data-history="${escapeHtml(it.id)}">🕘 تاریخچه</button></div></div>`;
+      })
+    ].join('') || '<div class="inv-empty">چیزی حذف نشده</div>';
+    openInvPanel('🗑 حذف‌شده‌ها', html);
+  }
+  function restoreDeleted(ref) {
+    if (!isAdmin()) return;
+    const [kind, id] = ref.split('|');
+    const inv = getInventory();
+    if (kind === 'company') {
+      const c = inv.companies.find(x => x.id === id);
+      if (!c) return;
+      c.deleted = false;
+      c.history.push({ at: new Date().toISOString(), by: sessionWho(), action: 'restore', name: c.name });
+    } else {
+      const it = inv.items.find(x => x.id === id);
+      if (!it) return;
+      it.deleted = false;
+      pushVersion(it, 'restore');
+    }
+    if (saveInventory(inv)) { showToast('↩️ برگردانده شد'); renderInventory(); openDeletedPanel(); }
+  }
+
+  // همه تغییرات همه شرکت‌ها و حساب‌ها، جدیدترین اول؛ با فیلتر شخص
+  function openAuditPanel(who) {
+    if (!isAdmin()) return;
+    const inv = getInventory();
+    const team = getTeam();
+    const events = [];
+    inv.items.forEach(it => {
+      const sec = sectionOf(it.section);
+      it.history.forEach((v, i) => events.push({ at: v.at, by: v.by, text: `${ACTION_LABELS[v.action] || v.action} ${sec.title.split(' ')[0]} «${(v.data && v.data[sec.titleField]) || it.data[sec.titleField] || ''}» — ${it.company}`, id: it.id }));
+    });
+    inv.companies.forEach(c => (c.history || []).forEach(v => events.push({ at: v.at, by: v.by, text: `${ACTION_LABELS[v.action] || v.action} پرونده فنی «${c.name}»` })));
+    (team ? team.log : []).forEach(v => events.push({ at: v.at, by: v.by, text: `👥 ${v.detail}` }));
+    const people = [...new Set(events.map(e => (e.by && e.by.name) || 'نامشخص'))];
+    const shown = events.filter(e => !who || ((e.by && e.by.name) || 'نامشخص') === who).sort((a, b) => String(b.at).localeCompare(String(a.at))).slice(0, 300);
+    openInvPanel('📜 گزارش تغییرات', `
+      <div class="inv-tools"><button class="inv-small-btn" data-audit-who="" style="${!who ? 'color:var(--gold);' : ''}">همه</button>${people.map(p =>
+        `<button class="inv-small-btn" data-audit-who="${escapeHtml(p)}" style="${p === who ? 'color:var(--gold);' : ''}">${escapeHtml(p)}</button>`).join('')}</div>
+      ${shown.map(e => `<div class="inv-ver"><div class="inv-ver-head"><span>${escapeHtml((e.by && e.by.name) || 'نامشخص')}</span><span class="inv-meta">${whenLabel(e.at)}</span></div>
+        <div>${escapeHtml(e.text)}</div>${e.id ? `<button data-history="${escapeHtml(e.id)}">🕘 جزئیات</button>` : ''}</div>`).join('') || '<div class="inv-empty">تغییری ثبت نشده</div>'}`);
+  }
+
+
