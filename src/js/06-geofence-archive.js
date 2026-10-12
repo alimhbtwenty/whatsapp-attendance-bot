@@ -382,9 +382,10 @@
       durationMins: counted ? dur.totalMins : 0,
       durationText: counted ? `${dur.h}:${String(dur.m).padStart(2,'0')}` : '-',
       text: text,
-      actions: document.getElementById('supportActionsText')?.value || '',
-      pending: document.getElementById('supportPendingText')?.value || '',
-      tech: document.getElementById('supportTechInfo')?.value || '',
+      // فیلدهای فرم ساپورت فقط در گزارش ساپورت (قبلاً متن فرم ساپورت در رکورد تردد هم می‌رفت و در اکسل می‌آمد)
+      actions: isSupport ? document.getElementById('supportActionsText').value : '',
+      pending: isSupport ? document.getElementById('supportPendingText').value : '',
+      tech: isSupport ? document.getElementById('supportTechInfo').value : '',
       checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
     });
     // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
@@ -395,6 +396,13 @@
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
   let archivePersonFilter = 'all';
+  // رکوردهای یک نفر (فیلتر «👤») یا همه؛ آرشیو، اکسل و گزارش ماهانه همه از همین می‌خوانند
+  function personScopedLogs(logs) {
+    return archivePersonFilter === 'all' ? logs : logs.filter(l => l.by && l.by.id === archivePersonFilter);
+  }
+  function archiveScopedLogs() {
+    return personScopedLogs(getLogs()).filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter);
+  }
   function renderArchive() {
     const logs = getLogs();
     const comps = getCompanies();
@@ -433,8 +441,7 @@
     } else {
       archivePersonFilter = 'all';
     }
-    const filtered = logs.filter(l => (archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter) &&
-      (archivePersonFilter === 'all' || (l.by && l.by.id === archivePersonFilter)));
+    const filtered = archiveScopedLogs();
 
     // آمار (ورود و خروج جدا هم جفت و حساب می‌شوند)
     const totalMins = computeSessions(filtered).reduce((sum, x) => sum + x.mins, 0);
@@ -458,7 +465,7 @@
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-            ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).slice(0, 30)) + '...' : 'گزارش ساپورت')}
+            ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
         </div>
@@ -500,25 +507,25 @@
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
   function exportFilteredExcel() {
     playTactileFeedback();
-    const logs = getLogs();
     const targetComp = archiveCompanyFilter;
-    const filtered = targetComp === 'all' ? logs : logs.filter(l => l.company === targetComp);
+    const filtered = archiveScopedLogs();
 
     if (filtered.length === 0) {
       showToast('گزارشی برای این شرکت موجود نیست');
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', r.actions, r.pending, r.tech, geoLink, checks].map(csvCell).join(',') + '\n';
+      const sup = r.type === 'support'; // رکوردهای تردد قدیمی گاهی متن فرم ساپورت را هم داشتند
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : ''].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? 'geoteam-archive-all.csv' : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const filename = targetComp === 'all' ? `geoteam-archive-all${archivePersonFilter === 'all' ? '' : '-person'}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }

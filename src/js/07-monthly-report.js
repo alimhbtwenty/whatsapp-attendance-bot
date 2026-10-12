@@ -120,8 +120,10 @@
       reportJY = t.jy;
       reportJM = t.jm;
     }
-    const logs = getLogs();
+    // فیلتر «👤» شخص هم اعمال می‌شود؛ اضافه‌کار و کسر فقط وقتی رکوردها مال یک نفرند معنا دارد
+    const logs = personScopedLogs(getLogs());
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+    const people = new Set(logs.filter(l => l.by && l.by.id).map(l => l.by.id));
     const allSessions = computeSessions(logs);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};
@@ -133,7 +135,7 @@
     // اضافه‌کار و کسر مال کل روزِ شخص است، نه یک شرکت؛ با فیلتر شرکت نشان داده نمی‌شود.
     // روزها از اولین تردد ثبت‌شده تا امروز شمرده می‌شوند (نه آینده، نه قبل از شروع استفاده)
     let balance = null;
-    if (archiveCompanyFilter === 'all' && allSessions.length) {
+    if (archiveCompanyFilter === 'all' && people.size <= 1 && allSessions.length) {
       const first = Math.min(...allSessions.map(x => x.day));
       const today = dayIndex(dateToJalali(new Date()));
       const from = Math.max(j2d(reportJY, reportJM, 1), first);
@@ -149,6 +151,7 @@
       deficit: sum('deficit'),
       absentDays: balance ? Object.values(balance).filter(d => d.absent).length : 0,
       perCompany,
+      mixedPeople: people.size > 1,
       days: new Set(sessions.map(x => x.day)).size
     };
   }
@@ -160,7 +163,7 @@
     title.textContent = `${JALALI_MONTHS[reportJM - 1]} ${toPersianDigits(reportJY)}`;
     document.getElementById('reportTotal').textContent = formatHM(d.total);
     const st = getSettings();
-    document.getElementById('reportOvertimeCaption').textContent = 'اضافه‌کار:';
+    document.getElementById('reportOvertimeCaption').textContent = d.mixedPeople && archiveCompanyFilter === 'all' ? 'اضافه‌کار (یک نفر را انتخاب کنید):' : 'اضافه‌کار:';
     document.getElementById('reportOvertimeCaption').title = `قبل از ${st.workStart}، بعد از ${st.workEnd} (پنجشنبه ${st.thuEnd})، جمعه و تعطیل رسمی`;
     document.getElementById('reportOvertime').textContent = d.balance ? formatHM(d.overtime) : '—';
     document.getElementById('reportDeficit').textContent = d.balance ? formatHM(d.deficit) : '—';

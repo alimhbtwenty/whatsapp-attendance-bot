@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-X/VmJ3H/p6C3IiX3xTtAXNJepSlNzFXXTdqDU33w31w='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/ymxFqN/Ro/ZEkbVAJyiFUP0GSnlEeouAce/bXH3nFU='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -4264,9 +4264,10 @@
       durationMins: counted ? dur.totalMins : 0,
       durationText: counted ? `${dur.h}:${String(dur.m).padStart(2,'0')}` : '-',
       text: text,
-      actions: document.getElementById('supportActionsText')?.value || '',
-      pending: document.getElementById('supportPendingText')?.value || '',
-      tech: document.getElementById('supportTechInfo')?.value || '',
+      // فیلدهای فرم ساپورت فقط در گزارش ساپورت (قبلاً متن فرم ساپورت در رکورد تردد هم می‌رفت و در اکسل می‌آمد)
+      actions: isSupport ? document.getElementById('supportActionsText').value : '',
+      pending: isSupport ? document.getElementById('supportPendingText').value : '',
+      tech: isSupport ? document.getElementById('supportTechInfo').value : '',
       checklist: isSupport && checklistState(selectedCompany).some(c => c.done) ? checklistState(selectedCompany) : null
     });
     // سقف قبلی ۱۵۰ رکورد بود و قدیمی‌ها بی‌صدا حذف می‌شدند (گزارش ماهانه ناقص می‌شد)
@@ -4277,6 +4278,13 @@
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
   let archivePersonFilter = 'all';
+  // رکوردهای یک نفر (فیلتر «👤») یا همه؛ آرشیو، اکسل و گزارش ماهانه همه از همین می‌خوانند
+  function personScopedLogs(logs) {
+    return archivePersonFilter === 'all' ? logs : logs.filter(l => l.by && l.by.id === archivePersonFilter);
+  }
+  function archiveScopedLogs() {
+    return personScopedLogs(getLogs()).filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter);
+  }
   function renderArchive() {
     const logs = getLogs();
     const comps = getCompanies();
@@ -4315,8 +4323,7 @@
     } else {
       archivePersonFilter = 'all';
     }
-    const filtered = logs.filter(l => (archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter) &&
-      (archivePersonFilter === 'all' || (l.by && l.by.id === archivePersonFilter)));
+    const filtered = archiveScopedLogs();
 
     // آمار (ورود و خروج جدا هم جفت و حساب می‌شوند)
     const totalMins = computeSessions(filtered).reduce((sum, x) => sum + x.mins, 0);
@@ -4340,7 +4347,7 @@
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
-            ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).slice(0, 30)) + '...' : 'گزارش ساپورت')}
+            ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
         </div>
@@ -4382,25 +4389,25 @@
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
   function exportFilteredExcel() {
     playTactileFeedback();
-    const logs = getLogs();
     const targetComp = archiveCompanyFilter;
-    const filtered = targetComp === 'all' ? logs : logs.filter(l => l.company === targetComp);
+    const filtered = archiveScopedLogs();
 
     if (filtered.length === 0) {
       showToast('گزارشی برای این شرکت موجود نیست');
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست\n";
+    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده\n";
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', r.actions, r.pending, r.tech, geoLink, checks].map(csvCell).join(',') + '\n';
+      const sup = r.type === 'support'; // رکوردهای تردد قدیمی گاهی متن فرم ساپورت را هم داشتند
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : ''].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const filename = targetComp === 'all' ? 'geoteam-archive-all.csv' : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
+    const filename = targetComp === 'all' ? `geoteam-archive-all${archivePersonFilter === 'all' ? '' : '-person'}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }
@@ -4528,8 +4535,10 @@
       reportJY = t.jy;
       reportJM = t.jm;
     }
-    const logs = getLogs();
+    // فیلتر «👤» شخص هم اعمال می‌شود؛ اضافه‌کار و کسر فقط وقتی رکوردها مال یک نفرند معنا دارد
+    const logs = personScopedLogs(getLogs());
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
+    const people = new Set(logs.filter(l => l.by && l.by.id).map(l => l.by.id));
     const allSessions = computeSessions(logs);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};
@@ -4541,7 +4550,7 @@
     // اضافه‌کار و کسر مال کل روزِ شخص است، نه یک شرکت؛ با فیلتر شرکت نشان داده نمی‌شود.
     // روزها از اولین تردد ثبت‌شده تا امروز شمرده می‌شوند (نه آینده، نه قبل از شروع استفاده)
     let balance = null;
-    if (archiveCompanyFilter === 'all' && allSessions.length) {
+    if (archiveCompanyFilter === 'all' && people.size <= 1 && allSessions.length) {
       const first = Math.min(...allSessions.map(x => x.day));
       const today = dayIndex(dateToJalali(new Date()));
       const from = Math.max(j2d(reportJY, reportJM, 1), first);
@@ -4557,6 +4566,7 @@
       deficit: sum('deficit'),
       absentDays: balance ? Object.values(balance).filter(d => d.absent).length : 0,
       perCompany,
+      mixedPeople: people.size > 1,
       days: new Set(sessions.map(x => x.day)).size
     };
   }
@@ -4568,7 +4578,7 @@
     title.textContent = `${JALALI_MONTHS[reportJM - 1]} ${toPersianDigits(reportJY)}`;
     document.getElementById('reportTotal').textContent = formatHM(d.total);
     const st = getSettings();
-    document.getElementById('reportOvertimeCaption').textContent = 'اضافه‌کار:';
+    document.getElementById('reportOvertimeCaption').textContent = d.mixedPeople && archiveCompanyFilter === 'all' ? 'اضافه‌کار (یک نفر را انتخاب کنید):' : 'اضافه‌کار:';
     document.getElementById('reportOvertimeCaption').title = `قبل از ${st.workStart}، بعد از ${st.workEnd} (پنجشنبه ${st.thuEnd})، جمعه و تعطیل رسمی`;
     document.getElementById('reportOvertime').textContent = d.balance ? formatHM(d.overtime) : '—';
     document.getElementById('reportDeficit').textContent = d.balance ? formatHM(d.deficit) : '—';
@@ -4795,7 +4805,7 @@
       isMine: false,
       channel: 'general',
       ts: Date.now(),
-      text: 'به پیام‌رسان تیم خوش آمدید. هر تردد و گزارش ساپورتی که ثبت کنید، خودکار در کانال خودش این‌جا هم ثبت می‌شود.'
+      text: 'به پیام‌رسان تیم خوش آمدید. هر ترددی که ثبت کنید، خودکار در کانال «ترددها» این‌جا هم ثبت می‌شود.'
     }];
   }
 
@@ -4844,6 +4854,7 @@
       id: m.id != null ? String(m.id) : '',
       sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار',
       isMine: m.isMine === true,
+      by: m.by && typeof m.by.id === 'string' ? { id: m.by.id, name: String(m.by.name || '') } : null,
       channel: CHAT_CHANNELS[m.channel] ? m.channel : 'general',
       ts: ts,
       time: typeof m.time === 'string' ? m.time : '',
@@ -4979,6 +4990,9 @@
     }
 
     const myName = getUserName();
+    const myId = session ? session.user.id : null;
+    // روی گوشی مشترک، پیامِ هر حساب فقط برای خود همان حساب «من» است
+    const mine = (m) => m.by && myId ? m.by.id === myId : (m.isMine || m.sender === myName);
     let lastDay = null;
 
     stream.innerHTML = filtered.map((m, i) => {
@@ -4990,7 +5004,7 @@
           lastDay = day;
         }
       }
-      const isMine = m.isMine || m.sender === myName;
+      const isMine = mine(m);
       const cont = !sep && chatContinues(filtered[i - 1], m);
       const hasNext = chatContinues(m, filtered[i + 1]);
       const authorColor = getAuthorColor(m.sender);
@@ -5009,7 +5023,7 @@
             <div class="tg-bubble-meta">
               ${chatChannelFilter === 'all' ? `<span class="tg-chan-tag">${ch.icon} ${ch.label}</span>` : ''}
               <span>${escapeHtml(chatTimeLabel(m))}</span>
-              ${isMine ? '<span style="color:#38bdf8; font-weight:800;" title="ذخیره شد">✓</span>' : ''}
+              ${isMine ? '<span style="color:var(--info); font-weight:800;" title="ذخیره شد">✓</span>' : ''}
             </div>
           </div>
         </div>
@@ -5155,6 +5169,7 @@
     msgs.push({
       id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
       sender: getUserName(),
+      by: sessionWho().id ? sessionWho() : null,
       isMine: true,
       channel: currentChatTargetChannel(),
       ts: now,
@@ -5178,6 +5193,7 @@
     msgs.push({
       id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
       sender: getUserName(),
+      by: sessionWho().id ? sessionWho() : null,
       isMine: true,
       channel: 'attendance',
       ts: now,
@@ -5212,9 +5228,9 @@
     const el = document.getElementById('tgNetStatus');
     if (!el) return;
     if (navigator.onLine) {
-      el.innerHTML = '<span style="color:#22c55e;">●</span> آنلاین • ذخیره فقط روی همین دستگاه';
+      el.innerHTML = '<span style="color:var(--success);">●</span> آنلاین • ذخیره فقط روی همین دستگاه';
     } else {
-      el.innerHTML = '<span style="color:#f59e0b;">●</span> آفلاین • ذخیره فقط روی همین دستگاه';
+      el.innerHTML = '<span style="color:var(--warning);">●</span> آفلاین • ذخیره فقط روی همین دستگاه';
     }
   }
   window.addEventListener('online', updateNetworkStatus);

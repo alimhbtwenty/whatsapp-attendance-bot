@@ -66,7 +66,10 @@
 `{ reminderTime, workStart: "09:00", workEnd: "17:00", thuEnd: "14:00", holidays: ["YYYY-MM-DD", ...], theme: "dark|light|system" }`. گزارش ماهانه اضافه‌کار و کسر کار را از همین‌ها حساب می‌کند (ADR-0001 بند ۱۰).
 
 ## رکوردهای آرشیو: چه کسی
-`by: {id, name}` (ثبت‌کننده) و `closedBy` (ثبت خروج)، از نشست ورود.
+`by: {id, name}` (ثبت‌کننده) و `closedBy` (ثبت خروج)، از نشست ورود. فیلتر «👤» شخص روی آرشیو، اکسل (ستون «ثبت‌کننده») و گزارش ماهانه اعمال می‌شود؛ اضافه‌کار و کسر فقط وقتی رکوردها مال یک نفرند حساب می‌شود. `actions`/`pending`/`tech` فقط در رکورد ساپورت پر می‌شوند.
+
+## پیام‌رسان — `geomat_chat_messages_v1`
+آرایه `{id, sender, by: {id, name} | null, isMine, channel: attendance|support|general, ts, text}`، حداکثر ۱۰۰ پیام. `by` از 1.4؛ «من» بودن پیام با `by.id` حساب می‌شود (گوشی مشترک). پیام‌های قدیمی بدون `by` با `isMine` یا نام فرستنده.
 
 ## به‌روزرسانی
 `geomat_schema_version` (الان `14`) و `geomat_backup_pre_1_4` (`{at, from, data}`: کپی کامل پیش از اولین اجرای 1.4؛ در فایل پشتیبان نمی‌آید).

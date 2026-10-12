@@ -17,7 +17,7 @@
       isMine: false,
       channel: 'general',
       ts: Date.now(),
-      text: 'به پیام‌رسان تیم خوش آمدید. هر تردد و گزارش ساپورتی که ثبت کنید، خودکار در کانال خودش این‌جا هم ثبت می‌شود.'
+      text: 'به پیام‌رسان تیم خوش آمدید. هر ترددی که ثبت کنید، خودکار در کانال «ترددها» این‌جا هم ثبت می‌شود.'
     }];
   }
 
@@ -66,6 +66,7 @@
       id: m.id != null ? String(m.id) : '',
       sender: typeof m.sender === 'string' && m.sender.trim() ? m.sender : 'همکار',
       isMine: m.isMine === true,
+      by: m.by && typeof m.by.id === 'string' ? { id: m.by.id, name: String(m.by.name || '') } : null,
       channel: CHAT_CHANNELS[m.channel] ? m.channel : 'general',
       ts: ts,
       time: typeof m.time === 'string' ? m.time : '',
@@ -201,6 +202,9 @@
     }
 
     const myName = getUserName();
+    const myId = session ? session.user.id : null;
+    // روی گوشی مشترک، پیامِ هر حساب فقط برای خود همان حساب «من» است
+    const mine = (m) => m.by && myId ? m.by.id === myId : (m.isMine || m.sender === myName);
     let lastDay = null;
 
     stream.innerHTML = filtered.map((m, i) => {
@@ -212,7 +216,7 @@
           lastDay = day;
         }
       }
-      const isMine = m.isMine || m.sender === myName;
+      const isMine = mine(m);
       const cont = !sep && chatContinues(filtered[i - 1], m);
       const hasNext = chatContinues(m, filtered[i + 1]);
       const authorColor = getAuthorColor(m.sender);
@@ -231,7 +235,7 @@
             <div class="tg-bubble-meta">
               ${chatChannelFilter === 'all' ? `<span class="tg-chan-tag">${ch.icon} ${ch.label}</span>` : ''}
               <span>${escapeHtml(chatTimeLabel(m))}</span>
-              ${isMine ? '<span style="color:#38bdf8; font-weight:800;" title="ذخیره شد">✓</span>' : ''}
+              ${isMine ? '<span style="color:var(--info); font-weight:800;" title="ذخیره شد">✓</span>' : ''}
             </div>
           </div>
         </div>
@@ -377,6 +381,7 @@
     msgs.push({
       id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
       sender: getUserName(),
+      by: sessionWho().id ? sessionWho() : null,
       isMine: true,
       channel: currentChatTargetChannel(),
       ts: now,
@@ -400,6 +405,7 @@
     msgs.push({
       id: `${now}-${Math.random().toString(36).slice(2, 7)}`,
       sender: getUserName(),
+      by: sessionWho().id ? sessionWho() : null,
       isMine: true,
       channel: 'attendance',
       ts: now,
@@ -434,9 +440,9 @@
     const el = document.getElementById('tgNetStatus');
     if (!el) return;
     if (navigator.onLine) {
-      el.innerHTML = '<span style="color:#22c55e;">●</span> آنلاین • ذخیره فقط روی همین دستگاه';
+      el.innerHTML = '<span style="color:var(--success);">●</span> آنلاین • ذخیره فقط روی همین دستگاه';
     } else {
-      el.innerHTML = '<span style="color:#f59e0b;">●</span> آفلاین • ذخیره فقط روی همین دستگاه';
+      el.innerHTML = '<span style="color:var(--warning);">●</span> آفلاین • ذخیره فقط روی همین دستگاه';
     }
   }
   window.addEventListener('online', updateNetworkStatus);
