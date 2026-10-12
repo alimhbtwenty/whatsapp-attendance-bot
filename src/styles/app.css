@@ -1658,3 +1658,6 @@
 
     .storage-usage { font-size: 11px; color: var(--text-muted); line-height: 1.7; }
     .storage-usage.storage-warn { color: var(--warning-fg); background: color-mix(in srgb, var(--warning) 14%, transparent); border-radius: var(--radius-s); padding: 6px 8px; }
+    .inv-copy-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 4px; margin-inline-start: auto; color: var(--text-dim); }
+    .inv-pw-tools { display: flex; gap: 6px; margin-top: -4px; }
+    .inv-pw-tools button { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-s); padding: 6px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }

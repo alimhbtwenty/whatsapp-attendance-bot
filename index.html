@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-XOAn1l0rQIw+Khu45qwztS9Tn34IdwvmP5nc7m9KBU8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ci3mZ4oF6ElVwTZk4AqO9Ve/rd+QIfICU0ib4Z/k/ho='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -1774,6 +1774,9 @@
 
     .storage-usage { font-size: 11px; color: var(--text-muted); line-height: 1.7; }
     .storage-usage.storage-warn { color: var(--warning-fg); background: color-mix(in srgb, var(--warning) 14%, transparent); border-radius: var(--radius-s); padding: 6px 8px; }
+    .inv-copy-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 0 4px; margin-inline-start: auto; color: var(--text-dim); }
+    .inv-pw-tools { display: flex; gap: 6px; margin-top: -4px; }
+    .inv-pw-tools button { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-s); padding: 6px 10px; font-size: 12px; cursor: pointer; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -6343,7 +6346,9 @@
       let v = it.data[f.k];
       if (f.type === 'ref') v = itemLabel(inv, v);
       if (!v) return '';
-      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
+      // فیلدهای فنی (آدرس، یوزر، IP، ID) دکمه کپی دارند (مثل IT Glue)
+      const copy = f.ltr && f.type !== 'ref' ? `<button class="inv-copy-btn" data-copy-field="${id}|${escapeHtml(f.k)}" title="کپی" aria-label="کپی ${escapeHtml(fieldLabel(f))}">📋</button>` : '';
+      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span>${copy}</div>`;
     }).join('');
     const secrets = sec.fields.filter(f => f.type === 'secret' && it.secrets && it.secrets[f.k]).map(f =>
       `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(fieldLabel(f))}:</b>
@@ -6366,7 +6371,7 @@
     const panel = document.getElementById('invPanelModal');
     if (!view || (!view.contains(e.target) && !panel.contains(e.target))) return;
     touchSession();
-    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who]');
+    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who],[data-copy-field]');
     if (!t) return;
     const d = t.dataset;
     const acts = {
@@ -6390,6 +6395,7 @@
     else if (d.userToggle) toggleUserActive(d.userToggle);
     else if (d.userAdd) addTeamUser();
     else if (d.auditWho !== undefined) openAuditPanel(d.auditWho);
+    else if (d.copyField) copyField(d.copyField);
   });
 
   // ref: «id|field» برای پسورد فعلی، یا «id|field|index» برای پسوردِ یک نسخه قدیمی (فقط مدیر)
@@ -6436,6 +6442,52 @@
       } catch(e) {}
       navigator.clipboard.writeText('').catch(() => {});
     }, 30000);
+  }
+
+  // کپی یک فیلد غیرمحرمانه (کلیپ‌بورد پاک نمی‌شود؛ پسورد نیست)
+  async function copyField(ref) {
+    if (!techUnlocked()) return;
+    const [id, k] = ref.split('|');
+    const it = getInventory().items.find(i => i.id === id && !i.deleted);
+    const v = it && it.data[k];
+    if (!v) return;
+    try {
+      await navigator.clipboard.writeText(String(v));
+      showToast('📋 کپی شد');
+    } catch(e) {
+      showToast('⚠️ کپی ممکن نشد');
+    }
+  }
+  // پسورد تصادفی قوی (۱۶ نویسه، بدون نویسه‌های شبیه هم مثل 0/O و l/1)، فقط در فرم؛ با «ذخیره» رمزنگاری می‌شود
+  const PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*-_=+';
+  function randomPassword(len = 16) {
+    const limit = 256 - (256 % PW_ALPHABET.length); // بدون سوگیری
+    for (;;) {
+      const out = [];
+      while (out.length < len) {
+        for (const b of crypto.getRandomValues(new Uint8Array(len * 2))) {
+          if (b < limit && out.length < len) out.push(PW_ALPHABET[b % PW_ALPHABET.length]);
+        }
+      }
+      const pw = out.join('');
+      // هر چهار نوع نویسه باشد (بعضی سیستم‌ها بدون آن رمز را نمی‌پذیرند)
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) return pw;
+    }
+  }
+  function invSecretInput(name) {
+    const el = document.querySelector(`#invItemForm input[name="${CSS.escape(name)}"]`);
+    return el && el.type !== 'checkbox' ? el : null;
+  }
+  function genInvPassword(name) {
+    const el = invSecretInput(name);
+    if (!el || !techUnlocked()) return;
+    el.value = randomPassword();
+    el.type = 'text';
+    showToast('🎲 پسورد تصادفی ساخته شد؛ با «ذخیره» رمزنگاری و ذخیره می‌شود');
+  }
+  function toggleInvSecret(name) {
+    const el = invSecretInput(name);
+    if (el) el.type = el.type === 'password' ? 'text' : 'password';
   }
 
   async function createInvCompany() {
@@ -6505,7 +6557,8 @@
       }
       if (f.type === 'secret') {
         const has = it && it.secrets && it.secrets[f.k];
-        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
+        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>
+          <div class="inv-pw-tools"><button type="button" ${uiAttr('click', 'genInvPassword', name)}>🎲 پسورد تصادفی</button><button type="button" ${uiAttr('click', 'toggleInvSecret', name)} aria-label="نمایش یا پنهان کردن پسورد">👁</button></div>` +
           (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد (نسخه قبلی در تاریخچه می‌ماند)</label>` : '');
       }
       return `<label>${escapeHtml(f.label)}${f.required ? ' *' : ''}<input type="text" class="cyber-input" name="${name}" maxlength="200" ${f.ltr ? 'dir="ltr"' : ''} value="${escapeHtml(v)}"></label>`;
@@ -6710,7 +6763,7 @@
   // ==================== رویدادهای رابط (بدون onclick داخل HTML) ====================
   // همه رویدادها از یک‌جا و فقط به تابع‌های این فهرست می‌رسند؛ با این کار CSP می‌تواند هر اسکریپت تزریق‌شده را ببندد
   // قالب: data-click='["نام‌تابع", آرگومان‌ها...]'؛ "$this" = خود عنصر، "$event" = رویداد، "$value" = مقدار عنصر
-  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "filterChatRoom", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitVaultModal", "switchSystemMode", "toggleEditLocations", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
+  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "filterChatRoom", "genInvPassword", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitVaultModal", "switchSystemMode", "toggleInvSecret", "toggleEditLocations", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
   const UI_EVENT_ATTRS = { click: 'click', input: 'input', change: 'change', keydown: 'keydown', paste: 'paste', focusout: 'blur' };
   Object.keys(UI_EVENT_ATTRS).forEach(type => document.addEventListener(type, (e) => {
     const attr = 'data-' + UI_EVENT_ATTRS[type];

@@ -270,7 +270,9 @@
       let v = it.data[f.k];
       if (f.type === 'ref') v = itemLabel(inv, v);
       if (!v) return '';
-      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span></div>`;
+      // فیلدهای فنی (آدرس، یوزر، IP، ID) دکمه کپی دارند (مثل IT Glue)
+      const copy = f.ltr && f.type !== 'ref' ? `<button class="inv-copy-btn" data-copy-field="${id}|${escapeHtml(f.k)}" title="کپی" aria-label="کپی ${escapeHtml(fieldLabel(f))}">📋</button>` : '';
+      return `<div class="inv-row"><b>${escapeHtml(fieldLabel(f))}:</b> <span class="${f.ltr ? 'inv-ltr' : ''}">${escapeHtml(v)}</span>${copy}</div>`;
     }).join('');
     const secrets = sec.fields.filter(f => f.type === 'secret' && it.secrets && it.secrets[f.k]).map(f =>
       `<div class="inv-secret"><b style="color:var(--text-dim); font-weight:600;">${escapeHtml(fieldLabel(f))}:</b>
@@ -293,7 +295,7 @@
     const panel = document.getElementById('invPanelModal');
     if (!view || (!view.contains(e.target) && !panel.contains(e.target))) return;
     touchSession();
-    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who]');
+    const t = e.target.closest('[data-act],[data-filter],[data-company],[data-add],[data-edit],[data-del],[data-history],[data-reveal],[data-copy],[data-restore],[data-undelete],[data-ver-reveal],[data-user-pw],[data-user-toggle],[data-user-add],[data-audit-who],[data-copy-field]');
     if (!t) return;
     const d = t.dataset;
     const acts = {
@@ -317,6 +319,7 @@
     else if (d.userToggle) toggleUserActive(d.userToggle);
     else if (d.userAdd) addTeamUser();
     else if (d.auditWho !== undefined) openAuditPanel(d.auditWho);
+    else if (d.copyField) copyField(d.copyField);
   });
 
   // ref: «id|field» برای پسورد فعلی، یا «id|field|index» برای پسوردِ یک نسخه قدیمی (فقط مدیر)
@@ -363,6 +366,52 @@
       } catch(e) {}
       navigator.clipboard.writeText('').catch(() => {});
     }, 30000);
+  }
+
+  // کپی یک فیلد غیرمحرمانه (کلیپ‌بورد پاک نمی‌شود؛ پسورد نیست)
+  async function copyField(ref) {
+    if (!techUnlocked()) return;
+    const [id, k] = ref.split('|');
+    const it = getInventory().items.find(i => i.id === id && !i.deleted);
+    const v = it && it.data[k];
+    if (!v) return;
+    try {
+      await navigator.clipboard.writeText(String(v));
+      showToast('📋 کپی شد');
+    } catch(e) {
+      showToast('⚠️ کپی ممکن نشد');
+    }
+  }
+  // پسورد تصادفی قوی (۱۶ نویسه، بدون نویسه‌های شبیه هم مثل 0/O و l/1)، فقط در فرم؛ با «ذخیره» رمزنگاری می‌شود
+  const PW_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*-_=+';
+  function randomPassword(len = 16) {
+    const limit = 256 - (256 % PW_ALPHABET.length); // بدون سوگیری
+    for (;;) {
+      const out = [];
+      while (out.length < len) {
+        for (const b of crypto.getRandomValues(new Uint8Array(len * 2))) {
+          if (b < limit && out.length < len) out.push(PW_ALPHABET[b % PW_ALPHABET.length]);
+        }
+      }
+      const pw = out.join('');
+      // هر چهار نوع نویسه باشد (بعضی سیستم‌ها بدون آن رمز را نمی‌پذیرند)
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw) && /\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) return pw;
+    }
+  }
+  function invSecretInput(name) {
+    const el = document.querySelector(`#invItemForm input[name="${CSS.escape(name)}"]`);
+    return el && el.type !== 'checkbox' ? el : null;
+  }
+  function genInvPassword(name) {
+    const el = invSecretInput(name);
+    if (!el || !techUnlocked()) return;
+    el.value = randomPassword();
+    el.type = 'text';
+    showToast('🎲 پسورد تصادفی ساخته شد؛ با «ذخیره» رمزنگاری و ذخیره می‌شود');
+  }
+  function toggleInvSecret(name) {
+    const el = invSecretInput(name);
+    if (el) el.type = el.type === 'password' ? 'text' : 'password';
   }
 
   async function createInvCompany() {
@@ -432,7 +481,8 @@
       }
       if (f.type === 'secret') {
         const has = it && it.secrets && it.secrets[f.k];
-        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>` +
+        return `<label>${escapeHtml(f.label)} 🔐<input type="password" class="cyber-input" name="${name}" dir="ltr" maxlength="128" autocomplete="new-password" placeholder="${has ? 'بدون تغییر (ذخیره شده)' : ''}"></label>
+          <div class="inv-pw-tools"><button type="button" ${uiAttr('click', 'genInvPassword', name)}>🎲 پسورد تصادفی</button><button type="button" ${uiAttr('click', 'toggleInvSecret', name)} aria-label="نمایش یا پنهان کردن پسورد">👁</button></div>` +
           (has ? `<label class="inv-check"><input type="checkbox" name="${name}_clear"> پاک کردن پسورد (نسخه قبلی در تاریخچه می‌ماند)</label>` : '');
       }
       return `<label>${escapeHtml(f.label)}${f.required ? ' *' : ''}<input type="text" class="cyber-input" name="${name}" maxlength="200" ${f.ltr ? 'dir="ltr"' : ''} value="${escapeHtml(v)}"></label>`;
