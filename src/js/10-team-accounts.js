@@ -126,6 +126,7 @@
     } catch(e) {}
     setFails({ n: 0, until: 0 });
     document.getElementById('appLock').classList.remove('open');
+    setAppInert(false);
     document.getElementById('userNameHeader').textContent = user.name;
     updatePreview();
     updateSupportPreview();
@@ -191,9 +192,14 @@
 
   // ---------- صفحه ورود ----------
   let lockLegacyMode = false;
+  // صفحه پشت قفل با کیبورد و صفحه‌خوان هم در دسترس نیست
+  function setAppInert(on) {
+    document.querySelectorAll('body > :not(#appLock):not(#confirmModal):not(#vaultModal):not(#toast):not(script)').forEach(el => { el.inert = on; });
+  }
   function renderLockScreen() {
     const box = document.getElementById('appLockBody');
     document.getElementById('appLock').classList.add('open');
+    setAppInert(true);
     if (!cryptoSupported()) {
       box.innerHTML = '<div class="lock-hint">این مرورگر از رمزنگاری امن پشتیبانی نمی‌کند. برنامه را از نسخه اندروید یا یک مرورگر به‌روز (با https) باز کنید.</div>';
       return;
@@ -223,8 +229,7 @@
       <button class="install-btn lock-main-btn" id="lockSubmit" data-click='["loginApp"]'>ورود</button>
       <button class="dock-copy-btn lock-bio-btn" id="lockBioBtn" style="display:none;" data-click='["loginWithBiometric"]'>👆 ورود با اثر انگشت / چهره</button>
       <div class="lock-err" id="lockErr" role="alert"></div>
-      ${legacy.length ? `<button class="lock-link" data-click='["toggleLegacyLogin"]'>${lockLegacyMode ? 'ورود با شماره موبایل' : 'حساب قدیمی بدون شماره؟ ورود با نام'}</button>` : ''}
-      ${importLink}`;
+      ${legacy.length ? `<button class="lock-link" data-click='["toggleLegacyLogin"]'>${lockLegacyMode ? 'ورود با شماره موبایل' : 'حساب قدیمی بدون شماره؟ ورود با نام'}</button>` : ''}`;
     refreshLockBio();
     const phone = document.getElementById('lockPhone');
     if (phone) phone.addEventListener('input', refreshLockBio);
@@ -361,6 +366,7 @@
       </div>
       <button class="inv-small-btn" data-click='["changeMyPassword"]'>🔑 تغییر رمز</button>
       ${bioOk ? `<button class="inv-small-btn" data-click='["${bioOn ? 'disableBiometric' : 'enableBiometric'}"]'>${bioOn ? '👆 خاموش کردن ورود با اثر انگشت' : '👆 روشن کردن ورود با اثر انگشت / چهره'}</button>` : '<div class="inv-meta">ورود با اثر انگشت روی این دستگاه یا مرورگر در دسترس نیست.</div>'}
+      <button class="inv-small-btn" data-click='["importTeamFileFromSession"]'>📥 به‌روزرسانی فایل تیم</button>
       <button class="inv-small-btn" data-click='["logoutApp"]'>🚪 خروج از حساب</button>`);
   }
   function logoutApp() {
@@ -603,9 +609,10 @@
         <select class="cyber-input" id="newUserRole"><option value="tech">تکنسین (دیدن، افزودن، ویرایش)</option><option value="admin">مدیر (کنترل کامل)</option></select>
         <button class="inv-small-btn" data-user-add="1">ساخت حساب و تعیین رمز</button>
       </div>
-      <div class="inv-meta">برای گوشی تکنسین‌ها «📤 فایل تیم» بگیرید و در گوشی آن‌ها «📥 ورود فایل تیم» را بزنید. فایل تیم بدون رمزها قابل استفاده نیست.</div>`);
+      <div class="inv-meta">برای گوشی تکنسین‌ها «📤 فایل تیم» بگیرید. گوشی تازه: در صفحه ورود «📥 ورود فایل تیم». گوشی‌ای که قبلاً فایل تیم گرفته: بعد از ورود، «حساب من ← 📥 به‌روزرسانی فایل تیم». فایل تیم بدون رمزها قابل استفاده نیست.</div>`);
   }
   async function addTeamUser() {
+    if (!techAdmin()) return;
     const name = document.getElementById('newUserName').value.replace(/\s+/g, ' ').trim();
     const phone = normalizePhone(document.getElementById('newUserPhone').value);
     const role = document.getElementById('newUserRole').value === 'admin' ? 'admin' : 'tech';
@@ -620,6 +627,7 @@
     if (saveTeam(team)) { showToast('✅ حساب ساخته شد'); openUsersPanel(); }
   }
   async function resetUserPassword(id) {
+    if (!techAdmin()) return;
     const team = getTeam();
     const u = team.users.find(x => x.id === id);
     if (!u) return;
@@ -632,6 +640,7 @@
     if (saveTeam(t2)) { showToast('🔑 رمز تعیین شد'); openUsersPanel(); }
   }
   function toggleUserActive(id) {
+    if (!techAdmin()) return;
     const team = getTeam();
     const u = team.users.find(x => x.id === id);
     if (!u || u.id === session.user.id) return;
@@ -648,9 +657,21 @@
     const payload = { app: BACKUP_APP_ID, kind: 'team', format: 1, exportedAt: new Date().toISOString(), team: { schema: 1, users: team.users, log: [] } };
     if (downloadFile('geoteam-team.json', JSON.stringify(payload), 'application/json')) showToast('📤 فایل تیم آماده شد');
   }
+  // فایل تیم:
+  // - گوشی تازه (هنوز تیمی ندارد): از صفحه ورود
+  // - گوشی‌ای که تیم دارد: فقط بعد از ورود، و فقط فایلِ همان تیم؛ کاربر رمز خودش را در فایل تازه وارد می‌کند و
+  //   کلید تیمی که باز می‌شود باید همان کلید فعلی باشد. وگرنه هر کسی با گوشی قفل و یک فایل تیم ساختگی
+  //   (که خودش در آن مدیر است) وارد برنامه می‌شد و کلیدهای قفل‌شده تیم اصلی برای همیشه از بین می‌رفت.
   function openTeamFilePicker() {
+    if (getTeam()) return;
     document.getElementById('teamFileInput').click();
   }
+  function importTeamFileFromSession() {
+    if (!session) return;
+    closeInvPanel();
+    document.getElementById('teamFileInput').click();
+  }
+  const sameBytes = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
   function importTeamFile(input) {
     const file = input.files && input.files[0];
     input.value = '';
@@ -664,12 +685,40 @@
         return;
       }
       if (!obj.team.users.every(u => u.phone === undefined || normalizePhone(u.phone) === u.phone)) { showToast('⚠️ فایل تیم خراب است'); return; }
-      if (getTeam() && !await appConfirm('حساب‌های فعلی این گوشی با فایل تیم جایگزین شود؟ پسوردهایی که با تیم دیگری ذخیره شده‌اند دیگر باز نمی‌شوند.', 'جایگزینی')) return;
-      if (saveTeam({ schema: 1, users: obj.team.users, log: [{ at: new Date().toISOString(), by: { id: null, name: getUserName() }, action: 'team-import', detail: 'ورود فایل تیم' }] })) {
-        showToast('📥 فایل تیم وارد شد؛ با شماره و رمز خودتان وارد شوید');
-        if (session) lockApp(true); else renderLockScreen();
+      const users = obj.team.users;
+      const current = getTeam();
+      if (!current) {
+        if (saveTeam({ schema: 1, users, log: [{ at: new Date().toISOString(), by: { id: null, name: getUserName() }, action: 'team-import', detail: 'ورود فایل تیم' }] })) {
+          showToast('📥 فایل تیم وارد شد؛ با شماره و رمز خودتان وارد شوید');
+          renderLockScreen();
+        }
+        return;
+      }
+      if (!session) { showToast('⚠️ اول وارد شوید؛ بعد از «حساب من» فایل تیم را به‌روز کنید'); return; }
+      const me = users.find(u => u.id === session.user.id);
+      if (!me || !me.active) { showToast('⚠️ حساب شما در این فایل تیم نیست؛ فایل تازه را از مدیر بگیرید'); return; }
+      const r = await askVaultPassword({
+        title: '📥 به‌روزرسانی فایل تیم', hint: `رمز «${me.name}» را وارد کنید (همان رمزی که در این فایل تیم دارید).`, okLabel: 'به‌روزرسانی',
+        check: async (pw) => {
+          const w = failWait(); if (w) return w;
+          const raw = await unwrapWithPassword(me, pw);
+          if (!raw) return recordFail();
+          if (!session || !sameBytes(raw, session.raw)) return 'این فایل تیم مال تیم دیگری است؛ فایل تیم را از مدیر خودتان بگیرید';
+          return '';
+        }
+      });
+      if (!r || !session) return;
+      setFails({ n: 0, until: 0 });
+      const team = getTeam();
+      team.users = users;
+      teamLog(team, 'team-import', 'به‌روزرسانی حساب‌ها از فایل تیم');
+      if (saveTeam(team)) {
+        session.user.role = me.role;
+        session.user.name = me.name;
+        session.user.phone = me.phone || session.user.phone;
+        lockTech(true);
+        showToast('📥 حساب‌های تیم به‌روز شد');
       }
     };
     reader.readAsText(file);
   }
-
