@@ -128,6 +128,9 @@
     document.getElementById('appLock').classList.remove('open');
     setAppInert(false);
     document.getElementById('userNameHeader').textContent = user.name;
+    // ورود باز و جفتِ خروج به حساب واردشده بستگی دارند (گوشی مشترک)
+    lastPrefillKey = '';
+    renderOpenEntryBanner();
     updatePreview();
     updateSupportPreview();
     if (systemMode === 'messenger') renderChatMessages();

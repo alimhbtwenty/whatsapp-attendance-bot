@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-7O+sPkmuxUgF+J9Ha+/V1+AAfebPOE19/90C2IAIv8o='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-HctJRnKZoX9CgRFvFtbdc/ApOgkZxq3DAO116v7pdxE='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -3678,12 +3678,18 @@
     saveSettingField('holidays', getSettings().holidays.filter(h => h !== iso));
   }
 
-  function getOpenEntry() {
+  function readOpenEntry() {
     try {
       const o = JSON.parse(localStorage.getItem(OPEN_ENTRY_KEY) || 'null');
       if (o && typeof o.company === 'string' && isoToDate(o.dateISO) && /^\d{2}:\d{2}$/.test(o.inTime)) return o;
     } catch(e) {}
     return null;
+  }
+  // روی گوشی مشترک، ورود بازِ حساب دیگر برای حساب واردشده دیده نمی‌شود (خروجِ یک نفر ورودِ دیگری را نبندد)
+  const otherPersons = (by) => !!by && typeof session !== 'undefined' && !!session && by !== session.user.id;
+  function getOpenEntry() {
+    const o = readOpenEntry();
+    return o && otherPersons(o.by) ? null : o;
   }
   function setOpenEntry(o) {
     try {
@@ -3703,7 +3709,7 @@
   function syncExitReminder() {
     const br = window.AndroidBridge;
     if (!br || typeof br.scheduleExitReminder !== 'function') return;
-    const o = getOpenEntry();
+    const o = readOpenEntry(); // یادآوری مال صاحب ورود است، هر کس که الان وارد شده باشد
     if (!o) { br.cancelExitReminder(); return; }
     const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
     const at = isoToDate(o.dateISO);
@@ -3724,6 +3730,8 @@
   window.handleNotificationAction = (action) => {
     if (typeof session === 'undefined' || !session) { pendingNotificationAction = action; return; }
     switchSystemMode('attendance');
+    const raw = readOpenEntry();
+    if (raw && otherPersons(raw.by)) { showToast('این یادآوری مال حساب دیگری است؛ با همان حساب وارد شوید'); return; }
     if (!getOpenEntry()) { showToast('این ورود قبلاً بسته شده است'); return; }
     if (action === 'exit') startExitForOpenEntry();
     else if (action === 'dismiss') discardOpenEntry();
@@ -3760,6 +3768,7 @@
     const outMins = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
     for (const l of getLogs()) {
       if (!l || l.type !== 'attendance' || l.company !== selectedCompany || !l.inTime || l.outTime || !l.dateISO) continue;
+      if (l.by && otherPersons(l.by.id)) continue; // ورودِ حساب دیگر روی همین گوشی
       const inMins = parseHM(l.inTime);
       if (inMins === null) continue;
       const diff = Math.round((isoToDate(iso) - isoToDate(l.dateISO)) / 86400000);
@@ -3795,7 +3804,8 @@
         inTime: timeInputValue('in'),
         logId: logId,
         ts: Date.now(),
-        notified: false
+        notified: false,
+        by: session ? session.user.id : undefined
       });
       requestReminderPermission();
     } else if (open && open.company === selectedCompany &&
@@ -3835,7 +3845,7 @@
     if (!banner) return;
     const o = getOpenEntry();
     banner.classList.toggle('show', !!o);
-    if (!o) return;
+    if (!o) { document.getElementById('openEntryText').textContent = ''; return; }
     const overdue = isOpenEntryOverdue(o);
     banner.classList.toggle('overdue', overdue);
     const when = o.dateISO === toISODate(new Date()) ? '' : ` (${shortDateLabel(isoToDate(o.dateISO))})`;
@@ -5490,6 +5500,9 @@
     document.getElementById('appLock').classList.remove('open');
     setAppInert(false);
     document.getElementById('userNameHeader').textContent = user.name;
+    // ورود باز و جفتِ خروج به حساب واردشده بستگی دارند (گوشی مشترک)
+    lastPrefillKey = '';
+    renderOpenEntryBanner();
     updatePreview();
     updateSupportPreview();
     if (systemMode === 'messenger') renderChatMessages();
@@ -6216,20 +6229,25 @@
   // و فایل پشتیبان متن ساده و قابل دستکاری است)؛ نسخه‌ای با تاریخ آینده هم پذیرفته نمی‌شود (وگرنه همیشه «آخرین» می‌ماند).
   function mergeInventoryData(curText, incText, opts = {}) {
     if (!incText) return curText || null;
-    const maxAt = new Date(Date.now() + 86400000).toISOString();
-    const trusted = (v) => String(v.at) <= maxAt && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
+    // فقط تاریخ ISO دقیق، مقایسه عددی (مقایسه متنی با نویسه کنترلی دور زده می‌شد)
+    const ISO_AT = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,3})?Z$/;
+    const maxMs = Date.now() + 86400000;
+    const validAt = (v) => typeof v.at === 'string' && ISO_AT.test(v.at) && Date.parse(v.at) <= maxMs;
+    const trusted = (v) => validAt(v) && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
     if (!curText) {
       const fresh = normalizeInventory(incText);
-      fresh.items.forEach(it => { it.history = it.history.filter(v => String(v.at) <= maxAt); });
+      fresh.items.forEach(it => { it.history = it.history.filter(validAt); });
       return JSON.stringify(fresh);
     }
     const a = normalizeInventory(curText), b = normalizeInventory(incText);
     const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
-    const byTime = (x, y) => String(x.at).localeCompare(String(y.at));
+    const byTime = (x, y) => (Date.parse(x.at) || 0) - (Date.parse(y.at) || 0);
     const items = new Map(a.items.map(i => [i.id, i]));
     for (const it of b.items) {
       const mine = items.get(it.id);
       if (!mine) { items.set(it.id, it); continue; }
+      // آیتمی که مدیر حذف کرده با پشتیبانِ غیرمدیر برنمی‌گردد (برگرداندن فقط کار مدیر است)
+      if (mine.deleted && !opts.admin) continue;
       const seen = new Set(mine.history.map(vkey));
       const added = it.history.filter(v => !seen.has(vkey(v)) && trusted(v));
       if (!added.length) continue;

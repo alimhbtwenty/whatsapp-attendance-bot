@@ -44,6 +44,14 @@ const now = new Date().toISOString();
   await forgedBackup([{ at: new Date(Date.now() + 1000).toISOString(), by: { id: 'x', name: 'x' }, action: 'edit', data: { title: 'ویرایش تکنسین' }, secrets: {} }]);
   ok('a normal edit version from a backup is still merged', await p.evaluate(() => getInventory().items[0].data.title === 'ویرایش تکنسین'));
 
+  await forgedBackup([{ at: '\u00019999-01-01T00:00:00.000Z', by: adminWho, action: 'edit', data: { title: 'FORGED' }, secrets: {} }]);
+  ok('a date with a hidden control character is not accepted either', await p.evaluate(() => getInventory().items[0].data.title !== 'FORGED'));
+
+  // مدیر حذف می‌کند؛ پشتیبانِ تکنسین با یک ویرایشِ تازه‌تر نباید آن را برگرداند
+  await p.evaluate(() => { const inv = getInventory(); const it = inv.items[0]; it.deleted = true; it.history.push({ at: new Date().toISOString(), by: { id: 'adm', name: 'مدیر' }, action: 'delete', data: it.data, secrets: {} }); saveInventory(inv); });
+  await forgedBackup([{ at: new Date(Date.now() + 5000).toISOString(), by: { id: 'x', name: 'x' }, action: 'edit', data: { title: 'برگشته' }, secrets: {} }]);
+  ok('a technician\'s backup cannot bring back an item the admin deleted', await p.evaluate(() => getInventory().items[0].deleted === true));
+
   // ---------- فایل تیمِ تکنسین ----------
   const importAs = async (users) => {
     const json = JSON.stringify({ app: 'geomat-attendance', kind: 'team', format: 1, team: { schema: 1, users, log: [] } });

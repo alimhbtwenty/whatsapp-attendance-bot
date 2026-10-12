@@ -107,20 +107,25 @@
   // و فایل پشتیبان متن ساده و قابل دستکاری است)؛ نسخه‌ای با تاریخ آینده هم پذیرفته نمی‌شود (وگرنه همیشه «آخرین» می‌ماند).
   function mergeInventoryData(curText, incText, opts = {}) {
     if (!incText) return curText || null;
-    const maxAt = new Date(Date.now() + 86400000).toISOString();
-    const trusted = (v) => String(v.at) <= maxAt && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
+    // فقط تاریخ ISO دقیق، مقایسه عددی (مقایسه متنی با نویسه کنترلی دور زده می‌شد)
+    const ISO_AT = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,3})?Z$/;
+    const maxMs = Date.now() + 86400000;
+    const validAt = (v) => typeof v.at === 'string' && ISO_AT.test(v.at) && Date.parse(v.at) <= maxMs;
+    const trusted = (v) => validAt(v) && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
     if (!curText) {
       const fresh = normalizeInventory(incText);
-      fresh.items.forEach(it => { it.history = it.history.filter(v => String(v.at) <= maxAt); });
+      fresh.items.forEach(it => { it.history = it.history.filter(validAt); });
       return JSON.stringify(fresh);
     }
     const a = normalizeInventory(curText), b = normalizeInventory(incText);
     const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
-    const byTime = (x, y) => String(x.at).localeCompare(String(y.at));
+    const byTime = (x, y) => (Date.parse(x.at) || 0) - (Date.parse(y.at) || 0);
     const items = new Map(a.items.map(i => [i.id, i]));
     for (const it of b.items) {
       const mine = items.get(it.id);
       if (!mine) { items.set(it.id, it); continue; }
+      // آیتمی که مدیر حذف کرده با پشتیبانِ غیرمدیر برنمی‌گردد (برگرداندن فقط کار مدیر است)
+      if (mine.deleted && !opts.admin) continue;
       const seen = new Set(mine.history.map(vkey));
       const added = it.history.filter(v => !seen.has(vkey(v)) && trusted(v));
       if (!added.length) continue;

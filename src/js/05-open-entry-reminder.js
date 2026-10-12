@@ -83,12 +83,18 @@
     saveSettingField('holidays', getSettings().holidays.filter(h => h !== iso));
   }
 
-  function getOpenEntry() {
+  function readOpenEntry() {
     try {
       const o = JSON.parse(localStorage.getItem(OPEN_ENTRY_KEY) || 'null');
       if (o && typeof o.company === 'string' && isoToDate(o.dateISO) && /^\d{2}:\d{2}$/.test(o.inTime)) return o;
     } catch(e) {}
     return null;
+  }
+  // روی گوشی مشترک، ورود بازِ حساب دیگر برای حساب واردشده دیده نمی‌شود (خروجِ یک نفر ورودِ دیگری را نبندد)
+  const otherPersons = (by) => !!by && typeof session !== 'undefined' && !!session && by !== session.user.id;
+  function getOpenEntry() {
+    const o = readOpenEntry();
+    return o && otherPersons(o.by) ? null : o;
   }
   function setOpenEntry(o) {
     try {
@@ -108,7 +114,7 @@
   function syncExitReminder() {
     const br = window.AndroidBridge;
     if (!br || typeof br.scheduleExitReminder !== 'function') return;
-    const o = getOpenEntry();
+    const o = readOpenEntry(); // یادآوری مال صاحب ورود است، هر کس که الان وارد شده باشد
     if (!o) { br.cancelExitReminder(); return; }
     const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
     const at = isoToDate(o.dateISO);
@@ -129,6 +135,8 @@
   window.handleNotificationAction = (action) => {
     if (typeof session === 'undefined' || !session) { pendingNotificationAction = action; return; }
     switchSystemMode('attendance');
+    const raw = readOpenEntry();
+    if (raw && otherPersons(raw.by)) { showToast('این یادآوری مال حساب دیگری است؛ با همان حساب وارد شوید'); return; }
     if (!getOpenEntry()) { showToast('این ورود قبلاً بسته شده است'); return; }
     if (action === 'exit') startExitForOpenEntry();
     else if (action === 'dismiss') discardOpenEntry();
@@ -165,6 +173,7 @@
     const outMins = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
     for (const l of getLogs()) {
       if (!l || l.type !== 'attendance' || l.company !== selectedCompany || !l.inTime || l.outTime || !l.dateISO) continue;
+      if (l.by && otherPersons(l.by.id)) continue; // ورودِ حساب دیگر روی همین گوشی
       const inMins = parseHM(l.inTime);
       if (inMins === null) continue;
       const diff = Math.round((isoToDate(iso) - isoToDate(l.dateISO)) / 86400000);
@@ -200,7 +209,8 @@
         inTime: timeInputValue('in'),
         logId: logId,
         ts: Date.now(),
-        notified: false
+        notified: false,
+        by: session ? session.user.id : undefined
       });
       requestReminderPermission();
     } else if (open && open.company === selectedCompany &&
@@ -240,7 +250,7 @@
     if (!banner) return;
     const o = getOpenEntry();
     banner.classList.toggle('show', !!o);
-    if (!o) return;
+    if (!o) { document.getElementById('openEntryText').textContent = ''; return; }
     const overdue = isOpenEntryOverdue(o);
     banner.classList.toggle('overdue', overdue);
     const when = o.dateISO === toISODate(new Date()) ? '' : ` (${shortDateLabel(isoToDate(o.dateISO))})`;
