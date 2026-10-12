@@ -1559,7 +1559,6 @@
       background: none; border: 1px solid var(--gold-border); color: var(--gold);
       border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
-    .inv-vault-btn.unlocked { border-color: color-mix(in srgb, var(--whatsapp) 50%, transparent); color: var(--whatsapp); }
     .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
     .inv-footnote { font-size: 11px; color: var(--text-dim); line-height: 1.9; padding: 0 6px 90px; }
     .inv-section summary {

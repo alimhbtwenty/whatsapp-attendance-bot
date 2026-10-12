@@ -521,9 +521,12 @@
 
   // دکمه برگشت گوشی (اپ اندروید): اول پنجره باز را ببند، بعد به تب تردد برگرد؛
   // false یعنی چیزی برای بستن نبود و اپ بسته شود
+  // دکمه برگشت اندروید: اول پنجره‌ها و پنل‌ها، بعد تب‌ها؛ روی صفحه ورود برنامه بسته می‌شود
   function handleBack() {
     if (document.getElementById('confirmModal').classList.contains('open')) { resolveConfirm(false); return true; }
-    const modals = [['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal], ['userModal', closeUserModal]];
+    if (document.getElementById('vaultModal').classList.contains('open')) { resolveVaultModal(null); return true; }
+    if (document.getElementById('appLock').classList.contains('open')) return false;
+    const modals = [['invItemModal', closeInvItemModal], ['invPanelModal', closeInvPanel], ['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal]];
     for (const [id, close] of modals) {
       if (document.getElementById(id).classList.contains('open')) { close(); return true; }
     }

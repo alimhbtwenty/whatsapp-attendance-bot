@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-EEa3rKa7pGslHsv7dKUWDEfx78q90icuFPBNdhD2lp8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Jik86/ArjQb9m/tnhORlUpGNtGr77iPo94dZslbsERc='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -1668,7 +1668,6 @@
       background: none; border: 1px solid var(--gold-border); color: var(--gold);
       border-radius: 10px; padding: 4px 9px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
     }
-    .inv-vault-btn.unlocked { border-color: color-mix(in srgb, var(--whatsapp) 50%, transparent); color: var(--whatsapp); }
     .inv-link-btn { border: none; text-decoration: underline; padding: 0 4px; }
     .inv-footnote { font-size: 11px; color: var(--text-dim); line-height: 1.9; padding: 0 6px 90px; }
     .inv-section summary {
@@ -5282,9 +5281,12 @@
 
   // دکمه برگشت گوشی (اپ اندروید): اول پنجره باز را ببند، بعد به تب تردد برگرد؛
   // false یعنی چیزی برای بستن نبود و اپ بسته شود
+  // دکمه برگشت اندروید: اول پنجره‌ها و پنل‌ها، بعد تب‌ها؛ روی صفحه ورود برنامه بسته می‌شود
   function handleBack() {
     if (document.getElementById('confirmModal').classList.contains('open')) { resolveConfirm(false); return true; }
-    const modals = [['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal], ['userModal', closeUserModal]];
+    if (document.getElementById('vaultModal').classList.contains('open')) { resolveVaultModal(null); return true; }
+    if (document.getElementById('appLock').classList.contains('open')) return false;
+    const modals = [['invItemModal', closeInvItemModal], ['invPanelModal', closeInvPanel], ['calendarModal', closeCalendar], ['outboxModal', closeOutbox], ['addModal', closeAddModal]];
     for (const [id, close] of modals) {
       if (document.getElementById(id).classList.contains('open')) { close(); return true; }
     }
