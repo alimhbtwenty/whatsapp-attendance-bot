@@ -2,6 +2,9 @@
 
 Persian (RTL) PWA for sending site entry/exit and support reports to WhatsApp, also shipped as an Android WebView APK.
 
+## Start here
+Read `docs/HANDOFF.md` (current state, open work, the owner's preferences) and `docs/decisions/` (owner decisions not to re-decide) before starting.
+
 ## Skills
 Use the skills in `.claude/skills` for every task. Start with `using-agent-skills` to pick the right one for the phase of work (spec, implementation, `frontend-ui-engineering`, `browser-testing-with-devtools`, `debugging-and-error-recovery`, `code-review-and-quality`, `security-and-hardening`, ...), and review every change with `code-review-and-quality` before pushing.
 
