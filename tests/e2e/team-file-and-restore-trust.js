@@ -63,6 +63,31 @@ const now = new Date().toISOString();
   ok('a backup-only item with only a future-dated version is not added', await p.evaluate(() => !window.__m.future));
   ok('a backup-only item keeps every valid version, including the admin\'s delete (append-only)', await p.evaluate(() => window.__m.n8 && window.__m.n8.deleted === true && window.__m.n8.history.length === 2));
 
+  // نسخه‌ای با ساعت کمی جلوتر (تا یک روز، مثلاً گوشی با ساعت جلو) نباید حذفِ بعدیِ مدیر را بی‌اثر کند
+  const skew = await p.evaluate(() => {
+    const at = new Date().toISOString();
+    const d = { title: 'ساعت جلو' };
+    const base = { schema: 2, companies: [], items: [{ id: 'k1', company: 'کرانه', section: 'access', data: d, secrets: {}, history: [{ at, by: { id: 'x', name: 'x' }, action: 'create', data: d, secrets: {} }] }] };
+    const ahead = JSON.parse(JSON.stringify(base));
+    ahead.items[0].history.push({ at: new Date(Date.now() + 23 * 3600e3).toISOString(), by: { id: 'x', name: 'x' }, action: 'edit', data: { title: 'جلو' }, secrets: {} });
+    let inv = JSON.parse(mergeInventoryData(JSON.stringify(base), JSON.stringify(ahead), { admin: false }));
+    const it = inv.items[0]; it.deleted = true; pushVersion(it, 'delete');
+    const other = JSON.parse(JSON.stringify(base));
+    other.items[0].history.push({ at: new Date(Date.now() + 1000).toISOString(), by: { id: 'y', name: 'y' }, action: 'edit', data: { title: 'دیگر' }, secrets: {} });
+    inv = JSON.parse(mergeInventoryData(JSON.stringify(inv), JSON.stringify(other), { admin: true }));
+    return inv.items[0].deleted;
+  });
+  ok('a version from a fast clock does not undo a later admin delete', skew === true);
+  // گوشی بدون پرونده فنی: وضع آیتم از آخرین نسخه پذیرفته‌شده
+  const freshState = await p.evaluate(() => {
+    const at = new Date().toISOString();
+    const file = { schema: 2, companies: [], items: [{ id: 'f1', company: 'کرانه', section: 'access', data: { title: 'آینده' }, secrets: {}, history: [
+      { at, by: { id: 'x', name: 'x' }, action: 'create', data: { title: 'درست' }, secrets: {} },
+      { at: '9999-01-01T00:00:00.000Z', by: { id: 'x', name: 'x' }, action: 'edit', data: { title: 'آینده' }, secrets: {} }] }] };
+    return JSON.parse(mergeInventoryData(null, JSON.stringify(file))).items[0].data.title;
+  });
+  ok('on a phone without a technical file the item state comes from the last accepted version', freshState === 'درست', freshState);
+
   // ---------- فایل تیمِ تکنسین ----------
   const importAs = async (users) => {
     const json = JSON.stringify({ app: 'geomat-attendance', kind: 'team', format: 1, team: { schema: 1, users, log: [] } });

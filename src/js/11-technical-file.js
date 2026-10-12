@@ -112,14 +112,23 @@
     const maxMs = Date.now() + 86400000;
     const validAt = (v) => typeof v.at === 'string' && ISO_AT.test(v.at) && Date.parse(v.at) <= maxMs;
     const trusted = (v) => validAt(v) && (opts.admin || (v.action !== 'delete' && v.action !== 'restore'));
+    // وضع هر آیتم از آخرین نسخه پذیرفته‌شده‌اش ساخته می‌شود (نه از فیلدهای بالای فایل)
+    const fromHistory = (it, history) => {
+      const last = history[history.length - 1];
+      return { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete', updatedAt: last.at, updatedBy: last.by };
+    };
+    const byTime = (x, y) => (Date.parse(x.at) || 0) - (Date.parse(y.at) || 0);
     if (!curText) {
       const fresh = normalizeInventory(incText);
-      fresh.items.forEach(it => { it.history = it.history.filter(validAt); });
+      fresh.items = fresh.items.map(it => {
+        if (!it.history.length) return it;
+        const history = it.history.filter(validAt).sort(byTime);
+        return history.length ? fromHistory(it, history) : null;
+      }).filter(Boolean);
       return JSON.stringify(fresh);
     }
     const a = normalizeInventory(curText), b = normalizeInventory(incText);
     const vkey = (v) => `${v.at}|${v.by && v.by.id}|${v.action}|${JSON.stringify(v.data)}|${JSON.stringify(v.secrets || {})}`;
-    const byTime = (x, y) => (Date.parse(x.at) || 0) - (Date.parse(y.at) || 0);
     const items = new Map(a.items.map(i => [i.id, i]));
     for (const it of b.items) {
       const mine = items.get(it.id);
@@ -128,10 +137,7 @@
         // مدیر می‌ماند؛ حذفِ ساختگی فقط آیتم را روی گوشی خود او پنهان می‌کند و برگرداندنِ ساختگی همان افزودن است
         if (!it.history.length) { items.set(it.id, it); continue; }
         const history = it.history.filter(validAt).sort(byTime);
-        if (!history.length) continue;
-        const last = history[history.length - 1];
-        items.set(it.id, { ...it, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
-          updatedAt: last.at, updatedBy: last.by });
+        if (history.length) items.set(it.id, fromHistory(it, history));
         continue;
       }
       // آیتمی که مدیر حذف کرده با پشتیبانِ غیرمدیر برنمی‌گردد (برگرداندن فقط کار مدیر است)
@@ -139,10 +145,7 @@
       const seen = new Set(mine.history.map(vkey));
       const added = it.history.filter(v => !seen.has(vkey(v)) && trusted(v));
       if (!added.length) continue;
-      const history = mine.history.concat(added).sort(byTime);
-      const last = history[history.length - 1];
-      items.set(it.id, { ...mine, history, data: { ...last.data }, secrets: { ...(last.secrets || {}) }, deleted: last.action === 'delete',
-        updatedAt: last.at, updatedBy: last.by });
+      items.set(it.id, fromHistory(mine, mine.history.concat(added).sort(byTime)));
     }
     const companies = new Map(a.companies.map(c => [c.id, c]));
     for (const c of b.companies) {
@@ -165,8 +168,10 @@
   }
   // نسخه تازه؛ هیچ نسخه قبلی پاک یا بازنویسی نمی‌شود
   function pushVersion(it, action) {
-    const now = new Date().toISOString();
     it.history = it.history || [];
+    // نسخه تازه همیشه آخرین است، حتی اگر نسخه‌ای با ساعت جلوتر (گوشی دیگری با ساعت جلو) در تاریخچه باشد
+    const latest = Math.max(0, ...it.history.map(v => Date.parse(v.at) || 0));
+    const now = new Date(Math.max(Date.now(), latest + 1)).toISOString();
     it.history.push({ at: now, by: sessionWho(), action, data: { ...it.data }, secrets: { ...(it.secrets || {}) } });
     it.updatedAt = now;
     it.updatedBy = sessionWho();
