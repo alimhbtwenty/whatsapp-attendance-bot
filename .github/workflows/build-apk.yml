@@ -111,10 +111,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          gh release delete preview --cleanup-tag -y || true
-          gh release create preview geo-team.apk geo-team-web.zip --prerelease --target "$TARGET_SHA" \
-            --title "پیش‌نمایش (قبل از ادغام)" \
-            --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود. geo-team.apk = اپ اندروید، geo-team-web.zip = وب‌اپ."
+          # اجرای PR و اجرای دستی (workflow_dispatch) گاهی هم‌زمان منتشر می‌کنند و یکی با
+          # «tag_name already exists» می‌افتاد؛ حذف و ساخت دوباره چند بار امتحان می‌شود
+          for try in 1 2 3 4 5; do
+            gh release delete preview --cleanup-tag -y || true
+            if gh release create preview geo-team.apk geo-team-web.zip --prerelease --target "$TARGET_SHA" \
+              --title "پیش‌نمایش (قبل از ادغام)" \
+              --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود. geo-team.apk = اپ اندروید، geo-team-web.zip = وب‌اپ."; then
+              break
+            fi
+            [ "$try" = 5 ] && exit 1
+            sleep $((try * 10))
+          done
           # دفعه قبل ریلیز به حالت پیش‌نویس رفت و لینک دانلود خالی شد: منتشرشده بودن را مطمئن کن
           gh release edit preview --draft=false
           test "$(gh release view preview --json isDraft --jq .isDraft)" = "false"
