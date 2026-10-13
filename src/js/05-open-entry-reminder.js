@@ -121,6 +121,7 @@
     const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
     const at = isoToDate(o.dateISO);
     at.setHours(rh, rm, 0, 0);
+    if (parseHM(o.inTime) >= parseHM(getSettings().reminderTime)) at.setDate(at.getDate() + 1);
     const t = exitReminderTexts(o);
     br.scheduleExitReminder(t.title, t.body, String(Math.max(at.getTime(), Date.now() + 60000)), `${o.company}|${o.dateISO}|${o.inTime}`);
     askNotificationPermissionOnce();

@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RC568iokNDxx84mVvc4TqWDmqe8fVnz248JcOsvmQ9Q='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-lLVn+EZBO+OltD/xbUWzFnypj71oufgIGB2F7B2jrO8='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -3841,6 +3841,7 @@
     const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
     const at = isoToDate(o.dateISO);
     at.setHours(rh, rm, 0, 0);
+    if (parseHM(o.inTime) >= parseHM(getSettings().reminderTime)) at.setDate(at.getDate() + 1);
     const t = exitReminderTexts(o);
     br.scheduleExitReminder(t.title, t.body, String(Math.max(at.getTime(), Date.now() + 60000)), `${o.company}|${o.dateISO}|${o.inTime}`);
     askNotificationPermissionOnce();
