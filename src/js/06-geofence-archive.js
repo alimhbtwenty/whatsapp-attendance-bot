@@ -511,7 +511,7 @@
 
     stream.innerHTML = filtered.slice(0, archiveVisible).map(item => `
       <div class="record-card-item">
-        <div style="flex:1;">
+        <${item.type === 'support' ? `button type="button" class="record-open-btn" ${uiAttr('click', 'openSupportRecord', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '')} aria-label="${escapeHtml(`گزارش ساپورت ${item.company} ${item.date || ''}`)} — نمایش کامل"` : 'div style="flex:1;"'}>
           <div style="display:flex; align-items:center; gap:6px;">
             <span style="font-weight:800; color:var(--accent-fg); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
@@ -523,7 +523,7 @@
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
           ${isAdmin() && item.gap && item.gap.reason ? `<div class="archive-gap">🕓 ${escapeHtml(toPersianDigits(String(item.gap.from || '')))} تا ${escapeHtml(toPersianDigits(String(item.gap.to || '')))}: ${escapeHtml(String(item.gap.reason))}</div>` : ''}
-        </div>
+        </${item.type === 'support' ? 'button' : 'div'}>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
           <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
@@ -564,6 +564,30 @@
     lastCommit = null;
     renderArchive();
     showToast('رکورد حذف شد');
+  }
+
+  // گزارش ساپورت آرشیو در پاپ‌آپ، کامل و خوانا (درخواست مالک)
+  function openSupportRecord(id, byId) {
+    const r = getLogs().find(l => l.type === 'support' && l.id === id && (!byId || (l.by && l.by.id) === byId));
+    if (!r) return;
+    playTactileFeedback();
+    // مشخصات فنی (IP، ماسک، آدرس) چپ‌به‌راست، وگرنه «10.0.0.9 / 255.255.255.0» برعکس دیده می‌شد
+    const row = (label, value, ltr) => value ? `<div class="sup-rec-row"><div class="sup-rec-label">${label}</div><div class="sup-rec-value"${ltr ? ' dir="ltr"' : ''}>${escapeHtml(String(value))}</div></div>` : '';
+    const checks = Array.isArray(r.checklist) && r.checklist.length
+      ? `<div class="sup-rec-row"><div class="sup-rec-label">چک‌لیست</div><ul class="sup-rec-checks">${r.checklist.map(c => `<li>${c.done ? '✅' : '⬜'} ${escapeHtml(String(c.item || ''))}</li>`).join('')}</ul></div>`
+      : '';
+    const who = r.by && r.by.name ? r.by.name : '';
+    openFlowModal(`
+      <div class="flow-title">🛠 ${escapeHtml(r.company)}</div>
+      <div class="flow-hint">${escapeHtml(`${r.day || ''} ${r.date || ''}`.trim())}${who ? ` • 👤 ${escapeHtml(who)}` : ''}</div>
+      <div class="sup-rec-body" tabindex="0" role="region" aria-label="متن کامل گزارش">
+        ${row('شرح اقدامات', r.actions)}
+        ${row('کارهای باقی‌مانده', r.pending)}
+        ${row('مشخصات فنی / IP', r.tech, true)}
+        ${checks}
+        ${!r.actions && !r.pending && !r.tech ? row('متن گزارش', r.text) : ''}
+      </div>
+      <button class="install-btn flow-main" ${uiAttr('click', 'resolveFlowModal', null)}>بستن</button>`, '.flow-main', 'گزارش ساپورت');
   }
 
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده

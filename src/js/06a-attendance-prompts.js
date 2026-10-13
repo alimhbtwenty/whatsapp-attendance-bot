@@ -5,8 +5,9 @@
   let flowResolver = null;
   let pendingGap = null; // { from, to, reason } برای رکورد تازه‌ای که همین الان ساخته می‌شود
 
-  function openFlowModal(html, focusSel) {
+  function openFlowModal(html, focusSel, label) {
     if (flowResolver) resolveFlowModal(null);
+    document.getElementById('flowModal').setAttribute('aria-label', label || 'ثبت تردد');
     document.getElementById('flowModalBox').innerHTML = html;
     document.getElementById('flowModal').classList.add('open');
     setTimeout(() => { const el = focusSel && document.querySelector(focusSel); if (el) el.focus(); }, 80);

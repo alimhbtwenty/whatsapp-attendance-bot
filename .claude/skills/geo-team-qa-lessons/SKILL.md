@@ -51,6 +51,7 @@ Every item below was a real bug in this app. It was proven by a test that failed
 
 ## Accessibility (axe in tests)
 - **Every `role="dialog"` has a name.** Use `aria-labelledby` to point at its title (give the title default text), or `aria-label`. Guarded by `ui-defects`.
+- **Technical values (IP, mask, URL) inside RTL text get `dir="ltr"`.** Otherwise «10.0.0.9 / 255.255.255.0» shows reversed. Do not use `dir="auto"` on Persian text: a leading Latin word flips the whole paragraph. Guarded by `support-record-popup`.
 - **Every input has a label.** A placeholder is not a label.
 - **Scrollable regions such as chip rows need `tabindex="0"`** and a name.
 - **Check contrast in both themes.** A colour that passes in light can fail in dark. Use a token (`--on-danger`), not a hard-coded colour. Guarded by `reminder-timing`.

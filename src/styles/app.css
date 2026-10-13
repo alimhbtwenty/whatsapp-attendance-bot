@@ -1680,6 +1680,15 @@
 
     /* پرسش‌های پیش از ارسال تردد */
     .flow-box { gap: 10px; }
+    /* کارت گزارش ساپورت در آرشیو: کل متن کارت دکمه است و پاپ‌آپ کامل را باز می‌کند */
+    .record-open-btn { flex: 1; min-width: 0; background: none; border: none; padding: 0; margin: 0; color: inherit; font: inherit; text-align: right; cursor: pointer; border-radius: 10px; }
+    .record-open-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+    .sup-rec-body { display: flex; flex-direction: column; gap: 10px; max-height: 55vh; overflow-y: auto; }
+    .sup-rec-row { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+    .sup-rec-label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .sup-rec-value[dir="ltr"] { text-align: right; }
+    .sup-rec-value { font-size: 13px; color: var(--text-strong); line-height: 1.9; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .sup-rec-checks { list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--text-strong); line-height: 1.9; }
     .flow-title { font-size: 15px; font-weight: 800; color: var(--text-strong); }
     .flow-hint { font-size: 12px; color: var(--text-muted); line-height: 1.9; }
     .flow-time { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--text); }
