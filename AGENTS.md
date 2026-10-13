@@ -13,6 +13,9 @@ This repo is **Geo Team**: a Persian (RTL) offline PWA for site attendance and s
 8. **No false positives.** A finding needs a concrete path: exact inputs/steps → wrong result. "Might", "could", style nits and accepted risks (see `docs/security/threat-model.md`, "ریسک‌های پذیرفته‌شده") are not findings.
 9. Do not commit `node_modules/`, screenshots, or `tests/output/`.
 
+## Strix (AI pentest)
+The Strix skills are installed (`.agents/skills/*strix*`, `.claude/skills/*strix*`, `skills-lock.json`; reinstall with `npx skills add usestrix/strix`). The `strix` role (`.agent/workflows/qa-strix.md`) runs the open-source CLI against a local build with `docs/security/strix-instructions.md`. Strix output stays local (`strix_runs/` is git-ignored); only reproduced findings with failing tests are committed.
+
 ## Commands
 ```bash
 npm ci
