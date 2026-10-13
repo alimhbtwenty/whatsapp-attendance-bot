@@ -531,6 +531,7 @@
       renderOpenEntryBanner();
       updatePreview();
     }
+    lastCommit = null;
     renderArchive();
     showToast('رکورد حذف شد');
   }

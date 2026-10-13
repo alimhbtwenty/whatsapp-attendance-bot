@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-sGHF+D8erTHeaYumD6iy2tSntQ3I5We+E3T6tHsdOak='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RC568iokNDxx84mVvc4TqWDmqe8fVnz248JcOsvmQ9Q='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -3334,7 +3334,12 @@
     const day = dayIndex(dateToJalali(dateObj));
     return !getLogs().some(l => {
       if (!l || l.type !== 'attendance') return false;
-      if (l.dateISO) return l.dateISO === iso;
+      if (l.by && otherPersons(l.by.id)) return false;
+      if (l.dateISO === iso) return true;
+      if (l.inTime && l.outTime && parseHM(l.outTime) < parseHM(l.inTime)) {
+        const d = isoToDate(l.dateISO);
+        if (d && toISODate(new Date(d.getTime() + 86400000)) === iso) return true;
+      }
       const j = logJalali(l);
       return !!j && dayIndex(j) === day;
     });
@@ -3871,12 +3876,10 @@
     const o = getOpenEntry();
     if (!o || o.company !== selectedCompany || attendanceAction === 'in') return null;
     const diff = Math.round((isoToDate(toISODate(currentDateObj)) - isoToDate(o.dateISO)) / 86400000);
-    if (diff === 0) return o;
-    if (diff === 1) {
-      const [ih, im] = o.inTime.split(':').map(Number);
-      const out = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
-      if (out < ih * 60 + im) return o;
-    }
+    const [ih, im] = o.inTime.split(':').map(Number);
+    const out = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
+    if (diff === 0 && out >= ih * 60 + im) return o;
+    if (diff === 1 && out < ih * 60 + im) return o;
     return null;
   }
 
@@ -4570,6 +4573,7 @@
       renderOpenEntryBanner();
       updatePreview();
     }
+    lastCommit = null;
     renderArchive();
     showToast('رکورد حذف شد');
   }
