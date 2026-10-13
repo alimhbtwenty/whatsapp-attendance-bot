@@ -17,6 +17,7 @@ Antigravity کارهای سنگین (تست و باگ‌یابی از چند ج�
      ```
      (راه دیگر: به‌جای `npm` و `npx` بنویسید `npm.cmd` و `npx.cmd`.)
    - ریپو را در پوشه خودتان بگیرید (`cd $HOME`، بعد `mkdir Projects` و `cd Projects`)، نه در `C:\Windows\System32`؛ پنجره Administrator به‌طور پیش‌فرض آن‌جا باز می‌شود.
+   - **اینترنت:** لپ‌تاپ از PdaNext (آداپتور شبکه USB، گوشی مسیریاب است و VPN گوشی کل لپ‌تاپ را هم می‌پوشاند) وصل می‌شود. **هیچ پروکسی لازم نیست.** اگر قبلاً برای npm پروکسی گذاشته‌اید، پاکش کنید: `npm config delete proxy` و `npm config delete https-proxy`.
 3. **گرفتن ریپو در ترمینال:**
    ```bash
    git clone https://github.com/alimhbtwenty/whatsapp-attendance-bot.git
@@ -56,6 +57,19 @@ Reply with the branch name and the findings table.
 - ایجنت‌ها هم‌زمان روی یک پوشه کار می‌کنند. اگر Antigravity برای هر ایجنت workspace یا worktree جدا پیشنهاد کرد، قبول کنید. وگرنه بهتر است برای هر ایجنت یک clone جدا از ریپو بگیرید (مرحله ۱، در پوشه‌ای دیگر)، تا برنچ‌هایشان قاطی نشوند.
 - اگر ایجنتی خواست چیزی را `main` یا `ccr-6b68bcdc-nwkjfb` push کند، رد کنید.
 - «Review policy» را روی «Request review» بگذارید تا قبل از هر push بپرسد.
+
+## اجرای ایجنت‌ها بدون Antigravity IDE
+همان پرامپت‌ها در این دو راه هم کار می‌کنند. فقط به‌جای `/qa-flows` بنویسید `follow .agent/workflows/qa-flows.md`. هر ایجنت باید در `git worktree` خودش کار کند.
+
+- **Gemini CLI** (ایجنت ترمینالی گوگل، رایگان با حساب گوگل، روی لپ‌تاپ):
+  1. `npm.cmd install -g @google/gemini-cli`
+  2. در پوشه ریپو `gemini` را بزنید و با حساب گوگل وارد شوید. فایل `GEMINI.md` ریپو را خودش می‌خواند (به `AGENTS.md` و اسکیل درس‌ها اشاره می‌کند).
+  3. برای هر ایجنت یک پنجره PowerShell جدا باز کنید، با `cd` به همان worktree بروید، `gemini` را بزنید و پرامپت را بدهید.
+  4. Strix هم از همین‌جا اجرا می‌شود، چون روی لپ‌تاپ است (Docker و کلید لازم است).
+- **Jules** (jules.google، ایجنت ابری گوگل):
+  - مستقیم روی ریپوی GitHub کار می‌کند و روی لپ‌تاپ چیزی اجرا نمی‌شود. هر کار یک برنچ جدا می‌سازد.
+  - ریپو را وصل کنید، برنچ `ccr-6b68bcdc-nwkjfb` را انتخاب کنید و همان پرامپت را بدهید (خط‌های `git worktree` لازم نیست).
+  - Strix را نمی‌تواند اجرا کند (Docker و کلید ندارد)، ولی `npm test` و تست‌های Playwright را اجرا می‌کند.
 
 ## ۳. تحویل به Claude Code
 در یک پیام برای Claude بنویسید:

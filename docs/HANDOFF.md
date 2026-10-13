@@ -26,6 +26,8 @@ APK با کلید امضای ثابت ساخته می‌شود، پس روی ن�
 
 ## Antigravity (ایجنت‌های تست و باگ‌یابی)
 مالک کارهای سنگین تست و باگ‌یابی را به Antigravity (Google) می‌دهد. راهنما: `docs/antigravity/README.md`. قواعد ایجنت‌ها: `AGENTS.md` و `.agent/`. هر ایجنت روی برنچ `antigravity/<role>-<date>` تست می‌نویسد و گزارشش را در `docs/reviews/antigravity/` می‌گذارد. Claude برنچ‌ها را بررسی می‌کند، هر یافته را دوباره بازتولید و رفع می‌کند، و هیچ‌وقت برنچ آن‌ها را بی‌بررسی ادغام نمی‌کند.
+- **شبکه لپ‌تاپ مالک:** از PdaNext (ریپوی `alimhbtwenty/pdanet-next`): آداپتور شبکه USB با گوشی به‌عنوان مسیریاب؛ VPN گوشی کل لپ‌تاپ را می‌پوشاند. **پروکسی نیست؛ هیچ‌وقت پروکسی پیشنهاد نشود.**
+- مالک از Antigravity IDE راضی نیست. جایگزین‌ها: Gemini CLI روی لپ‌تاپ یا Jules ابری (`docs/antigravity/README.md`، `GEMINI.md`). Strix: `.agent/workflows/qa-strix.md`.
 - دور ۱ (flows، security، data-safety) و دور ۲ (ui، android) بررسی و ادغام شد: `docs/reviews/antigravity/claude-triage-2026-10-13.md`.
 - درس‌ها در اسکیل `.claude/skills/geo-team-qa-lessons/SKILL.md` جمع می‌شوند؛ ایجنت‌ها اول همین را می‌خوانند و هر بررسی تازه به آن اضافه می‌کند.
 

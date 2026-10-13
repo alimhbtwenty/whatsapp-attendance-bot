@@ -1,0 +1,2 @@
+# Gemini CLI / Jules instructions
+Read `AGENTS.md` (hard rules), then `.claude/skills/geo-team-qa-lessons/SKILL.md` (real past defects and test rules), then `CLAUDE.md` (project facts) before doing anything. QA workflows are in `.agent/workflows/qa-*.md`; when a prompt says `/qa-flows`, follow `.agent/workflows/qa-flows.md`. Work only in your own `antigravity/<role>-<date>` branch (in a `git worktree` when other agents share the clone). Never push to `main` or `ccr-6b68bcdc-nwkjfb`.
