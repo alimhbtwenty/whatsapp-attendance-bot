@@ -13,6 +13,8 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
   const p = await ctx.newPage(); p.setDefaultTimeout(15000);
   const errs = []; p.on('pageerror', e => errs.push(e.message));
+  // ساعت ثابت (ظهر): نزدیک ۰۸:۰۰ یا ۰۹:۳۰، ورود «همین لحظه» حساب می‌شد و پنجره «ثبت موقعیت» جلوی کلیک را می‌گرفت
+  await p.clock.install({ time: new Date('2026-10-12T12:00:00+03:30') });
   await p.addInitScript(() => {
     // «فایل‌های برنامه» در sessionStorage همین تب: با بارگذاری دوباره می‌مانند، مثل دیسک گوشی
     const NS = 'fake_native_store';

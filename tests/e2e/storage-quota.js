@@ -9,11 +9,14 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
 const DAY = 86400000;
 
 (async () => {
+  // ساعت ثابت (۲۲:۰۰ امروزِ تهران): دور از ساعت‌های ورودِ تست، تا ورود «همین لحظه» حساب نشود و پنجره «ثبت موقعیت» نیاید
+  const PINNED = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tehran' }) + 'T22:00:00+03:30');
   const b = await chromium.launch();
   const page = async (seed) => {
     const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, timezoneId: 'Asia/Tehran' });
     await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
     const p = await ctx.newPage(); p.setDefaultTimeout(15000);
+    await p.clock.install({ time: PINNED });
     p.errs = []; p.on('pageerror', e => p.errs.push(e.message));
     await p.addInitScript((s) => { if (localStorage.getItem('seeded')) return; localStorage.setItem('seeded', '1'); for (const k in s) localStorage.setItem(k, s[k]); }, seed);
     await p.goto(BASE + '/index.html'); await p.waitForTimeout(600);

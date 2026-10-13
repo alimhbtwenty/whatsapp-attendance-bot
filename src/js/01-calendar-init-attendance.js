@@ -707,7 +707,12 @@
     const day = dayIndex(dateToJalali(dateObj));
     return !getLogs().some(l => {
       if (!l || l.type !== 'attendance') return false;
-      if (l.dateISO) return l.dateISO === iso;
+      if (l.by && otherPersons(l.by.id)) return false;
+      if (l.dateISO === iso) return true;
+      if (l.inTime && l.outTime && parseHM(l.outTime) < parseHM(l.inTime)) {
+        const d = isoToDate(l.dateISO);
+        if (d && toISODate(new Date(d.getTime() + 86400000)) === iso) return true;
+      }
       const j = logJalali(l);
       return !!j && dayIndex(j) === day;
     });

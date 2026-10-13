@@ -9,10 +9,13 @@ const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
 const TECH = { name: 'تکنسین', phone: '09120000002', pw: 'tech-pass-22' };
 
 (async () => {
+  // ساعت ثابت (۲۲:۰۰ امروزِ تهران): دور از ساعت‌های ورودِ تست، تا ورود «همین لحظه» حساب نشود و پنجره «ثبت موقعیت» نیاید
+  const PINNED = new Date(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Tehran' }) + 'T22:00:00+03:30');
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, timezoneId: 'Asia/Tehran', acceptDownloads: true });
   await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE });
   const p = await ctx.newPage(); p.setDefaultTimeout(10000);
+  await p.clock.install({ time: PINNED });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.addInitScript(() => { localStorage.setItem('geomat_companies_v2', JSON.stringify(['کرانه', 'دور'])); });
   await p.goto(BASE + '/index.html'); await p.waitForTimeout(600);

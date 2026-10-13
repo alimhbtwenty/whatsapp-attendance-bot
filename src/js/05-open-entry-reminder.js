@@ -156,12 +156,10 @@
     const o = getOpenEntry();
     if (!o || o.company !== selectedCompany || attendanceAction === 'in') return null;
     const diff = Math.round((isoToDate(toISODate(currentDateObj)) - isoToDate(o.dateISO)) / 86400000);
-    if (diff === 0) return o;
-    if (diff === 1) {
-      const [ih, im] = o.inTime.split(':').map(Number);
-      const out = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
-      if (out < ih * 60 + im) return o;
-    }
+    const [ih, im] = o.inTime.split(':').map(Number);
+    const out = (parseInt(document.getElementById('outHour').value, 10) || 0) * 60 + (parseInt(document.getElementById('outMin').value, 10) || 0);
+    if (diff === 0 && out >= ih * 60 + im) return o;
+    if (diff === 1 && out < ih * 60 + im) return o;
     return null;
   }
 
