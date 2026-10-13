@@ -85,7 +85,10 @@
       write(next);
       return true;
     } catch(e) {
-      try { write(current); } catch(e2) {}
+      // بازگردانی با شکست مواجه شد: دو مرحله مثل نسخه دوم روی دیسک تا حافظه آزاد شود و کلیدی از دست نرود
+      const after = snapshotAppData();
+      Object.keys(after).forEach(k => { if (after[k] !== current[k]) { try { localStorage.removeItem(k); } catch(e2) {} } });
+      Object.entries(current).forEach(([k, v]) => { if (localStorage.getItem(k) !== v) { try { localStorage.setItem(k, v); } catch(e2) {} } });
       return false;
     }
   }

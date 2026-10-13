@@ -88,7 +88,10 @@
   function readOpenEntry() {
     try {
       const o = JSON.parse(localStorage.getItem(OPEN_ENTRY_KEY) || 'null');
-      if (o && typeof o.company === 'string' && isoToDate(o.dateISO) && /^\d{2}:\d{2}$/.test(o.inTime)) return o;
+      if (o && typeof o.company === 'string' && isoToDate(o.dateISO) && /^\d{2}:\d{2}$/.test(o.inTime)) {
+        if (!o.logId && o.ts) o.logId = o.ts;
+        return o;
+      }
     } catch(e) {}
     return null;
   }
