@@ -1,7 +1,7 @@
 ---
 description: QA agent 2 — security (XSS, roles, lock screen, team file, backup tampering)
 ---
-Role: `security`. Follow `AGENTS.md`.
+Role: `security`. Follow `AGENTS.md`. First read `.claude/skills/geo-team-qa-lessons/SKILL.md`: hunt for the same kinds of bugs in code it does not list, and do not re-report listed ones.
 
 1. Read `docs/security/threat-model.md` (accepted risks are NOT findings), `docs/decisions/0002-*.md`, `0003-*.md`, `src/js/08-*.js`, `10-*.js`, `11-*.js`, `12-*.js`, `tools/build.mjs` (CSP).
 2. Attack, without devtools on the victim's phone (attacker has a locked phone, or is a logged-in technician, or crafts a backup / team file):

@@ -125,7 +125,8 @@
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
     // تکنسین فیلتر نفر ندارد؛ اضافه‌کار و کسرِ او از رکوردهای خودش (و رکوردهای قدیمیِ بی‌نام) حساب می‌شود
     const own = !isAdmin() && session ? logs.filter(l => !l.by || !l.by.id || l.by.id === session.user.id) : logs;
-    const people = new Set(own.filter(l => l.by && l.by.id).map(l => l.by.id));
+    // فقط تردد: گزارش‌های ساپورتِ وارد‌شده از فایل آرشیو تیم، رکوردِ «یک نفر دیگر» در حساب کارکرد نیستند
+    const people = new Set(own.filter(l => l.type === 'attendance' && l.by && l.by.id).map(l => l.by.id));
     const allSessions = computeSessions(own);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};

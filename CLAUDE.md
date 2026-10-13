@@ -6,7 +6,7 @@ Persian (RTL) PWA for sending site entry/exit and support reports to WhatsApp, a
 Read `docs/HANDOFF.md` (current state, open work, the owner's preferences), `docs/decisions/` (owner decisions not to re-decide) and `docs/data-model.md` (stored data / future server contract) before starting.
 
 ## Skills
-Use the skills in `.claude/skills` for every task. Start with `using-agent-skills` to pick the right one for the phase of work (spec, implementation, `frontend-ui-engineering`, `browser-testing-with-devtools`, `debugging-and-error-recovery`, `code-review-and-quality`, `security-and-hardening`, ...), and review every change with `code-review-and-quality` before pushing.
+Use the skills in `.claude/skills` for every task. Start with `using-agent-skills` to pick the right one for the phase of work (spec, implementation, `frontend-ui-engineering`, `browser-testing-with-devtools`, `debugging-and-error-recovery`, `code-review-and-quality`, `security-and-hardening`, ...), and review every change with `code-review-and-quality` before pushing. Before changing or reviewing attendance, reminders, the archive, accessibility or the Android bridge, and when triaging an agent's branch, check `geo-team-qa-lessons` (real past defects and their guarding tests) and append new lessons to it.
 
 ## Project facts
 - Source lives in `src/` (`index.template.html`, `styles/*.css`, `js/NN-*.js` concatenated in order into one classic script). `index.html` and `android/app/src/main/assets/*` are **generated**: edit `src/`, then run `npm run build`. CI fails if they are stale (`npm run check`).

@@ -33,3 +33,17 @@ Four tests depended on the time of day. Sending an entry within 30 minutes of th
 - **Tests affected:** `restart-durability` (entries at 08:00 and 09:30), `storage-quota` (08:00), `messenger-support-archive` (09:00) and `lock-bypass`.
 - **What happened:** `restart-durability` failed at 10:0x Tehran time, and `storage-quota` fails with the clock set to 08:10.
 - **Fix:** these four tests now pin the page clock away from their entry times. No assertion changed.
+
+## Round 2: ui and android (based on `8105da9`)
+Both branches were reproduced on `8105da9`: `ui-defects` failed 10 checks and `android-bridge-defects` failed 1.
+
+| Finding | Decision |
+|---|---|
+| android #1: `ExitReminder.schedule()` kept `fired` when the reminder moved to a later time, so `restore()` dropped it after a reboot | **Accepted.** The agent was not allowed to touch `android/`, so I fixed it myself: `.remove("fired")` in `schedule()`. |
+| android #2: an entry at or after the reminder time got the notification 60 seconds later | **Accepted and completed.** The in-app banner (`isOpenEntryOverdue`) had the same bug. Both now use `exitReminderAt()`. Guarded by `reminder-timing`. |
+| ui #1: dialogs had no accessible name | **Accepted.** Dialogs with a title element use `aria-labelledby`, and the titles got default text. |
+| ui #2: the vault password fields had no labels | **Accepted.** |
+| ui #3: the delete button's contrast was too low | **Accepted, but the fix was incomplete.** The agent's `#fff` only fixed the light theme; the dark theme measured 3.46:1. There is now an `--on-danger` token for each theme, checked in both themes by `reminder-timing`. |
+
+## From now on
+Every triage adds its real findings, and the mistakes in agent fixes, to `.claude/skills/geo-team-qa-lessons/SKILL.md`. Antigravity agents read that file first (`AGENTS.md`, `.agent/rules`, `.agent/workflows`).

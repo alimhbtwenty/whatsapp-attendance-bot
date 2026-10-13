@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sfr5jrPs31/EELM+ysB5YODrUQ4LHZDuso6OGZ6qRc='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-NMc3QWtfURAKmxJ4+1ABhPjs+l9sjeqWIRBZU44PIwQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -1812,6 +1812,9 @@
     .flow-custom { display: flex; gap: 8px; }
     .flow-custom input { flex: 1; }
     .archive-gap { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+    .archive-who { font-size: 10px; color: var(--text-muted); max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .team-archive-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .team-archive-row .dock-copy-btn { flex: 1; padding: 9px 6px; font-size: 11.5px; }
     .notif-test-btns { display: flex; gap: 6px; }
   </style>
 </head>
@@ -2188,6 +2191,13 @@
         <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
           📥 دانلود اکسل
         </button>
+      </div>
+
+      <!-- آرشیو ساپورت تیم: گزارش‌های ساپورت هر نفر با فایل به گوشی بقیه می‌رسد (تا سرور بیاید) -->
+      <div class="team-archive-row">
+        <button class="dock-copy-btn" data-click='["exportTeamArchive"]'>📤 فایل آرشیو تیم</button>
+        <button class="dock-copy-btn" data-click='["openTeamArchivePicker"]'>📥 افزودن فایل آرشیو تیم</button>
+        <input type="file" id="teamArchiveInput" accept=".json,application/json" style="display:none;" data-change='["importTeamArchive", "$this"]' aria-label="فایل آرشیو تیم">
       </div>
 
       <div class="filter-pills-row" id="archiveCompanyFilters">
@@ -4503,12 +4513,15 @@
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
   let archivePersonFilter = 'all';
+  let archiveTypeFilter = 'all'; // 'all' | 'attendance' | 'support'
   // رکوردهای یک نفر (فیلتر «👤») یا همه؛ آرشیو، اکسل و گزارش ماهانه همه از همین می‌خوانند
   function personScopedLogs(logs) {
     return archivePersonFilter === 'all' ? logs : logs.filter(l => l.by && l.by.id === archivePersonFilter);
   }
   function archiveScopedLogs() {
-    return personScopedLogs(getLogs()).filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter);
+    return personScopedLogs(getLogs())
+      .filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter)
+      .filter(l => archiveTypeFilter === 'all' || (archiveTypeFilter === 'support' ? l.type === 'support' : l.type !== 'support'));
   }
   function renderArchive() {
     const logs = getLogs();
@@ -4531,6 +4544,17 @@
       chip.setAttribute('role', 'button'); chip.tabIndex = 0;
       chip.textContent = c;
       chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
+      filterBar.appendChild(chip);
+    });
+
+    // نوع گزارش: همه، تردد، ساپورت (گزارش‌های ساپورتِ بقیه با فایل آرشیو تیم می‌آیند)
+    [['all', 'همه گزارش‌ها'], ['attendance', '🕒 تردد'], ['support', '🛠 ساپورت']].forEach(([t, label]) => {
+      const chip = document.createElement('div');
+      chip.className = `filter-chip ${archiveTypeFilter === t ? 'active' : ''}`;
+      chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+      chip.dataset.archiveType = t;
+      chip.textContent = label;
+      chip.onclick = () => { archiveTypeFilter = t; archiveVisible = 30; renderArchive(); };
       filterBar.appendChild(chip);
     });
 
@@ -4571,6 +4595,7 @@
             <span style="font-weight:800; color:var(--accent-fg); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
+            ${item.by && item.by.name && (!session || item.by.id !== session.user.id) ? `<span class="archive-who">👤 ${escapeHtml(String(item.by.name))}</span>` : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
             ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
@@ -4580,7 +4605,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible
@@ -4596,11 +4621,17 @@
     return 'مدت: ' + (item.durationText || '-');
   }
 
-  async function deleteLogItem(id) {
+  // byId: id زمان ثبت است و گزارشِ وارد‌شده از گوشی دیگر می‌تواند همان id را داشته باشد؛ فقط همان یک رکورد حذف شود
+  async function deleteLogItem(id, byId) {
     playTactileFeedback();
-    const item = getLogs().find(l => l.id === id);
+    const match = l => l.id === id && (!byId || (l.by && l.by.id) === byId);
+    const item = getLogs().find(match);
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
-    if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
+    const logs = getLogs();
+    const idx = logs.findIndex(match);
+    if (idx < 0) return;
+    logs.splice(idx, 1);
+    if (!writeLogs(logs)) return;
     // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
     const open = readOpenEntry(); // ورود بازِ این رکورد، مال هر حسابی که باشد
     if (open && open.logId === id) {
@@ -4769,6 +4800,126 @@
     const br = window.AndroidBridge;
     if (br && typeof br.openBatterySettings === 'function') br.openBatterySettings();
   }
+  // ==================== آرشیو ساپورت تیم (فایل) ====================
+  // تا وقتی سرور نیست، گزارش‌های ساپورتِ هر نفر با یک فایل به گوشی بقیه (تکنسین‌ها و مدیر) می‌رسد (ADR-0004).
+  // - خروجی: فقط گزارش‌های ساپورتِ خودِ کاربر؛ هیچ‌وقت پرونده فنی، رمز یا تردد
+  // - ورود: فقط اضافه می‌شود؛ هیچ رکوردی عوض یا حذف نمی‌شود. کلید یکتا by.id|id است،
+  //   چون id زمان ثبت است و بین دو گوشی می‌تواند تکراری باشد
+  // همین شکل رکورد و کلید، قرارداد همگام‌سازی آینده با سرور است (docs/data-model.md)
+  const TEAM_ARCHIVE_KIND = 'team-archive';
+  const TEAM_ARCHIVE_MAX_BYTES = 2 * 1024 * 1024;
+  const TEAM_ARCHIVE_MAX_RECORDS = 2000;
+  const archiveRecordKey = (l) => `${l.by && l.by.id ? l.by.id : ''}|${l.id}`;
+
+  const shortStr = (v, max) => typeof v === 'string' && v.length <= max ? v : null;
+  function cleanWho(w) {
+    const id = w && shortStr(w.id, 64);
+    const name = w && shortStr(w.name, 60);
+    return id && name !== null ? { id, name } : null;
+  }
+  // فقط فیلدهای شناخته‌شده گزارش ساپورت، با نوع و اندازه درست؛ هر چیز دیگری از فایل دور ریخته می‌شود
+  function cleanSupportRecord(r) {
+    if (!r || typeof r !== 'object' || r.type !== 'support') return null;
+    const id = Number(r.id);
+    const by = cleanWho(r.by);
+    const company = shortStr(r.company, 80);
+    const dateISO = shortStr(r.dateISO, 10);
+    if (!Number.isSafeInteger(id) || id <= 0 || !by || !company || !dateISO || !isoToDate(dateISO) || toISODate(isoToDate(dateISO)) !== dateISO) return null; // ۲۰۲۶-۱۳-۴۵ هم Date می‌سازد
+    const jy = Number(r.jy), jm = Number(r.jm), jd = Number(r.jd);
+    if (![jy, jm, jd].every(Number.isInteger) || jy < 1300 || jy > 1600 || jm < 1 || jm > 12 || jd < 1 || jd > 31) return null;
+    const text = shortStr(r.text, 20000);
+    if (text === null) return null;
+    const field = (k) => shortStr(r[k] === undefined ? '' : r[k], 5000);
+    const actions = field('actions'), pending = field('pending'), tech = field('tech');
+    if (actions === null || pending === null || tech === null) return null;
+    let checklist = null;
+    if (Array.isArray(r.checklist)) {
+      if (r.checklist.length > 100) return null;
+      checklist = r.checklist.map(c => c && shortStr(c.item, 200) !== null ? { item: c.item, done: c.done === true } : null);
+      if (checklist.some(c => !c)) return null;
+    }
+    return {
+      id, by, type: 'support', company,
+      date: shortStr(r.date, 40) || '', day: shortStr(r.day, 40) || '',
+      dateISO, jy, jm, jd,
+      action: null, inTime: null, outTime: null, geo: null, durationMins: 0, durationText: '-',
+      text, actions, pending, tech, checklist
+    };
+  }
+
+  function exportTeamArchive() {
+    playTactileFeedback();
+    if (!session) return;
+    const mine = getLogs().filter(l => l.type === 'support' && !l.imported && l.by && l.by.id === session.user.id);
+    const records = mine.map(cleanSupportRecord).filter(Boolean).slice(0, TEAM_ARCHIVE_MAX_RECORDS);
+    if (!records.length) { showToast('هنوز گزارش ساپورتی از شما در آرشیو نیست'); return; }
+    const file = { app: BACKUP_APP_ID, kind: TEAM_ARCHIVE_KIND, v: 1, exportedAt: new Date().toISOString(), from: sessionWho(), records };
+    if (downloadFile(`geoteam-support-${toISODate(new Date())}.json`, JSON.stringify(file), 'application/json')) {
+      showToast(`📤 ${toPersianDigits(records.length)} گزارش ساپورت در فایل آرشیو تیم؛ آن را برای مدیر یا تیم بفرستید`);
+    }
+  }
+
+  function openTeamArchivePicker() {
+    if (!session) return;
+    document.getElementById('teamArchiveInput').click();
+  }
+  function importTeamArchive(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file || !session) return;
+    if (file.size > TEAM_ARCHIVE_MAX_BYTES) { showToast('⚠️ فایل آرشیو تیم خیلی بزرگ است'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      let obj = null;
+      try { obj = JSON.parse(String(reader.result || '')); } catch(e) {}
+      if (!obj || obj.app !== BACKUP_APP_ID || obj.kind !== TEAM_ARCHIVE_KIND || obj.v !== 1 || !Array.isArray(obj.records) || obj.records.length > TEAM_ARCHIVE_MAX_RECORDS) {
+        showToast('⚠️ این فایل، آرشیو تیم Geo Team نیست');
+        return;
+      }
+      if (!session) return; // وسط خواندن فایل قفل شد
+      const result = addTeamArchiveRecords(obj.records, cleanWho(obj.from));
+      if (result.error) { showToast(`⚠️ ${result.error}`); return; }
+      renderArchive();
+      const extra = [result.skipped ? `${toPersianDigits(result.skipped)} تکراری` : '', result.bad ? `${toPersianDigits(result.bad)} نامعتبر` : ''].filter(Boolean).join('، ');
+      showToast(`📥 ${toPersianDigits(result.added)} گزارش ساپورت به آرشیو اضافه شد${extra ? ` (${extra})` : ''}`);
+    };
+    reader.onerror = () => showToast('⚠️ خواندن فایل ممکن نشد');
+    reader.readAsText(file);
+  }
+  // رکوردهای تازه به ترتیب زمان لای آرشیو می‌روند؛ ترتیب رکوردهای فعلی دست نمی‌خورد
+  function addTeamArchiveRecords(records, from) {
+    const logs = getLogs();
+    const have = new Set(logs.map(archiveRecordKey));
+    const at = new Date().toISOString();
+    const fresh = [];
+    let skipped = 0, bad = 0;
+    for (const r of records) {
+      const c = cleanSupportRecord(r);
+      if (!c) { bad++; continue; }
+      const k = archiveRecordKey(c);
+      if (have.has(k)) { skipped++; continue; }
+      have.add(k);
+      c.imported = { at, from };
+      fresh.push(c);
+    }
+    if (!fresh.length) return { added: 0, skipped, bad };
+    // writeLogs برای جا باز کردن قدیمی‌ترین رکوردها را کنار می‌گذارد؛ ورود فایل هرگز نباید باعث آن شود
+    if (logs.length + fresh.length > LOGS_MAX) return { error: 'آرشیو این گوشی جای این همه گزارش را ندارد' };
+    fresh.sort((a, b) => b.id - a.id);
+    const out = [];
+    let i = 0;
+    for (const l of logs) {
+      while (i < fresh.length && fresh[i].id > (Number(l.id) || 0)) out.push(fresh[i++]);
+      out.push(l);
+    }
+    while (i < fresh.length) out.push(fresh[i++]);
+    try {
+      storeItem('geomat_logs_v2', JSON.stringify(out));
+    } catch(e) {
+      return { error: 'حافظه پر است؛ فایل وارد نشد و آرشیو دست نخورد' };
+    }
+    return { added: fresh.length, skipped, bad };
+  }
   // ==================== گزارش ماهانه ====================
   // هر رکورد تردد به «جلسه کاری» (ورود تا خروج) تبدیل می‌شود: رکورد کامل مستقیم، و ورود/خروجِ جدا
   // (حتی از نسخه‌های قبل که فقط متن پیام را داشتند) با هم جفت می‌شوند؛ رکوردهای تکراری
@@ -4896,7 +5047,8 @@
     const scoped = archiveCompanyFilter === 'all' ? logs : logs.filter(l => l.company === archiveCompanyFilter);
     // تکنسین فیلتر نفر ندارد؛ اضافه‌کار و کسرِ او از رکوردهای خودش (و رکوردهای قدیمیِ بی‌نام) حساب می‌شود
     const own = !isAdmin() && session ? logs.filter(l => !l.by || !l.by.id || l.by.id === session.user.id) : logs;
-    const people = new Set(own.filter(l => l.by && l.by.id).map(l => l.by.id));
+    // فقط تردد: گزارش‌های ساپورتِ وارد‌شده از فایل آرشیو تیم، رکوردِ «یک نفر دیگر» در حساب کارکرد نیستند
+    const people = new Set(own.filter(l => l.type === 'attendance' && l.by && l.by.id).map(l => l.by.id));
     const allSessions = computeSessions(own);
     const sessions = computeSessions(scoped).filter(x => x.jy === reportJY && x.jm === reportJM);
     const perCompany = {};
@@ -7189,7 +7341,7 @@
   // ==================== رویدادهای رابط (بدون onclick داخل HTML) ====================
   // همه رویدادها از یک‌جا و فقط به تابع‌های این فهرست می‌رسند؛ با این کار CSP می‌تواند هر اسکریپت تزریق‌شده را ببندد
   // قالب: data-click='["نام‌تابع", آرگومان‌ها...]'؛ "$this" = خود عنصر، "$event" = رویداد، "$value" = مقدار عنصر
-  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "filterChatRoom", "genInvPassword", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAppBatterySettings", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "pickGapReason", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveFlowModal", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitGapText", "submitMissingEntry", "submitVaultModal", "switchSystemMode", "testExitNotification", "toggleEditLocations", "toggleInvSecret", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
+  const UI_ACTION_NAMES = ["addChecklistItem", "addHoliday", "appendSupportTag", "attachCurrentReportToChat", "changeDateByDays", "changeMyPassword", "chatActionCopy", "chatActionDelete", "chatActionWhatsApp", "checklistKeydown", "clearChatHistory", "closeAddModal", "closeCalendar", "closeChatActions", "closeInvItemModal", "closeInvPanel", "closeOutbox", "createInvCompany", "deleteLogItem", "disableBiometric", "discardOpenEntry", "enableBiometric", "executeCopyText", "executeSendWhatsApp", "exportBackup", "exportFilteredExcel", "exportMonthlyCsv", "exportTeamArchive", "filterChatRoom", "genInvPassword", "handleDigitInput", "handleDigitKeydown", "handleDigitPaste", "importTeamArchive", "importTeamFile", "importTeamFileFromSession", "loginApp", "loginWithBiometric", "logoutApp", "openAccountPanel", "openAddModal", "openAppBatterySettings", "openAttendanceCalendar", "openOutbox", "openRestorePicker", "openSupportCalendar", "openTeamArchivePicker", "openTeamFilePicker", "padZeroOnBlur", "pickCalendarDate", "pickCalendarToday", "pickGapReason", "removeHoliday", "renderInventory", "requestEntryLocation", "resolveConfirm", "resolveFlowModal", "resolveVaultModal", "restoreBackupFromInput", "restorePreUpdateBackup", "saveInvItem", "saveNewProjectFromModal", "saveSettingField", "scrollChatToBottom", "sendChatMessage", "setAttendanceAction", "setDateOffset", "setSpecificNow", "setSupportDateOffset", "setSupportView", "setupAdmin", "shiftCalendarMonth", "shiftReportMonth", "showMoreArchive", "startExitForOpenEntry", "submitGapText", "submitMissingEntry", "submitVaultModal", "switchSystemMode", "testExitNotification", "toggleEditLocations", "toggleInvSecret", "toggleLegacyLogin", "updatePreview", "updateSupportPreview"];
   const UI_EVENT_ATTRS = { click: 'click', input: 'input', change: 'change', keydown: 'keydown', paste: 'paste', focusout: 'blur' };
   Object.keys(UI_EVENT_ATTRS).forEach(type => document.addEventListener(type, (e) => {
     const attr = 'data-' + UI_EVENT_ATTRS[type];

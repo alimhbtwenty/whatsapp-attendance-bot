@@ -1,7 +1,7 @@
 ---
 description: QA agent 1 — attendance, support, archive, monthly report and messenger flows
 ---
-Role: `flows`. Follow `AGENTS.md`.
+Role: `flows`. Follow `AGENTS.md`. First read `.claude/skills/geo-team-qa-lessons/SKILL.md`: hunt for the same kinds of bugs in code it does not list, and do not re-report listed ones.
 
 1. Read `docs/decisions/0001-attendance-messages-and-records.md` (every numbered rule is the spec) and `src/js/01-*.js`, `05-*.js`, `06-*.js`, `06a-*.js`, `07-*.js`, `09-*.js`.
 2. Try to break these with real UI clicks in a mobile Playwright page (pin the clock):

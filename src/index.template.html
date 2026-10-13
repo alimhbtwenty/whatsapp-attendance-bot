@@ -394,6 +394,13 @@
         </button>
       </div>
 
+      <!-- آرشیو ساپورت تیم: گزارش‌های ساپورت هر نفر با فایل به گوشی بقیه می‌رسد (تا سرور بیاید) -->
+      <div class="team-archive-row">
+        <button class="dock-copy-btn" data-click='["exportTeamArchive"]'>📤 فایل آرشیو تیم</button>
+        <button class="dock-copy-btn" data-click='["openTeamArchivePicker"]'>📥 افزودن فایل آرشیو تیم</button>
+        <input type="file" id="teamArchiveInput" accept=".json,application/json" style="display:none;" data-change='["importTeamArchive", "$this"]' aria-label="فایل آرشیو تیم">
+      </div>
+
       <div class="filter-pills-row" id="archiveCompanyFilters">
         <!-- چیپ‌های فیلتر: همه، صدف، مایسا و... -->
       </div>

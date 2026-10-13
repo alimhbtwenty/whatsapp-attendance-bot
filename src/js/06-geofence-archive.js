@@ -425,12 +425,15 @@
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
   let archivePersonFilter = 'all';
+  let archiveTypeFilter = 'all'; // 'all' | 'attendance' | 'support'
   // رکوردهای یک نفر (فیلتر «👤») یا همه؛ آرشیو، اکسل و گزارش ماهانه همه از همین می‌خوانند
   function personScopedLogs(logs) {
     return archivePersonFilter === 'all' ? logs : logs.filter(l => l.by && l.by.id === archivePersonFilter);
   }
   function archiveScopedLogs() {
-    return personScopedLogs(getLogs()).filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter);
+    return personScopedLogs(getLogs())
+      .filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter)
+      .filter(l => archiveTypeFilter === 'all' || (archiveTypeFilter === 'support' ? l.type === 'support' : l.type !== 'support'));
   }
   function renderArchive() {
     const logs = getLogs();
@@ -453,6 +456,17 @@
       chip.setAttribute('role', 'button'); chip.tabIndex = 0;
       chip.textContent = c;
       chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
+      filterBar.appendChild(chip);
+    });
+
+    // نوع گزارش: همه، تردد، ساپورت (گزارش‌های ساپورتِ بقیه با فایل آرشیو تیم می‌آیند)
+    [['all', 'همه گزارش‌ها'], ['attendance', '🕒 تردد'], ['support', '🛠 ساپورت']].forEach(([t, label]) => {
+      const chip = document.createElement('div');
+      chip.className = `filter-chip ${archiveTypeFilter === t ? 'active' : ''}`;
+      chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+      chip.dataset.archiveType = t;
+      chip.textContent = label;
+      chip.onclick = () => { archiveTypeFilter = t; archiveVisible = 30; renderArchive(); };
       filterBar.appendChild(chip);
     });
 
@@ -493,6 +507,7 @@
             <span style="font-weight:800; color:var(--accent-fg); font-size:13px;">${escapeHtml(item.company)}</span>
             <span style="font-size:10px; background:color-mix(in srgb, var(--fg-mix) 6%, transparent); padding:2px 6px; border-radius:6px; color:var(--text-muted);">${item.type === 'attendance' ? '🕒 تردد' : '🛠 فنی'}</span>
             ${item.geo ? '<span style="font-size:10px;" title="لوکیشن ورود ثبت شده">📍</span>' : ''}
+            ${item.by && item.by.name && (!session || item.by.id !== session.user.id) ? `<span class="archive-who">👤 ${escapeHtml(String(item.by.name))}</span>` : ''}
           </div>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">
             ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
@@ -502,7 +517,7 @@
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0)} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible
@@ -518,11 +533,17 @@
     return 'مدت: ' + (item.durationText || '-');
   }
 
-  async function deleteLogItem(id) {
+  // byId: id زمان ثبت است و گزارشِ وارد‌شده از گوشی دیگر می‌تواند همان id را داشته باشد؛ فقط همان یک رکورد حذف شود
+  async function deleteLogItem(id, byId) {
     playTactileFeedback();
-    const item = getLogs().find(l => l.id === id);
+    const match = l => l.id === id && (!byId || (l.by && l.by.id) === byId);
+    const item = getLogs().find(match);
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
-    if (!writeLogs(getLogs().filter(l => l.id !== id))) return;
+    const logs = getLogs();
+    const idx = logs.findIndex(match);
+    if (idx < 0) return;
+    logs.splice(idx, 1);
+    if (!writeLogs(logs)) return;
     // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
     const open = readOpenEntry(); // ورود بازِ این رکورد، مال هر حسابی که باشد
     if (open && open.logId === id) {

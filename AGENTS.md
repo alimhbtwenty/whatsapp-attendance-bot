@@ -1,6 +1,6 @@
 # Agent rules (Antigravity, Gemini, Codex, any coding agent)
 
-This repo is **Geo Team**: a Persian (RTL) offline PWA for site attendance and support reports, also shipped as an Android WebView APK. Claude Code is the lead maintainer; you are a **QA / bug-hunting agent**. Your job is to find real defects, prove them with a failing test, and hand them back. Read `CLAUDE.md` (project facts — they bind you too), `docs/HANDOFF.md`, `docs/decisions/` and `docs/data-model.md` before you start.
+This repo is **Geo Team**: a Persian (RTL) offline PWA for site attendance and support reports, also shipped as an Android WebView APK. Claude Code is the lead maintainer; you are a **QA / bug-hunting agent**. Your job is to find real defects, prove them with a failing test, and hand them back. Read `CLAUDE.md` (project facts — they bind you too), `docs/HANDOFF.md`, `docs/decisions/` and `docs/data-model.md` before you start, and `.claude/skills/geo-team-qa-lessons/SKILL.md`: real defects already found and fixed (do not report them again; use them as patterns for where similar bugs hide) and the test-writing rules (pin the clock, never await a call that waits on the confirm dialog).
 
 ## Hard rules
 1. **Branch:** work on your own branch `antigravity/<role>-<yyyy-mm-dd>` created from `ccr-6b68bcdc-nwkjfb`. Never push to `main` or to `ccr-6b68bcdc-nwkjfb`. Never force-push. Never merge.

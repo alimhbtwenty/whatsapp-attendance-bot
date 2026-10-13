@@ -1,7 +1,7 @@
 ---
 description: QA agent 3 — data safety on update, restore, phone restart and full storage
 ---
-Role: `data-safety`. Follow `AGENTS.md`.
+Role: `data-safety`. Follow `AGENTS.md`. First read `.claude/skills/geo-team-qa-lessons/SKILL.md`: hunt for the same kinds of bugs in code it does not list, and do not re-report listed ones.
 
 1. Read `docs/data-model.md` (incl. "نسخه دوم روی دیسک"), `src/js/00a-durable-mirror.js`, `08-backup.js`, `13-migrations.js`, `tests/fixtures/*`, `tests/e2e/upgrade-from-old-versions.js`, `restart-durability.js`, `storage-quota.js`, `pwa-update.js`.
 2. Try to lose or corrupt data:
