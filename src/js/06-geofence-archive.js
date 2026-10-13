@@ -425,15 +425,27 @@
   // آرشیو و فیلتر هر شرکت
   let archiveVisible = 30;
   let archivePersonFilter = 'all';
-  let archiveTypeFilter = 'all'; // 'all' | 'attendance' | 'support'
+  // تردد و ساپورت دو بخش جدای آرشیو‌اند؛ هر بخش فیلتر شرکت خودش را دارد (درخواست مالک)
+  let archiveSection = 'attendance'; // 'attendance' | 'support'
+  let archiveSupportCompany = 'all';
+  const archiveCompany = () => archiveSection === 'support' ? archiveSupportCompany : archiveCompanyFilter;
+  function setArchiveSection(sec) {
+    if (sec !== 'attendance' && sec !== 'support') return;
+    playTactileFeedback();
+    archiveSection = sec;
+    archiveVisible = 30;
+    renderArchive();
+  }
   // رکوردهای یک نفر (فیلتر «👤») یا همه؛ آرشیو، اکسل و گزارش ماهانه همه از همین می‌خوانند
   function personScopedLogs(logs) {
     return archivePersonFilter === 'all' ? logs : logs.filter(l => l.by && l.by.id === archivePersonFilter);
   }
   function archiveScopedLogs() {
-    return personScopedLogs(getLogs())
-      .filter(l => archiveCompanyFilter === 'all' || l.company === archiveCompanyFilter)
-      .filter(l => archiveTypeFilter === 'all' || (archiveTypeFilter === 'support' ? l.type === 'support' : l.type !== 'support'));
+    const company = archiveCompany();
+    const logs = archiveSection === 'support' ? getLogs() : personScopedLogs(getLogs());
+    return logs
+      .filter(l => archiveSection === 'support' ? l.type === 'support' : l.type !== 'support')
+      .filter(l => company === 'all' || l.company === company);
   }
   function renderArchive() {
     const logs = getLogs();
@@ -443,36 +455,32 @@
     const filterBar = document.getElementById('archiveCompanyFilters');
     filterBar.innerHTML = '';
     
-    const allChip = document.createElement('div');
-    allChip.className = `filter-chip ${archiveCompanyFilter === 'all' ? 'active' : ''}`;
-    allChip.setAttribute('role', 'button'); allChip.tabIndex = 0;
-    allChip.textContent = 'همه شرکت‌ها';
-    allChip.onclick = () => { archiveCompanyFilter = 'all'; archiveVisible = 30; renderArchive(); };
-    filterBar.appendChild(allChip);
+    const support = archiveSection === 'support';
+    document.getElementById('archiveSecAtt').classList.toggle('selected', !support);
+    document.getElementById('archiveSecSup').classList.toggle('selected', support);
+    document.getElementById('archiveSecAtt').setAttribute('aria-pressed', String(!support));
+    document.getElementById('archiveSecSup').setAttribute('aria-pressed', String(support));
+    document.getElementById('archiveSectionTitle').textContent = support ? 'آرشیو ساپورت' : 'آرشیو تردد';
+    document.getElementById('teamArchiveRow').hidden = !support;
 
-    comps.forEach(c => {
+    const company = archiveCompany();
+    const pickCompany = (c) => {
+      if (support) archiveSupportCompany = c; else archiveCompanyFilter = c;
+      archiveVisible = 30;
+      renderArchive();
+    };
+    [['all', 'همه شرکت‌ها'], ...comps.map(c => [c, c])].forEach(([c, label]) => {
       const chip = document.createElement('div');
-      chip.className = `filter-chip ${archiveCompanyFilter === c ? 'active' : ''}`;
+      chip.className = `filter-chip ${company === c ? 'active' : ''}`;
       chip.setAttribute('role', 'button'); chip.tabIndex = 0;
-      chip.textContent = c;
-      chip.onclick = () => { archiveCompanyFilter = c; archiveVisible = 30; renderArchive(); };
-      filterBar.appendChild(chip);
-    });
-
-    // نوع گزارش: همه، تردد، ساپورت (گزارش‌های ساپورتِ بقیه با فایل آرشیو تیم می‌آیند)
-    [['all', 'همه گزارش‌ها'], ['attendance', '🕒 تردد'], ['support', '🛠 ساپورت']].forEach(([t, label]) => {
-      const chip = document.createElement('div');
-      chip.className = `filter-chip ${archiveTypeFilter === t ? 'active' : ''}`;
-      chip.setAttribute('role', 'button'); chip.tabIndex = 0;
-      chip.dataset.archiveType = t;
       chip.textContent = label;
-      chip.onclick = () => { archiveTypeFilter = t; archiveVisible = 30; renderArchive(); };
+      chip.onclick = () => pickCompany(c);
       filterBar.appendChild(chip);
     });
 
-    // مدیر وقتی رکورد چند نفر در این گوشی هست، می‌تواند بر اساس شخص هم فیلتر کند
-    const people = [...new Map(logs.filter(l => l.by && l.by.id).map(l => [l.by.id, l.by.name])).entries()];
-    if (isAdmin() && people.length > 1) {
+    // مدیر وقتی ترددِ چند نفر در این گوشی هست، می‌تواند بر اساس شخص هم فیلتر کند (فقط بخش تردد)
+    const people = [...new Map(logs.filter(l => l.type === 'attendance' && l.by && l.by.id).map(l => [l.by.id, l.by.name])).entries()];
+    if (!support && isAdmin() && people.length > 1) {
       [['all', 'همه افراد'], ...people].forEach(([id, name]) => {
         const chip = document.createElement('div');
         chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
@@ -481,7 +489,7 @@
         chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
         filterBar.appendChild(chip);
       });
-    } else {
+    } else if (!isAdmin() || people.length <= 1) {
       archivePersonFilter = 'all';
     }
     const filtered = archiveScopedLogs();
@@ -489,14 +497,15 @@
     // آمار (ورود و خروج جدا هم جفت و حساب می‌شوند)
     const totalMins = computeSessions(filtered).reduce((sum, x) => sum + x.mins, 0);
     document.getElementById('archiveTotalHours').textContent = formatHM(totalMins);
-    document.getElementById('archiveTotalCount').textContent = `${toPersianDigits(filtered.length)} گزارش`;
+    document.getElementById('archiveTotalHours').closest('.hud-stat-box').hidden = support; // ساعت کارکرد مال تردد است
+    document.getElementById('archiveTotalCount').textContent = `${toPersianDigits(filtered.length)} ${support ? 'گزارش ساپورت' : 'گزارش'}`;
     renderMonthlyReport();
     renderStorageUsage();
 
     // لیست لاگ‌ها
     const stream = document.getElementById('archiveStream');
     if (filtered.length === 0) {
-      stream.innerHTML = '<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:18px;">هیچ رکوردی برای این شرکت ثبت نشده است.</div>';
+      stream.innerHTML = `<div style="color:var(--text-dim); font-size:12px; text-align:center; padding:18px;">${support ? 'هیچ گزارش ساپورتی برای این شرکت نیست.' : 'هیچ رکوردی برای این شرکت ثبت نشده است.'}</div>`;
       return;
     }
 
@@ -513,7 +522,7 @@
             ${item.type === 'attendance' ? escapeHtml(attendanceSummary(item)) : (item.actions ? escapeHtml(String(item.actions).length > 30 ? String(item.actions).slice(0, 30) + '…' : String(item.actions)) : 'گزارش ساپورت')}
             ${Array.isArray(item.checklist) ? ` • ✅ ${toPersianDigits(item.checklist.filter(c => c.done).length)}/${toPersianDigits(item.checklist.length)}` : ''}
           </div>
-          ${item.gap && item.gap.reason ? `<div class="archive-gap">🕓 ${escapeHtml(toPersianDigits(String(item.gap.from || '')))} تا ${escapeHtml(toPersianDigits(String(item.gap.to || '')))}: ${escapeHtml(String(item.gap.reason))}</div>` : ''}
+          ${isAdmin() && item.gap && item.gap.reason ? `<div class="archive-gap">🕓 ${escapeHtml(toPersianDigits(String(item.gap.from || '')))} تا ${escapeHtml(toPersianDigits(String(item.gap.to || '')))}: ${escapeHtml(String(item.gap.reason))}</div>` : ''}
         </div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
@@ -560,7 +569,10 @@
   // دانلود فایل اکسل شسته‌رفته برای شرکت فیلترشده
   function exportFilteredExcel() {
     playTactileFeedback();
-    const targetComp = archiveCompanyFilter;
+    const targetComp = archiveCompany();
+    const support = archiveSection === 'support';
+    // «بین دو حضور» فقط برای مدیر (درخواست مالک)؛ برای بقیه ستونش هم نیست
+    const withGap = isAdmin();
     const filtered = archiveScopedLogs();
 
     if (filtered.length === 0) {
@@ -568,18 +580,19 @@
       return;
     }
 
-    let csv = "\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده,بین دو حضور\n";
+    let csv = `\uFEFFردیف,تاریخ,روز,نام شرکت,نوع گزارش,ساعت ورود,ساعت خروج,مدت کارکرد,شرح اقدامات,کارهای باقی‌مانده,مشخصات فنی/IP,لوکیشن ورود,چک‌لیست,ثبت‌کننده${withGap ? ',بین دو حضور' : ''}\n`;
     filtered.forEach((r, idx) => {
       const typeStr = r.type === 'attendance' ? 'حضور و غیاب' : 'پشتیبانی فنی';
       const geoLink = r.geo ? `https://maps.google.com/?q=${r.geo.lat},${r.geo.lng}` : '';
       const checks = Array.isArray(r.checklist) ? r.checklist.map(c => `${c.done ? '✅' : '⬜'} ${c.item}`).join(' | ') : '';
       const sup = r.type === 'support'; // رکوردهای تردد قدیمی گاهی متن فرم ساپورت را هم داشتند
-      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : '', r.gap && r.gap.reason ? `${r.gap.from || ''}-${r.gap.to || ''} ${r.gap.reason}` : ''].map(csvCell).join(',') + '\n';
+      csv += [idx + 1, r.date, r.day, r.company, typeStr, r.inTime || '', r.outTime || '', r.durationText || '-', sup ? r.actions : '', sup ? r.pending : '', sup ? r.tech : '', geoLink, checks, r.by && r.by.name ? r.by.name : '', ...(withGap ? [r.gap && r.gap.reason ? `${r.gap.from || ''}-${r.gap.to || ''} ${r.gap.reason}` : ''] : [])].map(csvCell).join(',') + '\n';
     });
 
     // نام فایل لاتین: نام فارسی در کروم به «download» بدون پسوند تبدیل می‌شد
-    const who = archivePersonFilter === 'all' ? '' : '-person';
-    const filename = targetComp === 'all' ? `geoteam-archive-all${who}.csv` : `geoteam-archive-company-${getCompanies().indexOf(targetComp) + 1}${who}.csv`;
+    const who = support || archivePersonFilter === 'all' ? '' : '-person';
+    const kind = support ? 'support' : 'archive';
+    const filename = targetComp === 'all' ? `geoteam-${kind}-all${who}.csv` : `geoteam-${kind}-company-${getCompanies().indexOf(targetComp) + 1}${who}.csv`;
     if (downloadFile(filename, csv, 'text/csv')) {
       showToast(`فایل اکسل ${targetComp === 'all' ? 'جامع' : targetComp} دانلود شد 📊`);
     }

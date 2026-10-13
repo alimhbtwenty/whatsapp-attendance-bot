@@ -44,6 +44,8 @@ Every item below was a real bug in this app. It was proven by a test that failed
   - Never overwrite or drop a record.
   - Never call `writeLogs` for an import, because it trims the oldest records when the archive is full. Refuse the import instead.
 - **Validate every field from a file:** its type, its length, a round-trip date check (`2026-13-45` still makes a `Date`) and an allow-list of fields. Escape every field on display.
+- **Attendance and support are separate archive sections** (`archiveSection`), each with its own company filter and Excel. The team-file buttons live only in the support section. Guarded by `support-archive-share`.
+- **The gap reason («بین دو حضور») is admin-only**, both in the archive card and in the Excel column. The record still stores it, and the deficit rule is unchanged. Guarded by `gap-admin-only`.
 - **Delete only the clicked record** (`deleteLogItem(id, byId)`), never every record that shares its id.
 - **The technical file (`geomat_inventory_v1`) never goes into any export.** Assert this in the export test.
 

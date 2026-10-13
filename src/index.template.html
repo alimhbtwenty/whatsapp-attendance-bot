@@ -342,7 +342,7 @@
     <!-- کارت‌های آمار کل -->
     <div class="stats-hud-grid">
       <div class="hud-stat-box">
-        <span class="stat-caption">مجموع ساعت کارکرد:</span>
+        <span class="stat-caption" id="archiveTotalHoursCaption">مجموع ساعت کارکرد:</span>
         <span class="stat-number" id="archiveTotalHours">0 ساعت</span>
       </div>
       <div class="hud-stat-box">
@@ -388,14 +388,20 @@
     <!-- فیلتر اختصاصی بر اساس هر شرکت -->
     <div class="frost-card">
       <div class="card-header-bar">
-        <div class="title-tag"><span class="gold-marker"></span> فیلتر و خروجی اکسل بر اساس شرکت</div>
+        <div class="title-tag"><span class="gold-marker"></span> <span id="archiveSectionTitle">آرشیو تردد</span></div>
         <button style="background:var(--gold); border:none; color:var(--accent-ink); padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:800; cursor:pointer;" data-click='["exportFilteredExcel"]'>
           📥 دانلود اکسل
         </button>
       </div>
 
+      <!-- تردد و ساپورت دو بخش جدا، هر کدام با فیلتر شرکت خودش -->
+      <div class="segmented-pill-row archive-section-switch" role="group" aria-label="بخش آرشیو">
+        <button class="pill-opt-btn selected" id="archiveSecAtt" aria-pressed="true" data-click='["setArchiveSection", "attendance"]'>🕒 تردد</button>
+        <button class="pill-opt-btn" id="archiveSecSup" aria-pressed="false" data-click='["setArchiveSection", "support"]'>🛠 ساپورت</button>
+      </div>
+
       <!-- آرشیو ساپورت تیم: گزارش‌های ساپورت هر نفر با فایل به گوشی بقیه می‌رسد (تا سرور بیاید) -->
-      <div class="team-archive-row">
+      <div class="team-archive-row" id="teamArchiveRow" hidden>
         <button class="dock-copy-btn" data-click='["exportTeamArchive"]'>📤 فایل آرشیو تیم</button>
         <button class="dock-copy-btn" data-click='["openTeamArchivePicker"]'>📥 افزودن فایل آرشیو تیم</button>
         <input type="file" id="teamArchiveInput" accept=".json,application/json" style="display:none;" data-change='["importTeamArchive", "$this"]' aria-label="فایل آرشیو تیم">

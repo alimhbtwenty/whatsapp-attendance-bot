@@ -73,15 +73,21 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'geo-archive-'));
   const after = await B.evaluate(() => getLogs());
   const imp = after.find(l => l.imported);
   ok('importing adds the other technician\'s support report', after.length === before + 1 && imp && imp.by.name === 'علی تکنسین' && imp.imported.from.name === 'علی تکنسین', toast1);
-  ok('the archive card names who wrote it', await B.locator('#archiveStream .archive-who', { hasText: 'علی تکنسین' }).count() === 1);
-  await B.click('#archiveCompanyFilters [data-archive-type="support"]'); await B.waitForTimeout(150);
-  ok('the «ساپورت» filter shows only support reports', await B.evaluate(() => archiveScopedLogs().length === 2 && archiveScopedLogs().every(l => l.type === 'support')));
-  await B.click('#archiveCompanyFilters [data-archive-type="attendance"]'); await B.waitForTimeout(150);
-  ok('the «تردد» filter hides support reports', await B.evaluate(() => archiveScopedLogs().length === 1 && archiveScopedLogs()[0].type === 'attendance'));
-  await B.click('#archiveCompanyFilters [data-archive-type="all"]'); await B.waitForTimeout(150);
+  ok('the attendance section is the default and hides support reports', await B.evaluate(() => archiveScopedLogs().length === 1 && archiveScopedLogs()[0].type === 'attendance'));
+  ok('the team archive file buttons are not in the attendance section', await B.locator('#teamArchiveRow').isHidden());
+  await B.click('#archiveSecSup'); await B.waitForTimeout(150);
+  ok('the support section shows only support reports', await B.evaluate(() => archiveScopedLogs().length === 2 && archiveScopedLogs().every(l => l.type === 'support')));
+  ok('the support section shows the team archive file buttons', await B.locator('#teamArchiveRow').isVisible());
+  await B.locator('#archiveCompanyFilters .filter-chip', { hasText: 'کرانه' }).click(); await B.waitForTimeout(150);
+  ok('the support section has its own company filter', await B.evaluate(() => archiveScopedLogs().length === 1 && archiveScopedLogs()[0].company === 'کرانه' && archiveCompanyFilter === 'all'));
+  await B.click('#archiveSecAtt'); await B.waitForTimeout(150);
+  ok('switching back keeps the attendance company filter', await B.evaluate(() => archiveScopedLogs().length === 1 && archiveScopedLogs()[0].type === 'attendance'));
+  await B.click('#archiveSecSup'); await B.waitForTimeout(150);
+  await B.locator('#archiveCompanyFilters .filter-chip', { hasText: 'همه شرکت‌ها' }).click(); await B.waitForTimeout(150);
   ok('an imported support report does not stop the admin\'s own overtime figures', await B.evaluate(() => monthlyData().balance !== null));
 
   const toast2 = await importFile(B, ex.file);
+  ok('the archive card names who wrote it', await B.locator('#archiveStream .archive-who', { hasText: 'علی تکنسین' }).count() === 1);
   ok('importing the same file again adds nothing', await B.evaluate(() => getLogs().length) === before + 1, toast2);
 
   // ---------- فایل دستکاری‌شده ----------
