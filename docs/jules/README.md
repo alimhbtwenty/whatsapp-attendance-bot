@@ -7,10 +7,13 @@ Jules در ماشین ابری گوگل روی خود ریپوی GitHub کار �
 2. **Connect to GitHub** ← اپ Jules را فقط روی ریپوی `alimhbtwenty/whatsapp-attendance-bot` نصب کنید (Only select repositories).
 3. ریپو را انتخاب کنید ← **Configuration / Environment** ← در «Setup script» این را بگذارید و Run and snapshot بزنید:
    ```
+   git fetch --depth 1 origin ccr-6b68bcdc-nwkjfb
+   git checkout -B ccr-6b68bcdc-nwkjfb FETCH_HEAD
    npm ci
    npx playwright install --with-deps chromium
    npm test
    ```
+   (Jules اسکریپت را روی برنچ پیش‌فرض، یعنی `main`، اجرا می‌کند که هنوز نسخه 1.1 است و `package-lock.json` ندارد؛ دو خط اول برنچ کار فعلی را می‌آورند. بعد از مرج PR #4 این دو خط لازم نیست.)
    آخر خروجی باید `all N test files passed` باشد.
 
 ## ۲. ساختن هر کار
