@@ -111,18 +111,33 @@
   const NOTIF_ASKED_KEY = 'geomat_notif_asked_v1';
   function exitReminderTexts(o) {
     const when = o.dateISO === toISODate(new Date()) ? '' : ` (${shortDateLabel(isoToDate(o.dateISO))})`;
-    return { title: `⏰ خروج «${o.company}» ثبت نشده`, body: `ورود ${o.inTime}${when} — برای ثبت خروج بزنید` };
+    return {
+      title: `⏰ خروج «${o.company}» ثبت نشده`, body: `ورود ${o.inTime}${when} — برای ثبت خروج بزنید`,
+      // اعلان ماندگارِ «حضور» از همان لحظه ورود تا ثبت خروج (درخواست مالک)
+      ongoingTitle: `🟢 حضور در «${o.company}» از ${o.inTime}${when}`, ongoingBody: 'برای ثبت خروج بزنید'
+    };
+  }
+  // ساعت یادآوری خروجِ یک ورود: ساعت یادآوری همان روز؛ ورودی که بعد از آن ثبت شده (شیفت عصر/شب) فردا همان ساعت
+  // (قبلاً ورود ساعت ۲۰ همان لحظه «خروج ثبت نشده» می‌گرفت). بنر داخل برنامه و اعلان بومی هر دو از همین می‌خوانند.
+  function exitReminderAt(o) {
+    const rem = getSettings().reminderTime;
+    const [rh, rm] = rem.split(':').map(Number);
+    const at = isoToDate(o.dateISO);
+    at.setHours(rh, rm, 0, 0);
+    if (parseHM(o.inTime) >= parseHM(rem)) at.setDate(at.getDate() + 1);
+    return at;
   }
   function syncExitReminder() {
     const br = window.AndroidBridge;
     if (!br || typeof br.scheduleExitReminder !== 'function') return;
     const o = readOpenEntry(); // یادآوری مال صاحب ورود است، هر کس که الان وارد شده باشد
     if (!o) { br.cancelExitReminder(); return; }
-    const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
-    const at = isoToDate(o.dateISO);
-    at.setHours(rh, rm, 0, 0);
     const t = exitReminderTexts(o);
-    br.scheduleExitReminder(t.title, t.body, String(Math.max(at.getTime(), Date.now() + 60000)), `${o.company}|${o.dateISO}|${o.inTime}`);
+    const at = String(Math.max(exitReminderAt(o).getTime(), Date.now() + 60000));
+    const key = `${o.company}|${o.dateISO}|${o.inTime}`;
+    // APK قدیمی scheduleExitReminder2 ندارد: فقط یادآوری سر ساعت
+    if (typeof br.scheduleExitReminder2 === 'function') br.scheduleExitReminder2(t.title, t.body, at, key, t.ongoingTitle, t.ongoingBody);
+    else br.scheduleExitReminder(t.title, t.body, at, key);
     askNotificationPermissionOnce();
   }
   async function askNotificationPermissionOnce() {
@@ -140,9 +155,9 @@
     const raw = readOpenEntry();
     if (raw && otherPersons(raw.by)) { showToast('این یادآوری مال حساب دیگری است؛ با همان حساب وارد شوید'); return; }
     if (!getOpenEntry()) { showToast('این ورود قبلاً بسته شده است'); return; }
-    if (action === 'exit') startExitForOpenEntry();
-    else if (action === 'dismiss') discardOpenEntry();
-    else renderOpenEntryBanner();
+    // لمس خود اعلان هم مثل «ثبت خروج»: ساعت خروج «الان» و صفحه روی ساعت (درخواست مالک)
+    if (action === 'dismiss') discardOpenEntry();
+    else startExitForOpenEntry();
   };
   function runPendingNotificationAction() {
     if (!pendingNotificationAction) return;
@@ -237,12 +252,7 @@
   }
 
   function isOpenEntryOverdue(o) {
-    const now = new Date();
-    const today = toISODate(now);
-    if (o.dateISO < today) return true;
-    if (o.dateISO > today) return false;
-    const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
-    return now.getHours() * 60 + now.getMinutes() >= rh * 60 + rm;
+    return Date.now() >= exitReminderAt(o).getTime();
   }
 
   function renderOpenEntryBanner() {
@@ -280,7 +290,19 @@
     renderCompanies();
     setAttendanceAction('out');
     updateDateDisplay();
-    showToast(exitNow ? `ساعت ورود ${o.inTime} از ورود باز پر شد` : `خروجِ روز ${shortDateLabel(openDate)} را وارد کنید`);
+    showToast(exitNow ? `خروج: الان ${pad2(now.getHours())}:${pad2(now.getMinutes())} • ورود ${o.inTime}` : `خروجِ روز ${shortDateLabel(openDate)} را وارد کنید`);
+    showOutTimeRow();
+  }
+  // صفحه روی ساعت خروج برود و چند لحظه پررنگ شود تا معلوم باشد چه چیزی پر شد
+  function showOutTimeRow() {
+    const row = document.getElementById('outTimeRow');
+    if (!row) return;
+    const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    row.scrollIntoView({ block: 'center', behavior: still ? 'auto' : 'smooth' });
+    row.classList.remove('time-row-flash');
+    void row.offsetWidth; // انیمیشن از نو
+    row.classList.add('time-row-flash');
+    setTimeout(() => row.classList.remove('time-row-flash'), 1600);
   }
 
   async function discardOpenEntry() {

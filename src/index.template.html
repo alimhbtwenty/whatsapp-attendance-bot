@@ -538,7 +538,7 @@
 </div>
 
 <!-- Glass Modal: افزودن شرکت -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="addModal" data-click='["closeAddModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="افزودن محل جدید" id="addModal" data-click='["closeAddModal"]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">➕ افزودن محل جدید</div>
     <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک..." aria-label="نام شرکت یا محل، مثلاً: صدف، ونک...">
@@ -551,7 +551,7 @@
 </div>
 
 <!-- Glass Modal: تقویم شمسی داخلی -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="تقویم شمسی" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div class="jcal-head">
       <button class="jcal-nav" data-click='["shiftCalendarMonth", -1]' title="ماه قبل" aria-label="ماه قبل">▶</button>
@@ -567,7 +567,7 @@
 </div>
 
 <!-- Glass Modal: صف ارسال -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="گزارش‌های ارسال‌نشده" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">📤 گزارش‌های ارسال‌نشده</div>
     <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
@@ -577,20 +577,20 @@
 </div>
 
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="تأیید" aria-describedby="confirmText" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:14px; font-weight:700; color:var(--text-strong); line-height:1.8;" id="confirmText"></div>
     <div style="display:flex; gap:8px;">
-      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--text-strong);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
+      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--on-danger);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveConfirm", false]'>انصراف</button>
     </div>
   </div>
 </div>
 
 <!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="invItemTitle" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
   <div class="glass-modal-box inv-modal-box">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle">آیتم پرونده فنی</div>
     <div class="inv-form" id="invItemForm"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="invItemSaveBtn" data-click='["saveInvItem"]'>ذخیره</button>
@@ -600,21 +600,21 @@
 </div>
 
 <!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="invPanelTitle" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
   <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle">پرونده فنی</div>
     <div class="inv-panel-body" id="invPanelBody"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeInvPanel"]'>بستن</button>
   </div>
 </div>
 
 <!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="vaultModalTitle" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle">رمز</div>
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
-    <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
-    <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
+    <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128" aria-label="رمز">
+    <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128" aria-label="تکرار رمز">
     <div style="font-size:11.5px; color:var(--danger); min-height:16px;" id="vaultModalError"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="vaultModalOk" data-click='["submitVaultModal"]'>تأیید</button>
@@ -623,7 +623,7 @@
   </div>
 </div>
 
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="ثبت تردد" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
   <div class="glass-modal-box flow-box" id="flowModalBox"></div>
 </div>
 

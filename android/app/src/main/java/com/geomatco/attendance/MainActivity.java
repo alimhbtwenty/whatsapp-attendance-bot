@@ -242,6 +242,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // همان، به‌علاوه اعلان ماندگارِ «حضور» از لحظه ورود (صفحه‌های قدیمی فقط scheduleExitReminder را صدا می‌زنند)
+        @JavascriptInterface
+        public void scheduleExitReminder2(String title, String body, String atMillis, String key, String ongoingTitle, String ongoingBody) {
+            if (!pageIsApp || title == null || body == null || key == null) return;
+            try {
+                ExitReminder.schedule(MainActivity.this, title, body, Long.parseLong(atMillis), key, ongoingTitle, ongoingBody);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         // ---------- نسخه دوم داده (هر نوشتن همان لحظه و اتمیک روی دیسک) ----------
         @JavascriptInterface
         public String storeSet(String key, String value) {

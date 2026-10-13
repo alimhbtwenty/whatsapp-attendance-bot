@@ -32,6 +32,7 @@
       --warning: #f59e0b;
       --danger: #f0506e;
       --danger-fg: #ffc7d1;
+      --on-danger: #1a0a0e;        /* متن روی پس‌زمینه --danger (دکمه حذف): ۵.۶ به ۱ */
       --warning-fg: #ffe1a8;
       --success-fg: #b8f0d2;
       --info-fg: #bfe8f7;
@@ -83,6 +84,7 @@
       --warning: #8f5600;
       --danger: #c22745;
       --danger-fg: #a3122e;
+      --on-danger: #ffffff;
       --warning-fg: #7a4a00;
       --success-fg: #0d6b3f;
       --info-fg: #075f86;
@@ -95,6 +97,6 @@
         --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #5d697e;
         --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
         --accent: #e5bf00; --accent-fg: #6f5800; --accent-2: #a68a00; --brand-tile: #0b1018; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
-        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --on-danger: #ffffff; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
       }
     }

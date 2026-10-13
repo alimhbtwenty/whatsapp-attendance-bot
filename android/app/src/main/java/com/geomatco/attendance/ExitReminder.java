@@ -22,6 +22,9 @@ public class ExitReminder extends BroadcastReceiver {
     static final String PREFS = "geoteam_exit_reminder";
     static final String CHANNEL = "exit_reminder";
     static final int NOTIFICATION_ID = 7101;
+    // اعلان ماندگارِ «حضور» از لحظه ورود تا ثبت خروج؛ کانال جدا و بی‌صدا
+    static final String CHANNEL_ONGOING = "presence";
+    static final int ONGOING_ID = 7102;
     static final String ACTION_FIRE = "com.geomatco.attendance.EXIT_REMINDER";
     static final String ACTION_SNOOZE = "com.geomatco.attendance.EXIT_REMINDER_SNOOZE";
     static final String ACTION_TEST = "com.geomatco.attendance.EXIT_REMINDER_TEST";
@@ -34,10 +37,21 @@ public class ExitReminder extends BroadcastReceiver {
 
     /** زمان‌بندی (یا جایگزینی) یادآوری ورود باز. key همان ورود است تا یک ورود دو بار اعلان ندهد. */
     static void schedule(Context ctx, String title, String body, long at, String key) {
+        schedule(ctx, title, body, at, key, null, null);
+    }
+
+    /** همان، به‌علاوه اعلان ماندگارِ «حضور» که همین الان نشان داده می‌شود (ongoingTitle خالی = بدون آن) */
+    static void schedule(Context ctx, String title, String body, long at, String key, String ongoingTitle, String ongoingBody) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (ongoingTitle != null && ongoingBody != null) {
+            p.edit().putString("ongoingTitle", ongoingTitle).putString("ongoingBody", ongoingBody).apply();
+            showOngoing(ctx, ongoingTitle, ongoingBody);
+        }
         // همین ورود قبلاً اعلان شده و زمانش گذشته: دوباره نه (مگر «۳۰ دقیقه بعد»)
         if (key.equals(p.getString("fired", "")) && at <= System.currentTimeMillis() + 60000L) return;
-        p.edit().putString("title", title).putString("body", body).putLong("at", at).putString("key", key).apply();
+        // زمان تازه در آینده (ورود تازه، یا ساعت یادآوری عوض شد): نشانه «اعلان شده» پاک شود،
+        // وگرنه بعد از ری‌استارت گوشی restore() این یادآوری را نادیده می‌گرفت (یافته Antigravity، android #1)
+        p.edit().putString("title", title).putString("body", body).putLong("at", at).putString("key", key).remove("fired").apply();
         setAlarm(ctx, at);
     }
 
@@ -46,11 +60,15 @@ public class ExitReminder extends BroadcastReceiver {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am != null) am.cancel(firePending(ctx));
         NotificationManagerCompat.from(ctx).cancel(NOTIFICATION_ID);
+        NotificationManagerCompat.from(ctx).cancel(ONGOING_ID);
     }
 
     /** بعد از ری‌استارت گوشی یا آپدیت برنامه، یادآوری ذخیره‌شده دوباره زمان‌بندی می‌شود. */
     static void restore(Context ctx) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String ongoingTitle = p.getString("ongoingTitle", null);
+        String ongoingBody = p.getString("ongoingBody", null);
+        if (ongoingTitle != null && ongoingBody != null) showOngoing(ctx, ongoingTitle, ongoingBody);
         long at = p.getLong("at", 0);
         if (at <= 0 || p.getString("key", "").equals(p.getString("fired", ""))) return;
         setAlarm(ctx, Math.max(at, System.currentTimeMillis() + 5000L));
@@ -134,6 +152,33 @@ public class ExitReminder extends BroadcastReceiver {
                 .addAction(0, "✕", appAction(ctx, "dismiss", 13));
         try {
             NotificationManagerCompat.from(ctx).notify(NOTIFICATION_ID, b.build());
+        } catch (SecurityException ignored) {
+            // اجازه اعلان داده نشده؛ بنر داخل برنامه هنوز هست
+        }
+    }
+
+    private static void showOngoing(Context ctx, String title, String body) {
+        NotificationManager nm = (NotificationManager) ctx.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL_ONGOING) == null) {
+            NotificationChannel ch = new NotificationChannel(CHANNEL_ONGOING, "حضور فعال", NotificationManager.IMPORTANCE_LOW);
+            ch.setDescription("از لحظه ثبت ورود تا ثبت خروج؛ با لمس آن خروج همین الان ثبت می‌شود");
+            nm.createNotificationChannel(ch);
+        }
+        NotificationCompat.Builder b = new NotificationCompat.Builder(ctx, CHANNEL_ONGOING)
+                .setSmallIcon(R.drawable.ic_stat_geoteam)
+                .setColor(0xFFF3CB03)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setShowWhen(false)
+                .setContentIntent(appAction(ctx, "open", 14))
+                .addAction(0, "🔴 ثبت خروج", appAction(ctx, "exit", 15));
+        try {
+            NotificationManagerCompat.from(ctx).notify(ONGOING_ID, b.build());
         } catch (SecurityException ignored) {
             // اجازه اعلان داده نشده؛ بنر داخل برنامه هنوز هست
         }

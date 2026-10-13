@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-RC568iokNDxx84mVvc4TqWDmqe8fVnz248JcOsvmQ9Q='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-8sfr5jrPs31/EELM+ysB5YODrUQ4LHZDuso6OGZ6qRc='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -50,6 +50,7 @@
       --warning: #f59e0b;
       --danger: #f0506e;
       --danger-fg: #ffc7d1;
+      --on-danger: #1a0a0e;        /* متن روی پس‌زمینه --danger (دکمه حذف): ۵.۶ به ۱ */
       --warning-fg: #ffe1a8;
       --success-fg: #b8f0d2;
       --info-fg: #bfe8f7;
@@ -101,6 +102,7 @@
       --warning: #8f5600;
       --danger: #c22745;
       --danger-fg: #a3122e;
+      --on-danger: #ffffff;
       --warning-fg: #7a4a00;
       --success-fg: #0d6b3f;
       --info-fg: #075f86;
@@ -113,7 +115,7 @@
         --text-strong: #0b1220; --text: #1b2433; --text-muted: #546178; --text-dim: #5d697e;
         --author-1: #06709c; --author-2: #0c7542; --author-3: #8f5600; --author-4: #b0306f; --author-5: #6b46c1; --author-6: #a14a00; --author-7: #0e6f7f;
         --accent: #e5bf00; --accent-fg: #6f5800; --accent-2: #a68a00; --brand-tile: #0b1018; --info: #06709c; --success: #0c7542; --whatsapp: #1fa855;
-        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
+        --warning: #8f5600; --danger: #c22745; --danger-fg: #a3122e; --on-danger: #ffffff; --warning-fg: #7a4a00; --success-fg: #0d6b3f; --info-fg: #075f86;
       }
     }
     * {
@@ -539,6 +541,18 @@
       border-radius: 16px;
       padding: 10px 14px;
       box-shadow: inset 0 2px 8px color-mix(in srgb, var(--shadow) 50%, transparent);
+    }
+    /* بعد از لمس اعلان یادآوری: ساعت خروجِ پرشده چند لحظه پررنگ می‌شود */
+    .time-hud-row.time-row-flash {
+      border-color: var(--accent);
+      animation: timeRowFlash 1.5s ease-out;
+    }
+    @keyframes timeRowFlash {
+      0%, 40% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 55%, transparent); }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .time-hud-row.time-row-flash { animation: none; }
     }
     .time-row-meta {
       display: flex;
@@ -2320,7 +2334,7 @@
 </div>
 
 <!-- Glass Modal: افزودن شرکت -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="addModal" data-click='["closeAddModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="افزودن محل جدید" id="addModal" data-click='["closeAddModal"]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">➕ افزودن محل جدید</div>
     <input type="text" id="modalProjectInput" class="cyber-input" placeholder="نام شرکت یا محل، مثلاً: صدف، ونک..." aria-label="نام شرکت یا محل، مثلاً: صدف، ونک...">
@@ -2333,7 +2347,7 @@
 </div>
 
 <!-- Glass Modal: تقویم شمسی داخلی -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="تقویم شمسی" id="calendarModal" data-click='["closeCalendar"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div class="jcal-head">
       <button class="jcal-nav" data-click='["shiftCalendarMonth", -1]' title="ماه قبل" aria-label="ماه قبل">▶</button>
@@ -2349,7 +2363,7 @@
 </div>
 
 <!-- Glass Modal: صف ارسال -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="گزارش‌های ارسال‌نشده" id="outboxModal" data-click='["closeOutbox"]' data-self-only>
   <div class="glass-modal-box" style="gap:12px;">
     <div style="font-size:15px; font-weight:800; color:var(--text-strong);">📤 گزارش‌های ارسال‌نشده</div>
     <div style="font-size:11.5px; color:var(--text-dim);" id="outboxHint"></div>
@@ -2359,20 +2373,20 @@
 </div>
 
 <!-- Glass Modal: تأیید (جایگزین confirm که داخل اپ اندروید کار نمی‌کرد) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="تأیید" aria-describedby="confirmText" id="confirmModal" data-click='["resolveConfirm", false]' data-self-only>
   <div class="glass-modal-box">
     <div style="font-size:14px; font-weight:700; color:var(--text-strong); line-height:1.8;" id="confirmText"></div>
     <div style="display:flex; gap:8px;">
-      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--text-strong);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
+      <button class="install-btn" style="flex:1; padding:11px; background:var(--danger); color:var(--on-danger);" id="confirmOkBtn" data-click='["resolveConfirm", true]'>حذف</button>
       <button class="dock-copy-btn" style="flex:1; padding:11px;" data-click='["resolveConfirm", false]'>انصراف</button>
     </div>
   </div>
 </div>
 
 <!-- Glass Modal: افزودن/ویرایش آیتم پرونده فنی -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="invItemTitle" id="invItemModal" data-click='["closeInvItemModal"]' data-self-only>
   <div class="glass-modal-box inv-modal-box">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invItemTitle">آیتم پرونده فنی</div>
     <div class="inv-form" id="invItemForm"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="invItemSaveBtn" data-click='["saveInvItem"]'>ذخیره</button>
@@ -2382,21 +2396,21 @@
 </div>
 
 <!-- Glass Modal: پنل‌های پرونده فنی (کاربران، تاریخچه، گزارش تغییرات، حذف‌شده‌ها) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="invPanelTitle" id="invPanelModal" data-click='["closeInvPanel"]' data-self-only>
   <div class="glass-modal-box inv-modal-box" style="max-width:420px;">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="invPanelTitle">پرونده فنی</div>
     <div class="inv-panel-body" id="invPanelBody"></div>
     <button class="dock-copy-btn" style="padding:10px;" data-click='["closeInvPanel"]'>بستن</button>
   </div>
 </div>
 
 <!-- Glass Modal: رمز (ساخت حساب، تغییر رمز، رمز قبلی گاوصندوق) -->
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-labelledby="vaultModalTitle" id="vaultModal" data-click='["resolveVaultModal", null]' data-self-only>
   <div class="glass-modal-box">
-    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle"></div>
+    <div style="font-size:15px; font-weight:800; color:var(--text-strong);" id="vaultModalTitle">رمز</div>
     <div style="font-size:11.5px; color:var(--text-muted); line-height:1.8;" id="vaultModalHint"></div>
-    <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
-    <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128">
+    <input type="password" id="vaultPw1" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128" aria-label="رمز">
+    <input type="password" id="vaultPw2" class="cyber-input" autocomplete="off" dir="ltr" maxlength="128" aria-label="تکرار رمز">
     <div style="font-size:11.5px; color:var(--danger); min-height:16px;" id="vaultModalError"></div>
     <div style="display:flex; gap:8px;">
       <button class="install-btn" style="flex:1; padding:11px;" id="vaultModalOk" data-click='["submitVaultModal"]'>تأیید</button>
@@ -2405,7 +2419,7 @@
   </div>
 </div>
 
-<div class="glass-modal-bg" role="dialog" aria-modal="true" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
+<div class="glass-modal-bg" role="dialog" aria-modal="true" aria-label="ثبت تردد" id="flowModal" data-click='["resolveFlowModal", null]' data-self-only>
   <div class="glass-modal-box flow-box" id="flowModalBox"></div>
 </div>
 
@@ -3831,18 +3845,33 @@
   const NOTIF_ASKED_KEY = 'geomat_notif_asked_v1';
   function exitReminderTexts(o) {
     const when = o.dateISO === toISODate(new Date()) ? '' : ` (${shortDateLabel(isoToDate(o.dateISO))})`;
-    return { title: `⏰ خروج «${o.company}» ثبت نشده`, body: `ورود ${o.inTime}${when} — برای ثبت خروج بزنید` };
+    return {
+      title: `⏰ خروج «${o.company}» ثبت نشده`, body: `ورود ${o.inTime}${when} — برای ثبت خروج بزنید`,
+      // اعلان ماندگارِ «حضور» از همان لحظه ورود تا ثبت خروج (درخواست مالک)
+      ongoingTitle: `🟢 حضور در «${o.company}» از ${o.inTime}${when}`, ongoingBody: 'برای ثبت خروج بزنید'
+    };
+  }
+  // ساعت یادآوری خروجِ یک ورود: ساعت یادآوری همان روز؛ ورودی که بعد از آن ثبت شده (شیفت عصر/شب) فردا همان ساعت
+  // (قبلاً ورود ساعت ۲۰ همان لحظه «خروج ثبت نشده» می‌گرفت). بنر داخل برنامه و اعلان بومی هر دو از همین می‌خوانند.
+  function exitReminderAt(o) {
+    const rem = getSettings().reminderTime;
+    const [rh, rm] = rem.split(':').map(Number);
+    const at = isoToDate(o.dateISO);
+    at.setHours(rh, rm, 0, 0);
+    if (parseHM(o.inTime) >= parseHM(rem)) at.setDate(at.getDate() + 1);
+    return at;
   }
   function syncExitReminder() {
     const br = window.AndroidBridge;
     if (!br || typeof br.scheduleExitReminder !== 'function') return;
     const o = readOpenEntry(); // یادآوری مال صاحب ورود است، هر کس که الان وارد شده باشد
     if (!o) { br.cancelExitReminder(); return; }
-    const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
-    const at = isoToDate(o.dateISO);
-    at.setHours(rh, rm, 0, 0);
     const t = exitReminderTexts(o);
-    br.scheduleExitReminder(t.title, t.body, String(Math.max(at.getTime(), Date.now() + 60000)), `${o.company}|${o.dateISO}|${o.inTime}`);
+    const at = String(Math.max(exitReminderAt(o).getTime(), Date.now() + 60000));
+    const key = `${o.company}|${o.dateISO}|${o.inTime}`;
+    // APK قدیمی scheduleExitReminder2 ندارد: فقط یادآوری سر ساعت
+    if (typeof br.scheduleExitReminder2 === 'function') br.scheduleExitReminder2(t.title, t.body, at, key, t.ongoingTitle, t.ongoingBody);
+    else br.scheduleExitReminder(t.title, t.body, at, key);
     askNotificationPermissionOnce();
   }
   async function askNotificationPermissionOnce() {
@@ -3860,9 +3889,9 @@
     const raw = readOpenEntry();
     if (raw && otherPersons(raw.by)) { showToast('این یادآوری مال حساب دیگری است؛ با همان حساب وارد شوید'); return; }
     if (!getOpenEntry()) { showToast('این ورود قبلاً بسته شده است'); return; }
-    if (action === 'exit') startExitForOpenEntry();
-    else if (action === 'dismiss') discardOpenEntry();
-    else renderOpenEntryBanner();
+    // لمس خود اعلان هم مثل «ثبت خروج»: ساعت خروج «الان» و صفحه روی ساعت (درخواست مالک)
+    if (action === 'dismiss') discardOpenEntry();
+    else startExitForOpenEntry();
   };
   function runPendingNotificationAction() {
     if (!pendingNotificationAction) return;
@@ -3957,12 +3986,7 @@
   }
 
   function isOpenEntryOverdue(o) {
-    const now = new Date();
-    const today = toISODate(now);
-    if (o.dateISO < today) return true;
-    if (o.dateISO > today) return false;
-    const [rh, rm] = getSettings().reminderTime.split(':').map(Number);
-    return now.getHours() * 60 + now.getMinutes() >= rh * 60 + rm;
+    return Date.now() >= exitReminderAt(o).getTime();
   }
 
   function renderOpenEntryBanner() {
@@ -4000,7 +4024,19 @@
     renderCompanies();
     setAttendanceAction('out');
     updateDateDisplay();
-    showToast(exitNow ? `ساعت ورود ${o.inTime} از ورود باز پر شد` : `خروجِ روز ${shortDateLabel(openDate)} را وارد کنید`);
+    showToast(exitNow ? `خروج: الان ${pad2(now.getHours())}:${pad2(now.getMinutes())} • ورود ${o.inTime}` : `خروجِ روز ${shortDateLabel(openDate)} را وارد کنید`);
+    showOutTimeRow();
+  }
+  // صفحه روی ساعت خروج برود و چند لحظه پررنگ شود تا معلوم باشد چه چیزی پر شد
+  function showOutTimeRow() {
+    const row = document.getElementById('outTimeRow');
+    if (!row) return;
+    const still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    row.scrollIntoView({ block: 'center', behavior: still ? 'auto' : 'smooth' });
+    row.classList.remove('time-row-flash');
+    void row.offsetWidth; // انیمیشن از نو
+    row.classList.add('time-row-flash');
+    setTimeout(() => row.classList.remove('time-row-flash'), 1600);
   }
 
   async function discardOpenEntry() {
