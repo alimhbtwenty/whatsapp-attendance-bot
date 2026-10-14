@@ -473,6 +473,7 @@
       const chip = document.createElement('div');
       chip.className = `filter-chip ${company === c ? 'active' : ''}`;
       chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+      chip.setAttribute('aria-pressed', String(company === c));
       chip.textContent = label;
       chip.onclick = () => pickCompany(c);
       filterBar.appendChild(chip);
@@ -485,6 +486,7 @@
         const chip = document.createElement('div');
         chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
         chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+        chip.setAttribute('aria-pressed', String(archivePersonFilter === id));
         chip.textContent = id === 'all' ? name : `👤 ${name}`;
         chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
         filterBar.appendChild(chip);
@@ -526,7 +528,7 @@
         </${item.type === 'support' ? 'button' : 'div'}>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:14px; cursor:pointer; min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; padding:8px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '', item.type || '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible
@@ -542,10 +544,12 @@
     return 'مدت: ' + (item.durationText || '-');
   }
 
-  // byId: id زمان ثبت است و گزارشِ وارد‌شده از گوشی دیگر می‌تواند همان id را داشته باشد؛ فقط همان یک رکورد حذف شود
-  async function deleteLogItem(id, byId) {
+  // byId و type: id زمان ثبت است و گزارش‌های مختلف (تردد، ساپورت واردشده) می‌توانند id یکسان داشته باشند؛ فقط همان رکورد حذف شود
+  async function deleteLogItem(id, byId, type) {
     playTactileFeedback();
-    const match = l => l.id === id && (!byId || (l.by && l.by.id) === byId);
+    const match = l => l.id === id &&
+      (!type || l.type === type) &&
+      (byId === undefined ? true : (byId ? (l.by && l.by.id === byId) : (!l.by || !l.by.id)));
     const item = getLogs().find(match);
     if (!item || !await appConfirm(`رکورد «${item.company}» (${item.date || ''}) از آرشیو حذف شود؟`)) return;
     const logs = getLogs();
@@ -553,9 +557,9 @@
     if (idx < 0) return;
     logs.splice(idx, 1);
     if (!writeLogs(logs)) return;
-    // ورود بازِ همین رکورد هم بسته شود (وگرنه بنر و یادآوری به رکوردی اشاره می‌کردند که دیگر نیست)
+    // ورود بازِ همین رکورد هم بسته شود (فقط اگر رکورد حذف‌شده تردد بود)
     const open = readOpenEntry(); // ورود بازِ این رکورد، مال هر حسابی که باشد
-    if (open && open.logId === id) {
+    if (item.type === 'attendance' && open && (open.logId === id || open.ts === id)) {
       setOpenEntry(null);
       lastPrefillKey = '';
       renderOpenEntryBanner();
@@ -568,7 +572,7 @@
 
   // گزارش ساپورت آرشیو در پاپ‌آپ، کامل و خوانا (درخواست مالک)
   function openSupportRecord(id, byId) {
-    const r = getLogs().find(l => l.type === 'support' && l.id === id && (!byId || (l.by && l.by.id) === byId));
+    const r = getLogs().find(l => l.type === 'support' && l.id === id && (byId ? (l.by && l.by.id === byId) : (!l.by || !l.by.id)));
     if (!r) return;
     playTactileFeedback();
     // مشخصات فنی (IP، ماسک، آدرس) چپ‌به‌راست، وگرنه «10.0.0.9 / 255.255.255.0» برعکس دیده می‌شد

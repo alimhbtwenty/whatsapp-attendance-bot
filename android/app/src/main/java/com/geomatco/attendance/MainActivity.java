@@ -472,6 +472,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_NOTIFICATIONS) {
+            // اعلان ماندگار حضور بدون اجازه نشان داده نشد (یافته android-r4 #2): الان که اجازه آمده، دوباره نشان بده
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) ExitReminder.restoreOngoing(this);
+            return;
+        }
         if (requestCode != REQ_LOCATION || pendingGeoCallback == null) return;
         // اجازه را در WebView ذخیره نکن تا اگر کاربر بعداً از تنظیمات لغوش کرد، دوباره پرسیده شود
         pendingGeoCallback.invoke(pendingGeoOrigin, hasLocationPermission(), false);

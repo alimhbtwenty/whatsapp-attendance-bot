@@ -49,9 +49,13 @@ public class ExitReminder extends BroadcastReceiver {
         }
         // همین ورود قبلاً اعلان شده و زمانش گذشته: دوباره نه (مگر «۳۰ دقیقه بعد»)
         if (key.equals(p.getString("fired", "")) && at <= System.currentTimeMillis() + 60000L) return;
-        // زمان تازه در آینده (ورود تازه، یا ساعت یادآوری عوض شد): نشانه «اعلان شده» پاک شود،
-        // وگرنه بعد از ری‌استارت گوشی restore() این یادآوری را نادیده می‌گرفت (یافته Antigravity، android #1)
-        p.edit().putString("title", title).putString("body", body).putLong("at", at).putString("key", key).remove("fired").apply();
+        // اسنوز همین ورود هنوز در جریان است: زمان اسنوز بماند، وگرنه صفحه با زمان ساعت یادآوری آن را بازنویسی می‌کرد
+        // (یافته Antigravity، android #1: اسنوز ۳۰ دقیقه‌ای به یک دقیقه تبدیل می‌شد)
+        if (key.equals(p.getString("snoozeKey", "")) && p.getLong("snoozeAt", 0) > System.currentTimeMillis()) return;
+        // ساعت یادآوری عوض شده یا ورود تازه: اعلان قبلی روی پنل نماند (یافته android #3)
+        if (!key.equals(p.getString("key", "")) || at != p.getLong("at", 0)) NotificationManagerCompat.from(ctx).cancel(NOTIFICATION_ID);
+        // زمان تازه در آینده: نشانه «اعلان شده» پاک شود، وگرنه بعد از ری‌استارت گوشی restore() این یادآوری را نادیده می‌گرفت
+        p.edit().putString("title", title).putString("body", body).putLong("at", at).putString("key", key).remove("fired").remove("snoozeKey").remove("snoozeAt").apply();
         setAlarm(ctx, at);
     }
 
@@ -63,14 +67,29 @@ public class ExitReminder extends BroadcastReceiver {
         NotificationManagerCompat.from(ctx).cancel(ONGOING_ID);
     }
 
-    /** بعد از ری‌استارت گوشی یا آپدیت برنامه، یادآوری ذخیره‌شده دوباره زمان‌بندی می‌شود. */
-    static void restore(Context ctx) {
+    /** اعلان ماندگار حضور را از روی ذخیره دوباره نشان می‌دهد (بعد از ری‌استارت یا دادن اجازه اعلان). */
+    static void restoreOngoing(Context ctx) {
         SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String ongoingTitle = p.getString("ongoingTitle", null);
         String ongoingBody = p.getString("ongoingBody", null);
         if (ongoingTitle != null && ongoingBody != null) showOngoing(ctx, ongoingTitle, ongoingBody);
+    }
+
+    /** بعد از ری‌استارت گوشی یا آپدیت برنامه، یادآوری ذخیره‌شده دوباره زمان‌بندی می‌شود. */
+    static void restore(Context ctx) {
+        SharedPreferences p = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        restoreOngoing(ctx);
         long at = p.getLong("at", 0);
-        if (at <= 0 || p.getString("key", "").equals(p.getString("fired", ""))) return;
+        if (at <= 0) return;
+        String key = p.getString("key", "");
+        if (key.equals(p.getString("fired", ""))) {
+            // ورود هنوز باز است و یادآوری قبلاً آمده بود؛ ری‌استارت همه اعلان‌ها را پاک می‌کند،
+            // پس یک بار دیگر نشانش بده (یافته android #4). ورود بسته شود، cancel() همه‌چیز را پاک می‌کند.
+            String title = p.getString("title", null);
+            String body = p.getString("body", null);
+            if (title != null) show(ctx, title, body);
+            return;
+        }
         setAlarm(ctx, Math.max(at, System.currentTimeMillis() + 5000L));
     }
 
@@ -111,7 +130,7 @@ public class ExitReminder extends BroadcastReceiver {
         if (ACTION_SNOOZE.equals(action)) {
             NotificationManagerCompat.from(ctx).cancel(NOTIFICATION_ID);
             long at = System.currentTimeMillis() + SNOOZE_MS;
-            p.edit().putLong("at", at).remove("fired").apply();
+            p.edit().putLong("at", at).putString("snoozeKey", p.getString("key", "")).putLong("snoozeAt", at).remove("fired").apply();
             setAlarm(ctx, at);
             return;
         }

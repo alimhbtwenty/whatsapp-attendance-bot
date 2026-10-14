@@ -37,6 +37,11 @@ Every item below was a real bug in this app. It was proven by a test that failed
 - **Native state flags must be cleared on every path that re-arms them.** If `schedule()` keeps `fired` for a future time, `restore()` drops the reminder after a reboot. The same applies to `.complete` in the durable mirror.
 - **Tapping the notification (`open`) behaves like the «ثبت خروج» button.** It opens attendance, sets the exit to "now" (only when the exit is today or a night shift) and scrolls to `#outTimeRow`. Guarded by `notification-exit-now`.
 - **A new bridge method needs a fallback for older APKs.** Check `typeof br.newMethod === 'function'` first. Example: `scheduleExitReminder2`.
+- **A native reschedule must not overwrite a live snooze.** The page re-sends the reminder time on every sync. A snooze stores `snoozeKey`/`snoozeAt`, and `schedule()` keeps that time until it passes. Otherwise a 30-minute snooze becomes 1 minute. Source guard: `android-native-guards.js` (Android r4 #1).
+- **Cancel the stale reminder notification when the time or entry changes.** Otherwise the old "exit not recorded" notice stays on the panel. Guarded by `android-native-guards.js` (r4 #3).
+- **Handle the POST_NOTIFICATIONS result.** `onRequestPermissionsResult` must act on `REQ_NOTIFICATIONS`, not only `REQ_LOCATION`. Otherwise the ongoing notice never appears until the next launch. Guarded by `android-native-guards.js` (r4 #2).
+- **After a restart, re-show a still-open reminder that already fired.** Restart clears all notifications. Only `BootReceiver` calls `restore()`, so it does not repeat on every launch. Guarded by `android-native-guards.js` (r4 #4).
+- **Native Java cannot run in this sandbox** (no Android SDK). Guard tests read the source; real behaviour needs the phone or the preview APK.
 
 ## Archive and shared files (ADR-0004)
 - **Imports are append-only.**
@@ -46,13 +51,17 @@ Every item below was a real bug in this app. It was proven by a test that failed
 - **Validate every field from a file:** its type, its length, a round-trip date check (`2026-13-45` still makes a `Date`) and an allow-list of fields. Escape every field on display.
 - **Attendance and support are separate archive sections** (`archiveSection`), each with its own company filter and Excel. The team-file buttons live only in the support section. Guarded by `support-archive-share`.
 - **The gap reason («بین دو حضور») is admin-only**, both in the archive card and in the Excel column. The record still stores it, and the deficit rule is unchanged. Guarded by `gap-admin-only`.
-- **Delete only the clicked record** (`deleteLogItem(id, byId)`), never every record that shares its id.
+- **Delete only the clicked record** (`deleteLogItem(id, byId, type)`), never every record that shares its id. Ids repeat across companies and across attendance and support, so pass the record `type` too. Guarded by `data-safety-r4-audit`.
+- **Restore backups without losing older keys.** A one-step rollback that fails on a full quota deletes the keys it wrote. Guarded by `data-safety-r4-audit` (r4 #4).
 - **The technical file (`geomat_inventory_v1`) never goes into any export.** Assert this in the export test.
 
 ## Accessibility (axe in tests)
 - **Every `role="dialog"` has a name.** Use `aria-labelledby` to point at its title (give the title default text), or `aria-label`. Guarded by `ui-defects`.
 - **Technical values (IP, mask, URL) inside RTL text get `dir="ltr"`.** Otherwise «10.0.0.9 / 255.255.255.0» shows reversed. Do not use `dir="auto"` on Persian text: a leading Latin word flips the whole paragraph. Guarded by `support-record-popup`.
 - **Every input has a label.** A placeholder is not a label.
+- **Touch targets are at least 40×40 px.** Secondary banner buttons and the archive delete icon were 29–31 px. Guarded by `ui-r4-audit.js` (r4 #7, #8).
+- **Filter chips expose their state with `aria-pressed`.** Guarded by `ui-r4-audit.js` (r4 #9).
+- **Every modal flow has a Persian name** (`aria-label` / `aria-labelledby`), including the messenger action sheet (r4 #10, #11).
 - **Scrollable regions such as chip rows need `tabindex="0"`** and a name.
 - **Check contrast in both themes.** A colour that passes in light can fail in dark. Use a token (`--on-danger`), not a hard-coded colour. Guarded by `reminder-timing`.
 

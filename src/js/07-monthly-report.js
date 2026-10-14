@@ -94,9 +94,10 @@
   function dailyBalance(sessions, fromDay, toDay, st) {
     const byDay = {};
     sessions.forEach(x => {
-      const d = byDay[x.day] || (byDay[x.day] = { start: Infinity, end: -Infinity });
+      const d = byDay[x.day] || (byDay[x.day] = { start: Infinity, end: -Infinity, list: [] });
       d.start = Math.min(d.start, x.inM);
       d.end = Math.max(d.end, x.inM + x.mins);
+      d.list.push(x);
     });
     const days = {};
     for (let day = fromDay; day <= toDay; day++) {
@@ -109,7 +110,11 @@
         continue;
       }
       const inside = win ? Math.max(0, Math.min(span.end, win[1]) - Math.max(span.start, win[0])) : 0;
-      days[day] = { j, overtime: span.end - span.start - inside, deficit: winLen - inside, absent: false };
+      const overtime = span.list.reduce((sum, s) => {
+        const inWin = win ? Math.max(0, Math.min(s.inM + s.mins, win[1]) - Math.max(s.inM, win[0])) : 0;
+        return sum + Math.max(0, s.mins - inWin);
+      }, 0);
+      days[day] = { j, overtime, deficit: winLen - inside, absent: false };
     }
     return days;
   }
@@ -227,7 +232,8 @@
     }
     const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
-    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
+    const who = archivePersonFilter === 'all' ? '' : '-person';
+    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}${who}.csv`;
     if (downloadFile(name, csv, 'text/csv')) showToast(`📥 گزارش ${JALALI_MONTHS[reportJM - 1]} دانلود شد`);
   }
 
