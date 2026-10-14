@@ -35,7 +35,7 @@
       <div class="flow-err" id="flowErr" role="alert"></div>
       <button class="install-btn flow-main" ${uiAttr('click', 'submitMissingEntry')}>ثبت دوره کامل</button>
       <button class="dock-copy-btn flow-alt" ${uiAttr('click', 'resolveFlowModal', 'skip')}>بدون ورود ارسال کن</button>
-      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', null)}>انصراف</button>`, '#flowInTime');
+      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', null)}>انصراف</button>`, '#flowInTime', 'ورود ثبت نشده');
   }
   function submitMissingEntry() {
     const v = (document.getElementById('flowInTime').value || '').trim();
@@ -71,7 +71,7 @@
         <button class="dock-copy-btn" ${uiAttr('click', 'submitGapText')}>ثبت</button>
       </div>
       <div class="flow-err" id="flowErr" role="alert"></div>
-      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', 'skip')}>رد شدن</button>`);
+      <button class="lock-link" ${uiAttr('click', 'resolveFlowModal', 'skip')}>رد شدن</button>`, '#flowGapText', 'بین دو حضور کجا بودید؟');
   }
   function pickGapReason(i) {
     if (GAP_REASONS[i]) resolveFlowModal({ reason: GAP_REASONS[i] });
