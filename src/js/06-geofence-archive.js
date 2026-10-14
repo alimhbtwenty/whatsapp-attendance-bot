@@ -473,6 +473,7 @@
       const chip = document.createElement('div');
       chip.className = `filter-chip ${company === c ? 'active' : ''}`;
       chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+      chip.setAttribute('aria-pressed', String(company === c));
       chip.textContent = label;
       chip.onclick = () => pickCompany(c);
       filterBar.appendChild(chip);
@@ -485,6 +486,7 @@
         const chip = document.createElement('div');
         chip.className = `filter-chip ${archivePersonFilter === id ? 'active' : ''}`;
         chip.setAttribute('role', 'button'); chip.tabIndex = 0;
+        chip.setAttribute('aria-pressed', String(archivePersonFilter === id));
         chip.textContent = id === 'all' ? name : `👤 ${name}`;
         chip.onclick = () => { archivePersonFilter = id; archiveVisible = 30; renderArchive(); };
         filterBar.appendChild(chip);
@@ -526,7 +528,7 @@
         </${item.type === 'support' ? 'button' : 'div'}>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="font-size:11px; color:var(--text-dim); text-align:left;">${escapeHtml(item.date)}</div>
-          <button style="background:none; border:none; color:var(--text-dim); font-size:13px; cursor:pointer; padding:4px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '', item.type || '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
+          <button style="background:none; border:none; color:var(--text-dim); font-size:14px; cursor:pointer; min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; padding:8px;" ${uiAttr('click', 'deleteLogItem', Number(item.id) || 0, item.by && item.by.id ? String(item.by.id) : '', item.type || '')} title="حذف رکورد" aria-label="حذف رکورد">🗑</button>
         </div>
       </div>
     `).join('') + (filtered.length > archiveVisible
