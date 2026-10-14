@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- آیکون کوچک اعلان: نشانه «G» ژئومات، یک‌رنگ (اندروید رنگش را خودش می‌دهد) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="64" android:viewportHeight="64">
+    <group>
+        <clip-path android:pathData="M0,0h60v63h-60z" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineJoin="miter" android:strokeMiterLimit="10"
+            android:pathData="M72,-6.6L7,32.5L72,71.6M72,9.8L28,36.3M72,22.3L39,42.2M56.5,39V69" />
+    </group>
+</vector>

@@ -1,0 +1,5 @@
+node_modules/
+tests/output/
+
+# Strix pentest output (local only)
+strix_runs/

@@ -18,6 +18,33 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # تست آپدیت وب‌اپ (pwa-update.js) نسخه منتشرشده main را لازم دارد
+      - name: Fetch main for the update test
+        run: git fetch --no-tags --depth=1 origin +refs/heads/main:refs/remotes/origin/main
+
+      # تست‌ها قبل از هر APK: خروجی build باید با src یکی باشد و همه تست‌های مرورگری سبز باشند
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install test dependencies
+        run: |
+          npm ci --ignore-scripts
+          npx playwright install --with-deps chromium
+
+      - name: Build check and tests
+        run: npm test
+
+      - name: Upload test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-screenshots
+          path: tests/output
+          if-no-files-found: ignore
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -29,26 +56,84 @@ jobs:
         with:
           gradle-version: '8.5'
 
+      # کلید امضای ثابت (GitHub Secrets). ریلیز رسمی main بدون آن ساخته نمی‌شود، چون APK با
+      # کلید تصادفی روی نسخه نصب‌شده نصب نمی‌شود؛ برنچ‌ها/PRها در نبودش با کلید debug ساخته می‌شوند.
+      - name: Prepare signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/geomat-release.jks"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/geomat-release.jks" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          elif [ "$GITHUB_EVENT_NAME" = "push" ] && [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            echo "::error::KEYSTORE_BASE64 / KEYSTORE_PASSWORD secrets are missing; refusing to publish a randomly signed release."
+            exit 1
+          else
+            echo "::warning::Signing secrets missing: this build is debug-signed and will not install over the released app."
+          fi
+
       - name: Build Android APK
         working-directory: android
         run: |
           gradle assembleRelease --stacktrace
 
-      - name: Prepare APK File
+      - name: Verify APK signature
+        if: env.KEYSTORE_FILE != ''
         run: |
-          cp android/app/build/outputs/apk/release/app-release.apk geomat-attendance.apk
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          KEY=$(keytool -list -keystore "$KEYSTORE_FILE" -storepass "$KEYSTORE_PASSWORD" -alias geomat | grep -o 'SHA-256): .*' | cut -d' ' -f2 | tr -d ':')
+          APKSIG=$(keytool -printcert -jarfile "$APK" | grep -m1 'SHA256:' | awk '{print $2}' | tr -d ':')
+          echo "key $KEY / apk $APKSIG"
+          [ -n "$KEY" ] && [ "$KEY" = "$APKSIG" ] || { echo "::error::APK is not signed with the release key"; exit 1; }
 
-      - name: Upload APK Artifact
+      # APK و وب‌اپ با هم در هر ریلیز (نام ثابت برای لینک پیش‌نمایش)
+      - name: Prepare release files
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk geo-team.apk
+          mkdir -p web && cp index.html sw.js manifest.json icon-192.png icon-512.png icon-maskable-512.png web/
+          (cd web && zip -q -r ../geo-team-web.zip .)
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: geomat-attendance-apk
-          path: geomat-attendance.apk
+          name: geo-team
+          path: |
+            geo-team.apk
+            geo-team-web.zip
 
-      # فقط main ریلیز می‌سازد؛ PR و اجرای دستی روی برنچ‌ها فقط APK را می‌سازند
-      - name: Attach APK to GitHub Release v1.1.0
+      # برنچ‌ها و PRها: پیش‌ریلیز ثابت «preview» تا قبل از ادغام روی گوشی تست شود
+      # لینک‌ها همیشه یکی‌اند: releases/download/preview/geo-team.apk و geo-team-web.zip
+      - name: Publish preview (before merge)
+        if: github.ref != 'refs/heads/main' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # اجرای PR و اجرای دستی (workflow_dispatch) گاهی هم‌زمان منتشر می‌کنند و یکی با
+          # «tag_name already exists» می‌افتاد؛ حذف و ساخت دوباره چند بار امتحان می‌شود
+          for try in 1 2 3 4 5; do
+            gh release delete preview --cleanup-tag -y || true
+            if gh release create preview geo-team.apk geo-team-web.zip --prerelease --target "$TARGET_SHA" \
+              --title "پیش‌نمایش (قبل از ادغام)" \
+              --notes "نسخه آزمایشی ادغام‌نشده از ${GITHUB_HEAD_REF:-$GITHUB_REF_NAME} (${TARGET_SHA:0:7}). فقط برای تست؛ نسخه رسمی بعد از ادغام منتشر می‌شود. geo-team.apk = اپ اندروید، geo-team-web.zip = وب‌اپ."; then
+              break
+            fi
+            [ "$try" = 5 ] && exit 1
+            sleep $((try * 10))
+          done
+          # دفعه قبل ریلیز به حالت پیش‌نویس رفت و لینک دانلود خالی شد: منتشرشده بودن را مطمئن کن
+          gh release edit preview --draft=false
+          test "$(gh release view preview --json isDraft --jq .isDraft)" = "false"
+
+      # فقط main ریلیز رسمی می‌سازد
+      - name: Attach APK and web app to GitHub Release v1.4.0
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view v1.1.0 >/dev/null 2>&1 || gh release create v1.1.0 --title "v1.1.0" --notes "Geofence per site, open entry + exit reminder, monthly report with overtime, backup/restore, support checklists, offline send queue, entry GPS location, in-app Jalali calendar, chat delete fix." || true
-          gh release upload v1.1.0 geomat-attendance.apk --clobber || true
+          cp geo-team.apk geo-team-1.4.0.apk && cp geo-team-web.zip geo-team-web-1.4.0.zip
+          gh release view v1.4.0 >/dev/null 2>&1 || gh release create v1.4.0 --title "Geo Team 1.4.0" --notes-file docs/release-notes/1.4.0.md
+          gh release upload v1.4.0 geo-team-1.4.0.apk geo-team-web-1.4.0.zip --clobber
+          gh release edit v1.4.0 --draft=false

@@ -10,16 +10,30 @@ android {
         applicationId "com.geomatco.attendance"
         minSdk 21
         targetSdk 34
-        versionCode 11
-        versionName "1.1.0"
+        versionCode 14
+        versionName "1.4.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // کلید امضای ثابت از GitHub Secrets (KEYSTORE_BASE64 / KEYSTORE_PASSWORD) که workflow در فایل می‌گذارد.
+    // بدون آن هر ساخت با کلید debug تازه امضا می‌شد و نسخه جدید روی قبلی نصب نمی‌شد.
+    def releaseKeystore = System.getenv("KEYSTORE_FILE")
+    signingConfigs {
+        release {
+            if (releaseKeystore) {
+                storeFile file(releaseKeystore)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias "geomat"
+                keyPassword System.getenv("KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
+            signingConfig releaseKeystore ? signingConfigs.release : signingConfigs.debug
         }
     }
 
@@ -31,4 +45,5 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.biometric:biometric:1.1.0'
 }

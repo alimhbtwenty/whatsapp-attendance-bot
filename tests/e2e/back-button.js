@@ -1,0 +1,30 @@
+// دکمه برگشت اندروید (window.handleBack): هر پنجره و پنل باز را می‌بندد، بدون خطا (دور ۳ بازبینی)
+const { chromium } = require('playwright');
+const { login, unlockTech } = require('../helpers/session');
+const BASE = process.env.BASE_URL || 'http://localhost:8765';
+const ok = (n, c, x = '') => console.log((c ? 'PASS ' : 'FAIL ') + n + ' ' + x);
+(async () => {
+  const b = await chromium.launch();
+  const p = await (await b.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })).newPage(); p.setDefaultTimeout(8000);
+  const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.addInitScript(() => { if (localStorage.getItem('seeded')) return; localStorage.setItem('seeded', '1'); localStorage.setItem('geomat_companies_v2', JSON.stringify(['الف'])); });
+  await p.goto(BASE + '/index.html'); await p.waitForTimeout(600);
+  ok('back on the login screen lets Android close the app', await p.evaluate(() => window.handleBack()) === false);
+  await login(p);
+  if (await p.locator('#confirmModal.open').count()) await p.click('#confirmModal [data-click*="false"]');
+  const back = () => p.evaluate(() => window.handleBack());
+  const isOpen = (id) => p.evaluate((i) => document.getElementById(i).classList.contains('open'), id);
+  await p.evaluate(() => openAccountPanel()); await p.waitForTimeout(200);
+  ok('back closes the account panel', await back() === true && !(await isOpen('invPanelModal')));
+  await p.click('#tabSupportBtn'); await p.click('#supportViewRow button:nth-child(2)'); await unlockTech(p);
+  await p.evaluate(() => { selectedCompany = 'الف'; renderInventory(); openInvItemModal('users', null); }); await p.waitForTimeout(200);
+  ok('back closes the technical-file form', await back() === true && !(await isOpen('invItemModal')));
+  await p.evaluate(() => { changeMyPassword(); }); await p.waitForTimeout(200);
+  ok('back closes the password dialog', await back() === true && !(await isOpen('vaultModal')));
+  await p.evaluate(() => openAddModal()); await p.waitForTimeout(150);
+  ok('back closes the add-site dialog', await back() === true && !(await isOpen('addModal')));
+  ok('back from another tab returns to attendance', await back() === true && await p.evaluate(() => systemMode === 'attendance'));
+  ok('back on the home tab lets Android close the app', await back() === false);
+  ok('no errors', !errs.length, errs.join(';'));
+  await b.close();
+})();
