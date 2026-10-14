@@ -14,7 +14,7 @@
   <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
 
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-ugPROahrnbnRSN7DwjR0B7MfFiHgVNwrPJDUrq7A+IM='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-C0KiWmS/R4+9jOfq4Hop3Ln1f4ysG6WMwIm6fQ2/xuQ='; style-src 'unsafe-inline'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
   <style>
     /* ==================== Geo Team: توکن‌های طراحی ====================
        همه رنگ‌ها از این‌جا می‌آیند؛ تم تیره پیش‌فرض است و تم روشن با data-theme یا تنظیم سیستم.
@@ -5076,9 +5076,10 @@
   function dailyBalance(sessions, fromDay, toDay, st) {
     const byDay = {};
     sessions.forEach(x => {
-      const d = byDay[x.day] || (byDay[x.day] = { start: Infinity, end: -Infinity });
+      const d = byDay[x.day] || (byDay[x.day] = { start: Infinity, end: -Infinity, list: [] });
       d.start = Math.min(d.start, x.inM);
       d.end = Math.max(d.end, x.inM + x.mins);
+      d.list.push(x);
     });
     const days = {};
     for (let day = fromDay; day <= toDay; day++) {
@@ -5091,7 +5092,11 @@
         continue;
       }
       const inside = win ? Math.max(0, Math.min(span.end, win[1]) - Math.max(span.start, win[0])) : 0;
-      days[day] = { j, overtime: span.end - span.start - inside, deficit: winLen - inside, absent: false };
+      const overtime = span.list.reduce((sum, s) => {
+        const inWin = win ? Math.max(0, Math.min(s.inM + s.mins, win[1]) - Math.max(s.inM, win[0])) : 0;
+        return sum + Math.max(0, s.mins - inWin);
+      }, 0);
+      days[day] = { j, overtime, deficit: winLen - inside, absent: false };
     }
     return days;
   }
@@ -5209,7 +5214,8 @@
     }
     const csv = '\uFEFF' + rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
     const scope = archiveCompanyFilter === 'all' ? 'all' : `company-${getCompanies().indexOf(archiveCompanyFilter) + 1}`;
-    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}.csv`;
+    const who = archivePersonFilter === 'all' ? '' : '-person';
+    const name = `geoteam-monthly-${reportJY}-${pad2(reportJM)}-${scope}${who}.csv`;
     if (downloadFile(name, csv, 'text/csv')) showToast(`📥 گزارش ${JALALI_MONTHS[reportJM - 1]} دانلود شد`);
   }
 
